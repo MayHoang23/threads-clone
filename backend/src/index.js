@@ -7,6 +7,7 @@ const authRoutes = require("./modules/auth/auth.routes");
 const postRoutes = require("./modules/posts/post.routes");
 const userRoutes = require("./modules/users/user.routes");
 const notificationRoutes = require("./modules/notifications/notification.routes");
+const mediaRoutes = require("./modules/media/media.routes");
 const { initSocket } = require("./socket/socketManager");
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/media", mediaRoutes);
 
 // ========================
 // GLOBAL ERROR HANDLER

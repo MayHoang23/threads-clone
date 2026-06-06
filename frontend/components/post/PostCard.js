@@ -185,33 +185,70 @@ export default function PostCard({ post: initialPost, currentUser, onDelete }) {
               </p>
             )}
 
-            {/* Media grid: 1 ảnh = full width, 2+ = lưới 2 cột */}
+            {/* ===== MEDIA GRID =====
+                Layout:
+                - 1 media (ảnh/video): full width
+                - 2 ảnh: 2 cột đều nhau
+                - 3 ảnh: ảnh 1 chiếm cả hàng trên, 2 ảnh nhỏ hàng dưới
+                - 4 ảnh: lưới 2x2 */}
             {post.media?.length > 0 && (
-              <div
-                className={`grid gap-1 mb-3 rounded-2xl overflow-hidden ${
-                  post.media.length === 1 ? "grid-cols-1" : "grid-cols-2"
-                }`}
-              >
-                {post.media.slice(0, 4).map((m, idx) => (
+              <div className="mb-3 rounded-2xl overflow-hidden">
+                {post.media[0].type === "VIDEO" ? (
+                  /* Video — 16:9, có controls và preload metadata */
+                  <div className="relative bg-black aspect-video">
+                    <video
+                      src={post.media[0].url}
+                      className="w-full h-full"
+                      controls
+                      preload="metadata"
+                      playsInline
+                    />
+                  </div>
+                ) : (
+                  /* Ảnh — layout thay đổi theo số lượng */
                   <div
-                    key={m.id}
-                    className={`relative bg-gray-100 overflow-hidden ${
-                      post.media.length === 1 ? "aspect-[4/3]" : "aspect-square"
+                    className={`grid gap-0.5 ${
+                      post.media.length === 1
+                        ? "grid-cols-1"
+                        : post.media.length === 3
+                        ? "grid-cols-2"
+                        : "grid-cols-2"
                     }`}
                   >
-                    {m.type === "IMAGE" ? (
-                      <img src={m.url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <video src={m.url} className="w-full h-full object-cover" controls />
-                    )}
-                    {/* Overlay "+N" cho ảnh thứ 4 nếu có nhiều hơn */}
-                    {idx === 3 && post.media.length > 4 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <span className="text-white font-bold text-2xl">+{post.media.length - 4}</span>
-                      </div>
-                    )}
+                    {post.media.slice(0, 4).map((m, idx) => {
+                      // Layout đặc biệt cho 3 ảnh: ảnh đầu chiếm full hàng
+                      const isFirstOfThree = post.media.length === 3 && idx === 0;
+                      return (
+                        <div
+                          key={m.id}
+                          className={`relative bg-gray-100 overflow-hidden ${
+                            post.media.length === 1
+                              ? "aspect-[4/3]"
+                              : isFirstOfThree
+                              ? "col-span-2 aspect-[16/9]"
+                              : "aspect-square"
+                          }`}
+                        >
+                          <img
+                            src={m.url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          {/* Overlay "+N" trên ảnh thứ 4 nếu có nhiều hơn 4 */}
+                          {idx === 3 && post.media.length > 4 && (
+                            <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                              <span className="text-white font-bold text-2xl">
+                                +{post.media.length - 4}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
               </div>
             )}
 

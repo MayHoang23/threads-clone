@@ -30,34 +30,42 @@ API prefix: /api/v1
 
 ## Đã hoàn thành ✅
 
-Học async/await + fetch API
-Học React: component, useState, useEffect
-Setup project structure
-Backend Express chạy port 5000
-Frontend Next.js chạy port 3000
-Cài PostgreSQL 18.4
-Tạo database threads_db
-Setup Prisma v5
-Tạo toàn bộ 14 bảng database
-Setup GitHub repo + .gitignore
-Auth API: register, login, refresh token, logout
-Auth Frontend: login page, register page, middleware
-Post API: tạo/sửa/xóa/like/comment/save
-Feed API: cursor pagination + privacy
-Newsfeed UI: PostCard, CreatePost, Infinite scroll
-User API + Follow API + Search API
-Profile page: cover, avatar, stats, tab Bài viết/Đã lưu
-Edit Profile page: cập nhật displayName, bio, avatar, cover
-Search page: debounce 500ms, tab Tất cả/Người dùng/Bài viết/Hashtag
-Friends page: tab Lời mời/Bạn bè/Gợi ý
-UserCard component: Follow/Unfollow với optimistic update
+✅ Học async/await + fetch API
+✅ Học React: component, useState, useEffect
+✅ Setup project structure
+✅ Backend Express chạy port 5000
+✅ Frontend Next.js chạy port 3000
+✅ Cài PostgreSQL 18.4
+✅ Tạo database threads_db
+✅ Setup Prisma v5
+✅ Tạo toàn bộ 14 bảng database
+✅ Setup GitHub repo + .gitignore
+✅ Auth API: register, login, refresh token, logout
+✅ Auth Frontend: login page, register page, middleware
+✅ Post API: tạo/sửa/xóa/like/comment/save
+✅ Feed API: cursor pagination + privacy
+✅ Newsfeed UI: PostCard, CreatePost, Infinite scroll
+✅ User API + Follow API + Search API
+✅ Profile page: cover, avatar, stats, tab Bài viết/Đã lưu
+✅ Edit Profile page: cập nhật displayName, bio, avatar, cover
+✅ Search page: debounce 500ms, tab Tất cả/Người dùng/Bài viết/Hashtag
+✅ Friends page: tab Lời mời/Bạn bè/Gợi ý
+✅ UserCard component: Follow/Unfollow với optimistic update
+✅ Notification system: model + controller + routes
+✅ Socket.io: JWT auth, room per user, singleton
+✅ NotificationBell: badge real-time, dropdown desktop, icon mobile
+✅ Notifications page: infinite scroll, mark read, xóa, navigate
+✅ Cloudinary config + multer middleware (image/video/multiple)
+✅ Media API: upload-image, upload-multiple, upload-video, delete
+✅ MediaUpload component: drag & drop, progress bar, preview, retry
+✅ CreatePost: tích hợp media upload, cleanup khi lỗi
+✅ PostCard: grid layout 1-4 ảnh, video player
 
-## Đang làm — Ngày 6
+## Đang làm — Ngày 7
 
-Notification system (backend: model + controller + routes)
-Socket.io real-time notifications
-NotificationBell component (badge + dropdown)
-Notifications page (danh sách, đánh dấu đã đọc)
+AI Content Moderation (Anthropic API)
+AI Caption Generator
+Tích hợp vào luồng tạo post
 
 ## Ghi chú
 
