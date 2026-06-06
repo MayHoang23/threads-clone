@@ -1,0 +1,268 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================
+// USER
+// ========================
+model User {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  displayName String?
+  avatar      String?
+  coverImage  String?
+  bio         String?
+  isPrivate   Boolean  @default(false)
+  isVerified  Boolean  @default(false)
+  isBanned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Quan hệ
+  posts         Post[]
+  likes         Like[]
+  comments      Comment[]
+  followers     Follow[]       @relation("following")
+  following     Follow[]       @relation("follower")
+  sentRequests  Friendship[]   @relation("requester")
+  receivedRequests Friendship[] @relation("receiver")
+  sentMessages  Message[]
+  notifications Notification[] @relation("receiver")
+  triggered     Notification[] @relation("triggered")
+  reports       Report[]
+  savedPosts    SavedPost[]
+  conversations ConversationMember[]
+}
+
+// ========================
+// POST
+// ========================
+model Post {
+  id        String      @id @default(cuid())
+  content   String?
+  privacy   Privacy     @default(PUBLIC)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Khoá ngoại
+  authorId  String
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Quan hệ
+  media         Media[]
+  likes         Like[]
+  comments      Comment[]
+  hashtags      PostHashtag[]
+  savedBy       SavedPost[]
+  reports       Report[]
+  notifications Notification[]
+}
+
+// ========================
+// MEDIA (ảnh/video của bài viết)
+// ========================
+model Media {
+  id        String    @id @default(cuid())
+  url       String
+  type      MediaType
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+// ========================
+// LIKE
+// ========================
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId]) // 1 user chỉ like 1 bài 1 lần
+}
+
+// ========================
+// COMMENT
+// ========================
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  userId    String
+  postId    String
+  parentId  String?   // null = comment gốc, có giá trị = reply
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("replies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("replies")
+}
+
+// ========================
+// FOLLOW
+// ========================
+model Follow {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  followerId  String
+  followingId String
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+// ========================
+// FRIENDSHIP (kết bạn)
+// ========================
+model Friendship {
+  id          String           @id @default(cuid())
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  requesterId String
+  receiverId  String
+  requester   User             @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver    User             @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, receiverId])
+}
+
+// ========================
+// SAVED POST
+// ========================
+model SavedPost {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+// ========================
+// HASHTAG
+// ========================
+model Hashtag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  posts     PostHashtag[]
+}
+
+model PostHashtag {
+  postId    String
+  hashtagId String
+  post      Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, hashtagId])
+}
+
+// ========================
+// MESSAGE & CONVERSATION
+// ========================
+model Conversation {
+  id        String               @id @default(cuid())
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  members   ConversationMember[]
+  messages  Message[]
+}
+
+model ConversationMember {
+  id             String       @id @default(cuid())
+  conversationId String
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  senderId       String
+  conversationId String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+// ========================
+// NOTIFICATION
+// ========================
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  receiverId  String
+  triggeredId String
+  postId      String?
+  receiver    User             @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  triggered   User             @relation("triggered", fields: [triggeredId], references: [id], onDelete: Cascade)
+  post        Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+// ========================
+// REPORT
+// ========================
+model Report {
+  id        String       @id @default(cuid())
+  reason    String
+  status    ReportStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  userId    String
+  postId    String?
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+// ========================
+// ENUMS
+// ========================
+enum Privacy {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  MENTION
+  FOLLOW
+  FRIEND_REQUEST
+  MESSAGE
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
