@@ -39,6 +39,7 @@ threads-clone/
 - [x] Tạo database threads_db
 - [x] Setup Prisma v5
 - [x] Tạo toàn bộ 14 bảng database
+- [x] Setup GitHub repo + .gitignore
 
 ## Ngày mai — Ngày 3
 

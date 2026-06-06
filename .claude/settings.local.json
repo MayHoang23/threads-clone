@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm uninstall *)",
       "Bash(npm install *)",
-      "Bash(npx prisma *)"
+      "Bash(npx prisma *)",
+      "Bash(node -e \"require\\('./src/index.js'\\)\")"
     ]
   }
 }
