@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const authRoutes = require("./modules/auth/auth.routes");
 const postRoutes = require("./modules/posts/post.routes");
+const userRoutes = require("./modules/users/user.routes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 // Tất cả auth routes đều có prefix /api/v1/auth
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/posts", postRoutes);
+app.use("/api/v1/users", userRoutes);
 
 // ========================
 // GLOBAL ERROR HANDLER
