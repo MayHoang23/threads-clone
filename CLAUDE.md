@@ -42,13 +42,18 @@ threads-clone/
 - [x] Setup GitHub repo + .gitignore
 - [x] Auth API: register, login, refresh token, logout
 - [x] Auth Frontend: login page, register page, middleware
+- [x] Setup project + database + auth
+- [x] Auth API + Auth Frontend
+- [x] Post API: tạo/sửa/xóa/like/comment/save
+- [x] Feed API: cursor pagination + privacy
+- [x] Newsfeed UI: PostCard, CreatePost, Infinite scroll
 
-## Ngày mai — Ngày 4
+## Ngày mai — Ngày 5
 
-- [ ] Post API: tạo, sửa, xóa bài viết
-- [ ] Feed API: lấy bài viết theo thời gian
-- [ ] Like + Comment API
-- [ ] UI: Newsfeed page + Post card component
+- [ ] Profile page (cá nhân + người khác)
+- [ ] Follow/Unfollow API + UI
+- [ ] Search API + UI
+- [ ] Friends/Followers page
 
 ## Ghi chú
 
