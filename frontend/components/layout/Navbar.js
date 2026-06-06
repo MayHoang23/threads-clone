@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser, logout } from "@/lib/auth";
 import { useState } from "react";
+import NotificationBell, { MobileNotificationBell } from "@/components/notifications/NotificationBell";
 
 // SVG icons cho từng mục nav (filled = active, outline = inactive)
 const HomeIcon = ({ active }) =>
@@ -45,11 +46,20 @@ const ProfileIcon = ({ active }) => (
   </svg>
 );
 
+// NAV_ITEMS không có Thông báo — thay bằng NotificationBell component riêng
 const NAV_ITEMS = [
   { href: "/", label: "Trang chủ", Icon: HomeIcon },
   { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
   { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
-  { href: "/activity", label: "Thông báo", Icon: ActivityIcon },
+  { href: "/profile", label: "Hồ sơ", Icon: ProfileIcon },
+];
+
+// NAV_ITEMS mobile có đầy đủ để build bottom bar
+const MOBILE_NAV_ITEMS = [
+  { href: "/", label: "Trang chủ", Icon: HomeIcon },
+  { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
+  { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+  { href: "/notifications", label: "Thông báo", isNotification: true },
   { href: "/profile", label: "Hồ sơ", Icon: ProfileIcon },
 ];
 
@@ -79,7 +89,6 @@ export default function Navbar() {
         {/* Nav links */}
         <div className="flex flex-col gap-1 flex-1">
           {NAV_ITEMS.map(({ href, label, Icon, alwaysOutline }) => {
-            // "/profile" match cả "/profile/username"
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
@@ -96,6 +105,8 @@ export default function Navbar() {
               </Link>
             );
           })}
+          {/* NotificationBell thay thế ActivityIcon — có dropdown + real-time badge */}
+          <NotificationBell isActive={pathname.startsWith("/notifications")} />
         </div>
 
         {/* User section dưới cùng */}
@@ -147,8 +158,12 @@ export default function Navbar() {
       {/* ===== MOBILE: navbar cố định phía dưới ===== */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-100 z-40 safe-area-pb">
         <div className="flex items-center justify-around max-w-md mx-auto px-2 py-2">
-          {NAV_ITEMS.map(({ href, label, Icon, alwaysOutline }) => {
+          {MOBILE_NAV_ITEMS.map(({ href, label, Icon, alwaysOutline, isNotification }) => {
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            // Mục thông báo dùng MobileNotificationBell riêng (có badge real-time)
+            if (isNotification) {
+              return <MobileNotificationBell key={href} isActive={isActive} />;
+            }
             return (
               <Link
                 key={href}

@@ -1,5 +1,6 @@
 const prisma = require("../../utils/prisma");
 const AppError = require("../../utils/AppError");
+const notificationService = require("../notifications/notification.service");
 
 // Các trường select cho user — dùng lại ở nhiều chỗ
 const USER_SELECT = {
@@ -216,6 +217,10 @@ const toggleFollow = async (followerId, followingId) => {
   } else {
     // Chưa follow → follow
     await prisma.follow.create({ data: { followerId, followingId } });
+    // Tạo notification FOLLOW — chỉ khi follow mới, không tạo khi unfollow
+    notificationService
+      .createNotification("FOLLOW", followerId, followingId)
+      .catch(() => {});
     return { following: true };
   }
 };

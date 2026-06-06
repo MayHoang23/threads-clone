@@ -1,5 +1,6 @@
 const prisma = require("../../utils/prisma");
 const AppError = require("../../utils/AppError");
+const notificationService = require("../notifications/notification.service");
 
 // ========================
 // HELPER FUNCTIONS
@@ -272,6 +273,11 @@ const toggleLike = async (userId, postId) => {
     await prisma.like.delete({ where: { userId_postId: { userId, postId } } });
   } else {
     await prisma.like.create({ data: { userId, postId } });
+    // Tạo notification LIKE — chỉ khi like mới, không tạo khi unlike
+    // createNotification tự bỏ qua nếu userId === post.authorId
+    notificationService
+      .createNotification("LIKE", userId, post.authorId, postId)
+      .catch(() => {}); // Fire-and-forget: lỗi notification không được làm hỏng response
   }
 
   const count = await prisma.like.count({ where: { postId } });
@@ -295,13 +301,20 @@ const createComment = async (userId, postId, content, parentId = null) => {
     if (parent.parentId !== null) throw new AppError("Chỉ được phép reply 1 cấp", 400);
   }
 
-  return prisma.comment.create({
+  const comment = await prisma.comment.create({
     data: { userId, postId, content: content.trim(), parentId },
     include: {
       user: { select: AUTHOR_SELECT },
       replies: { include: { user: { select: AUTHOR_SELECT } } },
     },
   });
+
+  // Tạo notification COMMENT — không tạo khi comment bài của chính mình
+  notificationService
+    .createNotification("COMMENT", userId, post.authorId, postId)
+    .catch(() => {});
+
+  return comment;
 };
 
 // ========================
