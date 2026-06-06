@@ -40,14 +40,15 @@ threads-clone/
 - [x] Setup Prisma v5
 - [x] Tạo toàn bộ 14 bảng database
 - [x] Setup GitHub repo + .gitignore
+- [x] Auth API: register, login, refresh token, logout
+- [x] Auth Frontend: login page, register page, middleware
 
-## Ngày mai — Ngày 3
+## Ngày mai — Ngày 4
 
-- [ ] Hiểu JWT hoạt động thế nào
-- [ ] Auth API: POST /api/v1/auth/register
-- [ ] Auth API: POST /api/v1/auth/login
-- [ ] Auth API: POST /api/v1/auth/refresh-token
-- [ ] Auth Middleware: kiểm tra token
+- [ ] Post API: tạo, sửa, xóa bài viết
+- [ ] Feed API: lấy bài viết theo thời gian
+- [ ] Like + Comment API
+- [ ] UI: Newsfeed page + Post card component
 
 ## Ghi chú
 

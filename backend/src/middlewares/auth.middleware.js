@@ -76,4 +76,31 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticate };
+// Middleware xác thực tùy chọn — dùng cho các route public nhưng cần biết user là ai
+// Nếu có token hợp lệ → gắn req.user, nếu không có / token lỗi → tiếp tục mà không báo lỗi
+const optionalAuthenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) return next();
+
+    const token = authHeader.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return next(); // Token lỗi → bỏ qua, không chặn request
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, username: true, displayName: true, avatar: true, isVerified: true, isBanned: true },
+    });
+
+    if (user && !user.isBanned) req.user = user;
+    next();
+  } catch {
+    next();
+  }
+};
+
+module.exports = { authenticate, optionalAuthenticate };
