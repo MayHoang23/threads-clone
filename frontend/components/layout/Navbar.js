@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser, logout } from "@/lib/auth";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import NotificationBell, { MobileNotificationBell } from "@/components/notifications/NotificationBell";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
@@ -60,31 +60,31 @@ const SettingsIcon = ({ active }) => (
   </svg>
 );
 
-// NAV_ITEMS không có Thông báo — thay bằng NotificationBell component riêng
-const NAV_ITEMS = [
-  { href: "/", label: "Trang chủ", Icon: HomeIcon },
-  { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
-  { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
-  { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
-  { href: "/settings", label: "Cài đặt", Icon: SettingsIcon },
-  { href: "/profile", label: "Hồ sơ", Icon: ProfileIcon },
-];
-
-// NAV_ITEMS mobile có đầy đủ để build bottom bar
-const MOBILE_NAV_ITEMS = [
-  { href: "/", label: "Trang chủ", Icon: HomeIcon },
-  { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
-  { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
-  { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
-  { href: "/notifications", label: "Thông báo", isNotification: true },
-  { href: "/profile", label: "Hồ sơ", Icon: ProfileIcon },
-];
-
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const currentUser = getCurrentUser();
+
+  // NAV_ITEMS không có Thông báo — thay bằng NotificationBell component riêng
+  const NAV_ITEMS = useMemo(() => [
+    { href: "/", label: "Trang chủ", Icon: HomeIcon },
+    { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
+    { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+    { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
+    { href: "/settings", label: "Cài đặt", Icon: SettingsIcon },
+    { href: `/profile/${currentUser?.username}`, label: "Hồ sơ", Icon: ProfileIcon },
+  ], [currentUser?.username]);
+
+  // NAV_ITEMS mobile có đầy đủ để build bottom bar
+  const MOBILE_NAV_ITEMS = useMemo(() => [
+    { href: "/", label: "Trang chủ", Icon: HomeIcon },
+    { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
+    { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+    { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
+    { href: "/notifications", label: "Thông báo", isNotification: true },
+    { href: `/profile/${currentUser?.username}`, label: "Hồ sơ", Icon: ProfileIcon },
+  ], [currentUser?.username]);
 
   const handleLogout = async () => {
     await logout();

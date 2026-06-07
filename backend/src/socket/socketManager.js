@@ -24,7 +24,9 @@ const initSocket = (httpServer) => {
     if (!token) return next(new Error("Thiếu token xác thực"));
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let decoded;
+      try { decoded = jwt.verify(token, process.env.JWT_SECRET); }
+      catch { decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET); }
       socket.userId = decoded.userId; // Gắn userId vào socket để dùng sau
       next();
     } catch {

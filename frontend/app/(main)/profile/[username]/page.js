@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
   const bottomRef = useRef(null);
 
   const isOwnProfile = currentUser?.username === username;
@@ -145,6 +146,20 @@ export default function ProfilePage() {
     }
   };
 
+  const handleStartChat = async () => {
+    if (chatLoading || !profile) return;
+    setChatLoading(true);
+    try {
+      const res = await fetchAPI("/conversations", {
+        method: "POST",
+        body: JSON.stringify({ participantId: profile.id }),
+      });
+      if (res?.success) router.push("/messages");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const handlePostDeleted = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setProfile((p) => p ? { ...p, postCount: Math.max(0, p.postCount - 1) } : p);
@@ -201,7 +216,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Nút hành động */}
-          <div className="mt-12">
+          <div className="mt-12 flex items-center gap-2">
             {isOwnProfile ? (
               <Link
                 href="/profile/edit"
@@ -210,23 +225,36 @@ export default function ProfilePage() {
                 Chỉnh sửa
               </Link>
             ) : (
-              <button
-                onClick={handleToggleFollow}
-                disabled={followLoading}
-                className={`px-5 py-1.5 rounded-full text-sm font-semibold border transition-colors disabled:opacity-60 ${
-                  profile.isFollowing
-                    ? "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    : "bg-black text-white border-black hover:bg-gray-800"
-                }`}
-              >
-                {followLoading ? (
-                  <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : profile.isFollowing ? (
-                  "Đang follow"
-                ) : (
-                  "Follow"
-                )}
-              </button>
+              <>
+                <button
+                  onClick={handleToggleFollow}
+                  disabled={followLoading}
+                  className={`px-5 py-1.5 rounded-full text-sm font-semibold border transition-colors disabled:opacity-60 ${
+                    profile.isFollowing
+                      ? "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      : "bg-black text-white border-black hover:bg-gray-800"
+                  }`}
+                >
+                  {followLoading ? (
+                    <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : profile.isFollowing ? (
+                    "Đang follow"
+                  ) : (
+                    "Follow"
+                  )}
+                </button>
+                <button
+                  onClick={handleStartChat}
+                  disabled={chatLoading}
+                  className="px-5 py-1.5 rounded-full text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                >
+                  {chatLoading ? (
+                    <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    "Nhắn tin"
+                  )}
+                </button>
+              </>
             )}
           </div>
         </div>

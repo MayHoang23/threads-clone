@@ -23,14 +23,14 @@ threads-clone/
 │ │ │ ├── friends/page.js
 │ │ │ ├── notifications/page.js
 │ │ │ ├── settings/page.js
-│ │ │ └── messages/page.js ← đang làm
+│ │ │ └── messages/page.js
 │ │ └── layout.js
 │ ├── components/
 │ │ ├── post/PostCard.js, CreatePost.js, MediaUpload.js
 │ │ ├── user/UserCard.js
 │ │ ├── notifications/NotificationBell.js
 │ │ ├── ai/CaptionGenerator.js, HashtagSuggester.js
-│ │ ├── messages/ ← đang làm
+│ │ ├── messages/ConversationList.js, ChatWindow.js, MessageInput.js
 │ │ └── ui/ThemeToggle.js
 │ ├── contexts/AuthContext.js, ThemeContext.js
 │ ├── lib/
@@ -46,8 +46,8 @@ threads-clone/
 ├── modules/notifications/
 ├── modules/media/
 ├── modules/ai/
-├── modules/messages/ ← đang làm
-├── socket/socketManager.js ← initSocket(server), sendNotification(userId, data)
+├── modules/messages/message.service.js, message.controller.js, message.routes.js
+├── socket/socketManager.js ← initSocket, sendNotification, emitToConversation, sendDMNotification
 ├── config/cloudinary.js, anthropic.js
 ├── middlewares/authenticate.js, upload.js
 └── utils/AppError.js
@@ -63,9 +63,8 @@ Auth header: Bearer token (middleware authenticate.js)
 ## Database — Prisma models hiện có
 
 User, Post, Like, Comment, Save, Follow,
-Notification, UserSettings,
-RefreshToken, Session (auth)
-→ Ngày 10 cần thêm: Conversation, Message
+Notification, UserSettings, RefreshToken,
+Conversation (lastMessageAt), Message (content, mediaUrl, isRead)
 
 ## Đã hoàn thành ✅
 
@@ -108,12 +107,16 @@ RefreshToken, Session (auth)
 ✅ Settings page: đổi mật khẩu, privacy, notifications (sidebar desktop / tabs mobile)
 ✅ Dark mode: class-based, localStorage, script inline tránh FOUC
 ✅ PWA: manifest.json + service worker (network-first API, cache-first static)
+✅ Direct Messages: Conversation + Message models, CRUD API
+✅ Socket.io chat: join/leave conversation, typing indicator, read receipt
+✅ ConversationList: preview, unread badge, real-time new_dm
+✅ ChatWindow: date grouping, optimistic send, typing indicator, read receipt
+✅ MessageInput: auto-resize, debounce typing, Enter/Shift+Enter
 
-## Đang làm — Ngày 10
+## Đang làm — Ngày 11
 
-Direct Messages UI
-Conversation list
-Real-time chat với Socket.io
+Testing & Bug fixes
+Deploy chuẩn bị bảo vệ
 
 ## Ghi chú
 

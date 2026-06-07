@@ -4,8 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
-import { connectSocket } from "@/lib/socket";
+import { useSocket } from "@/contexts/SocketContext";
 
 // Format thời gian ngắn gọn: "2ph", "3g", "5ng"
 function timeAgo(dateStr) {
@@ -102,16 +101,16 @@ export default function NotificationBell({ isActive }) {
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
+  const socket = useSocket();
 
-  // Load số chưa đọc + kết nối socket khi component mount
+  // Load số chưa đọc khi mount
   useEffect(() => {
     fetchUnreadCount();
+  }, []);
 
-    const token = getAccessToken();
-    if (!token) return;
-
-    // Kết nối socket (singleton — không tạo lại nếu đã kết nối)
-    const socket = connectSocket(token);
+  // Lắng nghe notification mới khi socket sẵn sàng
+  useEffect(() => {
+    if (!socket) return;
 
     const handleNewNotification = (notification) => {
       // Notification mới: tăng badge + thêm vào đầu danh sách
@@ -121,7 +120,7 @@ export default function NotificationBell({ isActive }) {
 
     socket.on("new_notification", handleNewNotification);
     return () => socket.off("new_notification", handleNewNotification);
-  }, []);
+  }, [socket]);
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -267,21 +266,24 @@ export default function NotificationBell({ isActive }) {
 // ========================
 export function MobileNotificationBell({ isActive }) {
   const [unreadCount, setUnreadCount] = useState(0);
+  const socket = useSocket();
 
+  // Load số chưa đọc khi mount
   useEffect(() => {
     const fetchCount = async () => {
       const res = await fetchAPI("/notifications/unread-count");
       if (res?.success) setUnreadCount(res.data.count);
     };
     fetchCount();
+  }, []);
 
-    const token = getAccessToken();
-    if (!token) return;
-    const socket = connectSocket(token);
+  // Lắng nghe notification mới khi socket sẵn sàng
+  useEffect(() => {
+    if (!socket) return;
     const handler = () => setUnreadCount((c) => c + 1);
     socket.on("new_notification", handler);
     return () => socket.off("new_notification", handler);
-  }, []);
+  }, [socket]);
 
   return (
     <Link

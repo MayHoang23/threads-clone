@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
-import { connectSocket, getSocket } from "@/lib/socket";
-import { getAccessToken } from "@/lib/auth";
+import { useSocket } from "@/contexts/SocketContext";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatWindow from "@/components/messages/ChatWindow";
 
@@ -12,10 +12,19 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Mobile: "list" | "chat"
-  const [mobileView, setMobileView] = useState("list");
+  const [mobileView, setMobileView] = useState("list"); // "list" | "chat"
 
+  // New chat modal
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
+  const searchTimerRef = useRef(null);
+
+  const router = useRouter();
   const currentUser = getCurrentUser();
+  const socket = useSocket();
 
   // Conversation đang được chọn (full object)
   const selectedConv = conversations.find((c) => c.id === selectedId);
@@ -36,11 +45,53 @@ export default function MessagesPage() {
 
   useEffect(() => {
     loadConversations();
-
-    // Đảm bảo socket đã kết nối (NotificationBell cũng connect, nhưng phòng trường hợp)
-    const token = getAccessToken();
-    if (token) connectSocket(token);
   }, [loadConversations]);
+
+  // ========================
+  // TÌM KIẾM USER (debounce 400ms)
+  // ========================
+  const handleSearchChange = (e) => {
+    const q = e.target.value;
+    setSearchQuery(q);
+    clearTimeout(searchTimerRef.current);
+    if (!q.trim()) { setSearchResults([]); return; }
+    searchTimerRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetchAPI(`/users/search?q=${encodeURIComponent(q.trim())}&limit=8`);
+        if (res?.success) setSearchResults(res.data.users ?? res.data ?? []);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+  };
+
+  const handleStartNewChat = async (participantId) => {
+    if (startingChat) return;
+    setStartingChat(true);
+    try {
+      const res = await fetchAPI("/conversations", {
+        method: "POST",
+        body: JSON.stringify({ userId: participantId }),
+      });
+      if (res?.success) {
+        setShowNewChat(false);
+        setSearchQuery("");
+        setSearchResults([]);
+        // Reload danh sách và mở conversation mới
+        await loadConversations();
+        handleSelect(res.data.id);
+      }
+    } finally {
+      setStartingChat(false);
+    }
+  };
+
+  const closeNewChat = () => {
+    setShowNewChat(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
 
   // ========================
   // CẬP NHẬT PREVIEW KHI NHẬN DM MỚI
@@ -97,6 +148,7 @@ export default function MessagesPage() {
           )}
         </h1>
         <button
+          onClick={() => setShowNewChat(true)}
           title="Cuộc trò chuyện mới"
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
         >
@@ -171,6 +223,83 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
+
+      {/* ===== MODAL TẠO CUỘC TRÒ CHUYỆN MỚI ===== */}
+      {showNewChat && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40" onClick={closeNewChat} />
+
+          <div className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="font-bold text-base text-gray-900 dark:text-gray-100">Tin nhắn mới</h2>
+              <button
+                onClick={closeNewChat}
+                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Search input */}
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Tìm kiếm người dùng..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="flex-1 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none"
+                />
+                {searching && (
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin flex-shrink-0" />
+                )}
+              </div>
+            </div>
+
+            {/* Kết quả tìm kiếm */}
+            <div className="max-h-64 overflow-y-auto">
+              {searchResults.length === 0 && searchQuery.trim() && !searching ? (
+                <p className="py-8 text-center text-sm text-gray-400">Không tìm thấy người dùng</p>
+              ) : searchResults.length === 0 && !searchQuery.trim() ? (
+                <p className="py-8 text-center text-sm text-gray-400">Nhập tên để tìm kiếm</p>
+              ) : (
+                searchResults.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => handleStartNewChat(user.id)}
+                    disabled={startingChat}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white text-sm font-bold">
+                          {user.username?.[0]?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        {user.displayName || user.username}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">@{user.username}</p>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

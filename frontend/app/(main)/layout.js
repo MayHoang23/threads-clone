@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import { SocketProvider } from "@/contexts/SocketContext";
 
 export default function MainLayout({ children }) {
   const [ready, setReady] = useState(false);
@@ -30,29 +31,31 @@ export default function MainLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
-      {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
-      <Navbar />
+    <SocketProvider>
+      <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
+        {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
+        <Navbar />
 
-      {/* Nội dung chính — thụt sang phải để tránh chồng lên sidebar desktop */}
-      <div className="lg:pl-64">
-        <div className="max-w-5xl mx-auto flex">
-          {/* Feed / content chính — giới hạn 620px, có border hai bên */}
-          <main className="flex-1 max-w-[620px] min-h-screen border-x border-gray-100 dark:border-gray-800">
-            {children}
-          </main>
+        {/* Nội dung chính — thụt sang phải để tránh chồng lên sidebar desktop */}
+        <div className="lg:pl-64">
+          <div className="max-w-5xl mx-auto flex">
+            {/* Feed / content chính — giới hạn 620px, có border hai bên */}
+            <main className="flex-1 max-w-[620px] min-h-screen border-x border-gray-100 dark:border-gray-800">
+              {children}
+            </main>
 
-          {/* Sidebar gợi ý — chỉ hiện trên màn hình rất rộng (xl+) */}
-          <aside className="hidden xl:block w-80 px-6 py-6">
-            <div className="sticky top-6">
-              <Sidebar />
-            </div>
-          </aside>
+            {/* Sidebar gợi ý — chỉ hiện trên màn hình rất rộng (xl+) */}
+            <aside className="hidden xl:block w-80 px-6 py-6">
+              <div className="sticky top-6">
+                <Sidebar />
+              </div>
+            </aside>
+          </div>
         </div>
-      </div>
 
-      {/* Padding dưới cho mobile (tránh bị bottom navbar che) */}
-      <div className="h-16 lg:hidden" />
-    </div>
+        {/* Padding dưới cho mobile (tránh bị bottom navbar che) */}
+        <div className="h-16 lg:hidden" />
+      </div>
+    </SocketProvider>
   );
 }

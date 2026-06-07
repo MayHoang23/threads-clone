@@ -152,7 +152,9 @@ export default function CreatePost({ currentUser, onPostCreated }) {
   };
 
   const handleBlur = () => {
+    setTimeout(() => {
     if (!content.trim() && !showMedia && !showCaption && !showHashtag) setFocused(false);
+    }, 200);
   };
 
   const charsLeft = 500 - content.length;
