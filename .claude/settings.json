@@ -4,7 +4,10 @@
       "Bash(node -e ' *)",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\contexts\")",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\components\\\\ui\")",
-      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\app\\\\\\(main\\)\\\\settings\")"
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\app\\\\\\(main\\)\\\\settings\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\backend\\\\src\\\\modules\\\\messages\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\components\\\\messages\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\app\\\\\\(main\\)\\\\messages\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory"

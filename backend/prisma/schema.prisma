@@ -189,11 +189,12 @@ model PostHashtag {
 // MESSAGE & CONVERSATION
 // ========================
 model Conversation {
-  id        String               @id @default(cuid())
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-  members   ConversationMember[]
-  messages  Message[]
+  id            String               @id @default(cuid())
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  lastMessageAt DateTime?            // Thời gian tin nhắn mới nhất — dùng để sort
+  members       ConversationMember[]
+  messages      Message[]
 }
 
 model ConversationMember {
@@ -209,6 +210,7 @@ model ConversationMember {
 model Message {
   id             String       @id @default(cuid())
   content        String
+  mediaUrl       String?      // URL ảnh đính kèm (tuỳ chọn)
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
   senderId       String

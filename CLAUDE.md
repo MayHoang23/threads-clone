@@ -14,6 +14,30 @@ AI: Anthropic API (claude-haiku-4-5)
 
 threads-clone/
 ├── frontend/ (Next.js)
+│ ├── app/
+│ │ ├── (main)/
+│ │ │ ├── newsfeed/page.js
+│ │ │ ├── profile/[username]/page.js
+│ │ │ ├── profile/edit/page.js
+│ │ │ ├── search/page.js
+│ │ │ ├── friends/page.js
+│ │ │ ├── notifications/page.js
+│ │ │ ├── settings/page.js
+│ │ │ └── messages/page.js ← đang làm
+│ │ └── layout.js
+│ ├── components/
+│ │ ├── post/PostCard.js, CreatePost.js, MediaUpload.js
+│ │ ├── user/UserCard.js
+│ │ ├── notifications/NotificationBell.js
+│ │ ├── ai/CaptionGenerator.js, HashtagSuggester.js
+│ │ ├── messages/ ← đang làm
+│ │ └── ui/ThemeToggle.js
+│ ├── contexts/AuthContext.js, ThemeContext.js
+│ ├── lib/
+│ │ ├── api.js ← dùng fetchAPI(url, options) cho mọi API call
+│ │ ├── auth.js ← getCurrentUser(), getToken()
+│ │ └── socket.js ← connectSocket(token), singleton instance
+│ └── public/manifest.json, sw.js
 └── backend/ (Express)
 └── src/
 ├── modules/auth/
@@ -22,16 +46,26 @@ threads-clone/
 ├── modules/notifications/
 ├── modules/media/
 ├── modules/ai/
-├── socket/
-├── config/
-├── middlewares/
-└── utils/
+├── modules/messages/ ← đang làm
+├── socket/socketManager.js ← initSocket(server), sendNotification(userId, data)
+├── config/cloudinary.js, anthropic.js
+├── middlewares/authenticate.js, upload.js
+└── utils/AppError.js
 
 ## Quy ước code
 
 Response format: { success: true/false, data: {}, message: "" }
 Lỗi: throw new AppError(message, statusCode)
 API prefix: /api/v1
+File extension: .js (không dùng TypeScript)
+Auth header: Bearer token (middleware authenticate.js)
+
+## Database — Prisma models hiện có
+
+User, Post, Like, Comment, Save, Follow,
+Notification, UserSettings,
+RefreshToken, Session (auth)
+→ Ngày 10 cần thêm: Conversation, Message
 
 ## Đã hoàn thành ✅
 
@@ -86,4 +120,6 @@ Real-time chat với Socket.io
 Desktop path: /c/Users/PC/OneDrive/Desktop/threads-clone
 Mở backend: cd backend && npm run dev
 Mở frontend: cd frontend && npm run dev
-Cần ANTHROPIC_API_KEY trong backend/.env
+Cần ANTHROPIC*API_KEY trong backend/.env
+Cần CLOUDINARY*\* vars trong backend/.env
+Sau Prisma migration: restart backend (EPERM DLL issue trên Windows)

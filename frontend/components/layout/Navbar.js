@@ -47,6 +47,12 @@ const ProfileIcon = ({ active }) => (
   </svg>
 );
 
+const MessagesIcon = ({ active }) => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+  </svg>
+);
+
 const SettingsIcon = ({ active }) => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3" />
@@ -59,6 +65,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Trang chủ", Icon: HomeIcon },
   { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
   { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+  { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
   { href: "/settings", label: "Cài đặt", Icon: SettingsIcon },
   { href: "/profile", label: "Hồ sơ", Icon: ProfileIcon },
 ];
@@ -68,6 +75,7 @@ const MOBILE_NAV_ITEMS = [
   { href: "/", label: "Trang chủ", Icon: HomeIcon },
   { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
   { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+  { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
   { href: "/notifications", label: "Thông báo", isNotification: true },
   { href: "/profile", label: "Hồ sơ", Icon: ProfileIcon },
 ];
