@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory"
+    ]
+  }
+}

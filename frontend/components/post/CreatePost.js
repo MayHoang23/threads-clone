@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { fetchAPI } from "@/lib/api";
 import MediaUpload from "./MediaUpload";
+import CaptionGenerator from "@/components/ai/CaptionGenerator";
+import HashtagSuggester from "@/components/ai/HashtagSuggester";
 
 const PRIVACY_OPTIONS = [
   { value: "PUBLIC", label: "🌍 Mọi người" },
@@ -48,13 +50,19 @@ export default function CreatePost({ currentUser, onPostCreated }) {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const [showMedia, setShowMedia] = useState(false);
+  const [showCaption, setShowCaption] = useState(false);
+  const [showHashtag, setShowHashtag] = useState(false);
   // uploadedMedia: [{ url, publicId, type }] — nhận từ MediaUpload
   const [uploadedMedia, setUploadedMedia] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  // Cảnh báo nội dung vi phạm (từ backend 422)
+  const [moderationWarning, setModerationWarning] = useState("");
   const textareaRef = useRef(null);
 
   const handleContentChange = (e) => {
     setContent(e.target.value);
+    // Xóa cảnh báo kiểm duyệt khi user sửa lại nội dung
+    if (moderationWarning) setModerationWarning("");
     const ta = textareaRef.current;
     if (ta) {
       ta.style.height = "auto";
@@ -66,18 +74,44 @@ export default function CreatePost({ currentUser, onPostCreated }) {
   const handleMediaChange = (media, uploading) => {
     setUploadedMedia(media);
     setIsUploading(uploading);
-    // Nếu user xóa hết ảnh → ẩn khu vực media
-    if (media.length === 0 && !uploading) {
-      // Giữ showMedia = true để user có thể thêm tiếp
+  };
+
+  // Callback từ CaptionGenerator: điền caption vào textarea
+  const handleSelectCaption = (caption) => {
+    setContent(caption);
+    if (moderationWarning) setModerationWarning("");
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = "auto";
+      ta.style.height = `${ta.scrollHeight}px`;
+      ta.focus();
+    }
+  };
+
+  // Callback từ HashtagSuggester: thêm hashtag vào cuối content
+  const handleAddHashtag = (hashtagText) => {
+    setContent((prev) => {
+      const trimmed = prev.trimEnd();
+      // Không thêm trùng hashtag
+      if (trimmed.includes(hashtagText)) return prev;
+      return trimmed ? `${trimmed} ${hashtagText}` : hashtagText;
+    });
+    const ta = textareaRef.current;
+    if (ta) {
+      setTimeout(() => {
+        ta.style.height = "auto";
+        ta.style.height = `${ta.scrollHeight}px`;
+      }, 0);
     }
   };
 
   const handleSubmit = async () => {
     const hasContent = content.trim();
     const hasMedia = uploadedMedia.length > 0;
-    if ((!hasContent && !hasMedia) || loading || isUploading) return;
+    if ((!hasContent && !hasMedia) || loading || isUploading || moderationWarning) return;
 
     setLoading(true);
+    setModerationWarning("");
     try {
       const data = await fetchAPI("/posts", {
         method: "POST",
@@ -94,6 +128,8 @@ export default function CreatePost({ currentUser, onPostCreated }) {
         setContent("");
         setUploadedMedia([]);
         setShowMedia(false);
+        setShowCaption(false);
+        setShowHashtag(false);
         setFocused(false);
         if (textareaRef.current) textareaRef.current.style.height = "auto";
         onPostCreated?.(data.data);
@@ -101,29 +137,42 @@ export default function CreatePost({ currentUser, onPostCreated }) {
         // Tạo post thất bại → xóa file đã upload khỏi Cloudinary
         await cleanupMedia(uploadedMedia);
       }
-    } catch {
-      // Lỗi mạng → cleanup
-      await cleanupMedia(uploadedMedia);
+    } catch (err) {
+      // 422 = nội dung vi phạm chính sách (AI moderation)
+      if (err.status === 422) {
+        const msg = err.message || "Nội dung vi phạm chính sách cộng đồng";
+        setModerationWarning(msg);
+      } else {
+        // Lỗi mạng → cleanup
+        await cleanupMedia(uploadedMedia);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleBlur = () => {
-    if (!content.trim() && !showMedia) setFocused(false);
+    if (!content.trim() && !showMedia && !showCaption && !showHashtag) setFocused(false);
   };
 
   const charsLeft = 500 - content.length;
   const hasMedia = uploadedMedia.length > 0 || isUploading;
+  // Disable nếu nội dung vi phạm
   const canPost =
-    (content.trim() || hasMedia) && charsLeft >= 0 && !isUploading && !loading;
+    (content.trim() || hasMedia) &&
+    charsLeft >= 0 &&
+    !isUploading &&
+    !loading &&
+    !moderationWarning;
+
+  const isExpanded = focused || showMedia || showCaption || showHashtag;
 
   return (
     <div className="px-4 py-4 border-b border-gray-100">
       <div className="flex gap-3">
         <div className="flex flex-col items-center">
           <Avatar user={currentUser} />
-          {(focused || showMedia) && (
+          {isExpanded && (
             <div className="w-0.5 bg-gray-200 flex-1 mt-2 min-h-[16px] rounded-full" />
           )}
         </div>
@@ -140,12 +189,30 @@ export default function CreatePost({ currentUser, onPostCreated }) {
             onFocus={() => setFocused(true)}
             onBlur={handleBlur}
             placeholder="Có gì mới không?"
-            rows={focused || showMedia ? 3 : 1}
+            rows={isExpanded ? 3 : 1}
             className="w-full text-sm text-gray-900 placeholder-gray-400 outline-none resize-none bg-transparent leading-relaxed"
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleSubmit();
             }}
           />
+
+          {/* Cảnh báo kiểm duyệt nội dung */}
+          {moderationWarning && (
+            <div className="mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <span className="text-red-500 text-sm mt-0.5">⚠️</span>
+              <p className="text-xs text-red-600 leading-relaxed">{moderationWarning}</p>
+            </div>
+          )}
+
+          {/* AI Caption Generator */}
+          {showCaption && (
+            <CaptionGenerator onSelectCaption={handleSelectCaption} />
+          )}
+
+          {/* AI Hashtag Suggester — tự động trigger khi có content */}
+          {showHashtag && (
+            <HashtagSuggester content={content} onAddHashtag={handleAddHashtag} />
+          )}
 
           {/* Khu vực media upload — hiện khi nhấn icon ảnh */}
           {showMedia && (
@@ -156,7 +223,7 @@ export default function CreatePost({ currentUser, onPostCreated }) {
           )}
 
           {/* Footer toolbar */}
-          {(focused || showMedia) && (
+          {isExpanded && (
             <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
               <div className="flex items-center gap-1 -ml-1">
                 {/* Nút thêm ảnh/video */}
@@ -175,6 +242,34 @@ export default function CreatePost({ currentUser, onPostCreated }) {
                     <circle cx="8.5" cy="8.5" r="1.5" />
                     <polyline points="21 15 16 10 5 21" />
                   </svg>
+                </button>
+
+                {/* Nút AI Caption */}
+                <button
+                  type="button"
+                  onClick={() => setShowCaption((v) => !v)}
+                  title="Tạo caption bằng AI"
+                  className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                    showCaption
+                      ? "bg-violet-100 text-violet-700"
+                      : "text-gray-400 hover:text-violet-600 hover:bg-violet-50"
+                  }`}
+                >
+                  ✨ AI
+                </button>
+
+                {/* Nút AI Hashtag */}
+                <button
+                  type="button"
+                  onClick={() => setShowHashtag((v) => !v)}
+                  title="Gợi ý hashtag bằng AI"
+                  className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                    showHashtag
+                      ? "bg-violet-100 text-violet-700"
+                      : "text-gray-400 hover:text-violet-600 hover:bg-violet-50"
+                  }`}
+                >
+                  # Tag
                 </button>
 
                 {/* Indicator đang upload */}

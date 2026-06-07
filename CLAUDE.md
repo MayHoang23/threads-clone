@@ -60,12 +60,18 @@ API prefix: /api/v1
 ✅ MediaUpload component: drag & drop, progress bar, preview, retry
 ✅ CreatePost: tích hợp media upload, cleanup khi lỗi
 ✅ PostCard: grid layout 1-4 ảnh, video player
+✅ Anthropic config: singleton client, claude-haiku-4-5
+✅ AI Service: generateCaption, suggestHashtags, moderateContent
+✅ AI API: rate limit 20 req/giờ/user, hook moderation vào post
+✅ CaptionGenerator: 3 gợi ý, chọn tone, fade-in animation
+✅ HashtagSuggester: debounce 1000ms, chip violet, click thêm/bỏ
+✅ CreatePost: tích hợp AI caption + hashtag, cảnh báo vi phạm
 
-## Đang làm — Ngày 7
+## Đang làm — Ngày 9
 
-AI Content Moderation (Anthropic API)
-AI Caption Generator
-Tích hợp vào luồng tạo post
+Settings page: đổi mật khẩu, privacy, thông báo
+Dark mode toggle
+PWA: manifest + service worker
 
 ## Ghi chú
 

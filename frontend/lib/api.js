@@ -30,13 +30,28 @@ export async function fetchAPI(endpoint, options = {}) {
         ...options,
         headers: { ...headers, Authorization: `Bearer ${newToken}` },
       });
-      return retryRes.json();
+      const retryData = await retryRes.json();
+      if (!retryRes.ok) {
+        const err = new Error(retryData?.message || "Lỗi không xác định");
+        err.status = retryRes.status;
+        err.data = retryData;
+        throw err;
+      }
+      return retryData;
     } else {
       // Refresh thất bại → xóa token, đá về trang login
       clearAuthData();
       window.location.href = "/login";
       return;
     }
+  }
+
+  // Throw error có status cho các response lỗi khác (422, 429, 400, 403, v.v.)
+  if (!res.ok) {
+    const err = new Error(data?.message || "Lỗi không xác định");
+    err.status = res.status;
+    err.data = data;
+    throw err;
   }
 
   return data;

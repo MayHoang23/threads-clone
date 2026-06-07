@@ -1,6 +1,7 @@
 const prisma = require("../../utils/prisma");
 const AppError = require("../../utils/AppError");
 const notificationService = require("../notifications/notification.service");
+const { moderateContent } = require("../ai/ai.service");
 
 // ========================
 // HELPER FUNCTIONS
@@ -63,6 +64,23 @@ function formatPost(post, userId = null) {
 const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [] }) => {
   if (!content?.trim() && mediaUrls.length === 0) {
     throw new AppError("Bài viết phải có nội dung hoặc ảnh/video", 400);
+  }
+
+  // Kiểm duyệt AI trước khi tạo bài — chỉ kiểm tra khi có text
+  if (content?.trim()) {
+    try {
+      const modResult = await moderateContent(content.trim());
+      if (!modResult.isSafe) {
+        throw new AppError(
+          `Nội dung vi phạm chính sách cộng đồng: ${modResult.reason}`,
+          422
+        );
+      }
+    } catch (err) {
+      // Nếu là AppError (vi phạm chính sách) → re-throw để block bài đăng
+      if (err.isOperational) throw err;
+      // Nếu lỗi kết nối AI → bỏ qua, không block user
+    }
   }
 
   const tagNames = extractHashtags(content);
