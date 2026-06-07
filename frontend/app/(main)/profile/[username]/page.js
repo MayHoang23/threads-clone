@@ -152,7 +152,7 @@ export default function ProfilePage() {
     try {
       const res = await fetchAPI("/conversations", {
         method: "POST",
-        body: JSON.stringify({ participantId: profile.id }),
+        body: JSON.stringify({ userId: profile.id }),
       });
       if (res?.success) router.push("/messages");
     } finally {

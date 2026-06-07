@@ -45,15 +45,19 @@ const initSocket = (httpServer) => {
 
     // Client join room conversation để nhận tin nhắn real-time
     socket.on("join_conversation", async ({ conversationId }) => {
-      if (!conversationId) return;
+  console.log(`[Socket] join_conversation: userId=${socket.userId}, convId=${conversationId}`);
+  if (!conversationId) return;
       // Xác minh user là member trước khi cho join room
       const member = await prisma.conversationMember.findUnique({
         where: { conversationId_userId: { conversationId, userId: socket.userId } },
       }).catch(() => null);
 
       if (member) {
-        socket.join(`conversation_${conversationId}`);
-      }
+  socket.join(`conversation_${conversationId}`);
+  console.log(`[Socket] User ${socket.userId} joined conversation_${conversationId}`);
+} else {
+  console.log(`[Socket] DENIED: User ${socket.userId} not member of ${conversationId}`);
+}
     });
 
     // Client rời room conversation (khi đóng chat / navigate away)

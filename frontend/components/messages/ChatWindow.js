@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchAPI } from "@/lib/api";
-import { getSocket } from "@/lib/socket";
+import { useSocket } from "@/contexts/SocketContext";
 import MessageInput from "./MessageInput";
 
 // ========================
@@ -91,6 +91,8 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
   const [loadingInit, setLoadingInit] = useState(true);
   const [typingUser, setTypingUser] = useState(null); // user đang gõ
   const [isAtBottom, setIsAtBottom] = useState(true);
+
+  const socket = useSocket();
 
   const messagesEndRef = useRef(null); // để scroll to bottom
   const containerRef = useRef(null);   // container để detect scroll
@@ -186,26 +188,22 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
   // SOCKET EVENTS
   // ========================
   useEffect(() => {
-    if (!conversationId) return;
-    const socket = getSocket();
-    if (!socket) return;
+    if (!conversationId || !socket) return;
     socketRef.current = socket;
 
     // Join conversation room
+    console.log("[Chat] joining conversation", conversationId, "socket connected:", socket.connected);
     socket.emit("join_conversation", { conversationId });
 
     // Nhận tin nhắn mới
     const handleNewMessage = (message) => {
       if (message.conversationId !== conversationId) return;
+      // Tin của chính mình đã được thêm qua optimistic update → bỏ qua
+      if (message.senderId === currentUser?.id) return;
 
-      setMessages((prev) => {
-        // Tránh duplicate nếu là tin mình vừa gửi (đã có optimistic)
-        if (prev.some((m) => m.id === message.id)) return prev;
-        return [...prev, message];
-      });
+      setMessages((prev) => [...prev, message]);
 
-      // Scroll xuống nếu đang ở cuối hoặc là tin của mình
-      if (isAtBottom || message.senderId === currentUser?.id) {
+      if (isAtBottom) {
         setTimeout(() => scrollToBottom(true), 50);
       }
     };
@@ -241,7 +239,7 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
       socket.off("user_typing", handleTyping);
       socket.off("user_stop_typing", handleStopTyping);
     };
-  }, [conversationId, currentUser?.id]);
+  }, [conversationId, currentUser?.id, socket]);
 
   useEffect(() => {
     loadInitialMessages();
