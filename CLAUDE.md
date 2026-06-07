@@ -8,7 +8,7 @@ Database: PostgreSQL + Prisma ORM
 Realtime: Socket.io
 Media: Cloudinary
 Auth: JWT access token (15 phút) + refresh token (7 ngày)
-AI: Anthropic API
+AI: Anthropic API (claude-haiku-4-5)
 
 ## Cấu trúc
 
@@ -19,6 +19,11 @@ threads-clone/
 ├── modules/auth/
 ├── modules/posts/
 ├── modules/users/
+├── modules/notifications/
+├── modules/media/
+├── modules/ai/
+├── socket/
+├── config/
 ├── middlewares/
 └── utils/
 
@@ -38,7 +43,7 @@ API prefix: /api/v1
 ✅ Cài PostgreSQL 18.4
 ✅ Tạo database threads_db
 ✅ Setup Prisma v5
-✅ Tạo toàn bộ 14 bảng database
+✅ Tạo toàn bộ 14 bảng database + UserSettings
 ✅ Setup GitHub repo + .gitignore
 ✅ Auth API: register, login, refresh token, logout
 ✅ Auth Frontend: login page, register page, middleware
@@ -66,15 +71,19 @@ API prefix: /api/v1
 ✅ CaptionGenerator: 3 gợi ý, chọn tone, fade-in animation
 ✅ HashtagSuggester: debounce 1000ms, chip violet, click thêm/bỏ
 ✅ CreatePost: tích hợp AI caption + hashtag, cảnh báo vi phạm
+✅ Settings page: đổi mật khẩu, privacy, notifications (sidebar desktop / tabs mobile)
+✅ Dark mode: class-based, localStorage, script inline tránh FOUC
+✅ PWA: manifest.json + service worker (network-first API, cache-first static)
 
-## Đang làm — Ngày 9
+## Đang làm — Ngày 10
 
-Settings page: đổi mật khẩu, privacy, thông báo
-Dark mode toggle
-PWA: manifest + service worker
+Direct Messages UI
+Conversation list
+Real-time chat với Socket.io
 
 ## Ghi chú
 
 Desktop path: /c/Users/PC/OneDrive/Desktop/threads-clone
 Mở backend: cd backend && npm run dev
 Mở frontend: cd frontend && npm run dev
+Cần ANTHROPIC_API_KEY trong backend/.env

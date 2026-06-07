@@ -9,6 +9,7 @@ const userRoutes = require("./modules/users/user.routes");
 const notificationRoutes = require("./modules/notifications/notification.routes");
 const mediaRoutes = require("./modules/media/media.routes");
 const aiRoutes = require("./modules/ai/ai.routes");
+const settingsRoutes = require("./modules/users/settings.routes");
 const { initSocket } = require("./socket/socketManager");
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1/ai", aiRoutes);
+app.use("/api/v1/settings", settingsRoutes);
 
 // ========================
 // GLOBAL ERROR HANDLER

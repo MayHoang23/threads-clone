@@ -39,6 +39,21 @@ model User {
   reports       Report[]
   savedPosts    SavedPost[]
   conversations ConversationMember[]
+  settings      UserSettings?
+}
+
+// ========================
+// USER SETTINGS
+// ========================
+model UserSettings {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  likeNotif        Boolean      @default(true)
+  commentNotif     Boolean      @default(true)
+  followNotif      Boolean      @default(true)
+  emailNotif       Boolean      @default(false)
+  allowMessagesFrom MessagesFrom @default(EVERYONE)
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ========================
@@ -265,4 +280,10 @@ enum ReportStatus {
   PENDING
   REVIEWED
   DISMISSED
+}
+
+enum MessagesFrom {
+  EVERYONE
+  FOLLOWING
+  NONE
 }

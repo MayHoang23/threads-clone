@@ -2,16 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light mode mặc định */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark mode qua class .dark — được ThemeContext kiểm soát */
+/* Không dùng prefers-color-scheme nữa để tránh xung đột với toggle thủ công */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {

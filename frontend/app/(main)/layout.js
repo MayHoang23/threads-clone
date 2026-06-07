@@ -23,14 +23,14 @@ export default function MainLayout({ children }) {
   // Hiển thị loading spinner khi đang kiểm tra auth
   if (!ready) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-7 h-7 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
+        <div className="w-7 h-7 border-2 border-gray-200 dark:border-gray-700 border-t-black dark:border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
       {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
       <Navbar />
 
@@ -38,7 +38,7 @@ export default function MainLayout({ children }) {
       <div className="lg:pl-64">
         <div className="max-w-5xl mx-auto flex">
           {/* Feed / content chính — giới hạn 620px, có border hai bên */}
-          <main className="flex-1 max-w-[620px] min-h-screen border-x border-gray-100">
+          <main className="flex-1 max-w-[620px] min-h-screen border-x border-gray-100 dark:border-gray-800">
             {children}
           </main>
 
