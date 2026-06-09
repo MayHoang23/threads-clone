@@ -47,6 +47,10 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Threads Clone API đang chạy!" });
 });
 
+app.get('/api/v1/health', (req, res) => {
+  res.json({ success: true, message: 'Server is running', timestamp: new Date() });
+});
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/users", userRoutes);
