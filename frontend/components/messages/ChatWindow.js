@@ -341,7 +341,7 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-1 bg-white dark:bg-gray-950"
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-1 bg-white dark:bg-gray-950 scrollbar-thin"
       >
         {/* Load more indicator */}
         {loadingMore && (
@@ -380,7 +380,7 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
           return (
             <div
               key={item.id}
-              className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"}`}
+              className={`flex items-end gap-2 ${isMine ? "justify-end pr-2" : "justify-start pl-2"}`}
             >
               {/* Avatar người kia — chỉ hiện bên trái */}
               {!isMine && <Avatar user={otherUser} size="w-7 h-7" />}
@@ -399,9 +399,9 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
                 {/* Nội dung text */}
                 {item.content && (
                   <div
-                    className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed break-words ${
+                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${
                       isMine
-                        ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none"
+                        ? "bg-black text-white rounded-br-none dark:bg-violet-600 dark:text-white"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
                     } ${item.pending ? "opacity-60" : ""} ${item.failed ? "border border-red-300" : ""}`}
                   >
