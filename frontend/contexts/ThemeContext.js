@@ -5,22 +5,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  // Khởi tạo với "light" để tránh hydration mismatch
-  // Script inline trong layout.js sẽ set class "dark" trước khi hydrate
-  const [theme, setTheme] = useState("light");
+  // Đọc class "dark" từ DOM ngay lúc khởi tạo — script inline đã set trước đó
+  // Tránh race condition: useState("light") → xóa class dark → flash trắng
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "light";
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
 
   useEffect(() => {
-    // Đọc preference đã lưu từ localStorage sau khi mount
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark" || saved === "light") {
-      setTheme(saved);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-    }
-  }, []);
-
-  useEffect(() => {
-    // Áp dụng/bỏ class "dark" lên thẻ <html> → Tailwind dark: variants hoạt động
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
     } else {

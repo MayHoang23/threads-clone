@@ -78,10 +78,15 @@ export default function NewsfeedPage() {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loading, cursor]); // Re-setup khi cursor hoặc loading state thay đổi
 
-  // Callback từ CreatePost: thêm bài mới lên đầu feed ngay lập tức
-  const handlePostCreated = (newPost) => {
-    setPosts((prev) => [newPost, ...prev]);
-  };
+  // Bài tạo từ modal Navbar (không có onPostCreated prop)
+  useEffect(() => {
+    const handler = (e) => setPosts((prev) => [e.detail, ...prev]);
+    window.addEventListener("post-created", handler);
+    return () => window.removeEventListener("post-created", handler);
+  }, []);
+
+  // onPostCreated prop kept for compatibility; event listener above already handles it
+  const handlePostCreated = () => {};
 
   // Callback từ PostCard khi xóa: gỡ bài khỏi danh sách
   const handlePostDeleted = (postId) => {

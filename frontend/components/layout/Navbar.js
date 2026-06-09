@@ -6,6 +6,7 @@ import { getCurrentUser, logout } from "@/lib/auth";
 import { useState, useMemo } from "react";
 import NotificationBell, { MobileNotificationBell } from "@/components/notifications/NotificationBell";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import CreatePost from "@/components/post/CreatePost";
 
 // SVG icons cho từng mục nav (filled = active, outline = inactive)
 const HomeIcon = ({ active }) =>
@@ -34,11 +35,6 @@ const ComposeIcon = () => (
   </svg>
 );
 
-const ActivityIcon = ({ active }) => (
-  <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-  </svg>
-);
 
 const ProfileIcon = ({ active }) => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -66,11 +62,13 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const currentUser = getCurrentUser();
 
+  const openCreatePost = () => window.dispatchEvent(new CustomEvent("open-create-post"));
+
   // NAV_ITEMS không có Thông báo — thay bằng NotificationBell component riêng
   const NAV_ITEMS = useMemo(() => [
     { href: "/", label: "Trang chủ", Icon: HomeIcon },
     { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
-    { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+    { href: null, label: "Tạo bài", Icon: ComposeIcon, isCompose: true },
     { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
     { href: "/settings", label: "Cài đặt", Icon: SettingsIcon },
     { href: `/profile/${currentUser?.username}`, label: "Hồ sơ", Icon: ProfileIcon },
@@ -80,7 +78,7 @@ export default function Navbar() {
   const MOBILE_NAV_ITEMS = useMemo(() => [
     { href: "/", label: "Trang chủ", Icon: HomeIcon },
     { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
-    { href: "/compose", label: "Tạo bài", Icon: ComposeIcon, alwaysOutline: true },
+    { href: null, label: "Tạo bài", Icon: ComposeIcon, isCompose: true },
     { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
     { href: "/notifications", label: "Thông báo", isNotification: true },
     { href: `/profile/${currentUser?.username}`, label: "Hồ sơ", Icon: ProfileIcon },
@@ -105,7 +103,19 @@ export default function Navbar() {
 
         {/* Nav links */}
         <div className="flex flex-col gap-1 flex-1">
-          {NAV_ITEMS.map(({ href, label, Icon, alwaysOutline }) => {
+          {NAV_ITEMS.map(({ href, label, Icon, isCompose }) => {
+            if (isCompose) {
+              return (
+                <button
+                  key="compose"
+                  onClick={openCreatePost}
+                  className="flex items-center gap-3.5 px-3 py-2.5 rounded-2xl transition-colors font-medium text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
+                >
+                  <Icon active={false} />
+                  {label}
+                </button>
+              );
+            }
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
@@ -117,7 +127,7 @@ export default function Navbar() {
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
                 }`}
               >
-                <Icon active={isActive && !alwaysOutline} />
+                <Icon active={isActive} />
                 {label}
               </Link>
             );
@@ -186,12 +196,26 @@ export default function Navbar() {
         )}
       </nav>
 
+      {/* Global modal — listens for 'open-create-post' event, works on any page */}
+      <CreatePost currentUser={currentUser} modal={true} />
+
       {/* ===== MOBILE: navbar cố định phía dưới ===== */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 z-40 safe-area-pb transition-colors duration-200">
         <div className="flex items-center justify-around max-w-md mx-auto px-2 py-2">
-          {MOBILE_NAV_ITEMS.map(({ href, label, Icon, alwaysOutline, isNotification }) => {
+          {MOBILE_NAV_ITEMS.map(({ href, label, Icon, isCompose, isNotification }) => {
+            if (isCompose) {
+              return (
+                <button
+                  key="compose"
+                  onClick={openCreatePost}
+                  className="flex flex-col items-center p-2 rounded-2xl transition-colors text-gray-400 dark:text-gray-600"
+                  aria-label={label}
+                >
+                  <Icon active={false} />
+                </button>
+              );
+            }
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-            // Mục thông báo dùng MobileNotificationBell riêng (có badge real-time)
             if (isNotification) {
               return <MobileNotificationBell key={href} isActive={isActive} />;
             }
@@ -204,7 +228,7 @@ export default function Navbar() {
                 }`}
                 aria-label={label}
               >
-                <Icon active={isActive && !alwaysOutline} />
+                <Icon active={isActive} />
               </Link>
             );
           })}

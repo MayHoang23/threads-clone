@@ -16,7 +16,7 @@ threads-clone/
 ├── frontend/ (Next.js)
 │ ├── app/
 │ │ ├── (main)/
-│ │ │ ├── newsfeed/page.js
+│ │ │ ├── page.js (newsfeed)
 │ │ │ ├── profile/[username]/page.js
 │ │ │ ├── profile/edit/page.js
 │ │ │ ├── search/page.js
@@ -31,12 +31,13 @@ threads-clone/
 │ │ ├── notifications/NotificationBell.js
 │ │ ├── ai/CaptionGenerator.js, HashtagSuggester.js
 │ │ ├── messages/ConversationList.js, ChatWindow.js, MessageInput.js
+│ │ ├── layout/Navbar.js
 │ │ └── ui/ThemeToggle.js
-│ ├── contexts/AuthContext.js, ThemeContext.js
+│ ├── contexts/AuthContext.js, ThemeContext.js, SocketContext.js
 │ ├── lib/
-│ │ ├── api.js ← dùng fetchAPI(url, options) cho mọi API call
-│ │ ├── auth.js ← getCurrentUser(), getToken()
-│ │ └── socket.js ← connectSocket(token), singleton instance
+│ │ ├── api.js
+│ │ ├── auth.js
+│ │ └── socket.js ← singleton, connect 1 lần qua SocketContext
 │ └── public/manifest.json, sw.js
 └── backend/ (Express)
 └── src/
@@ -45,9 +46,9 @@ threads-clone/
 ├── modules/users/
 ├── modules/notifications/
 ├── modules/media/
-├── modules/ai/
-├── modules/messages/message.service.js, message.controller.js, message.routes.js
-├── socket/socketManager.js ← initSocket, sendNotification, emitToConversation, sendDMNotification
+├── modules/ai/ ← MOCK_MODE = true (chưa có Anthropic credit)
+├── modules/messages/
+├── socket/socketManager.js ← dùng JWT_REFRESH_SECRET cho socket auth
 ├── config/cloudinary.js, anthropic.js
 ├── middlewares/authenticate.js, upload.js
 └── utils/AppError.js
@@ -59,6 +60,50 @@ Lỗi: throw new AppError(message, statusCode)
 API prefix: /api/v1
 File extension: .js (không dùng TypeScript)
 Auth header: Bearer token (middleware authenticate.js)
+
+## Custom Events (window)
+
+Dùng window.dispatchEvent để giao tiếp giữa các component không có prop drilling:
+
+| Event name       | Detail         | Mô tả                                     |
+| ---------------- | -------------- | ----------------------------------------- |
+| open-create-post | (không có)     | Mở modal CreatePost từ bất kỳ đâu         |
+| post-created     | newPost object | Prepend bài mới vào newsfeed sau khi đăng |
+
+Pattern dùng:
+
+```js
+// Dispatch
+window.dispatchEvent(new CustomEvent("post-created", { detail: newPost }));
+
+// Listen
+useEffect(() => {
+    const handler = (e) => doSomething(e.detail);
+    window.addEventListener("post-created", handler);
+    return () => window.removeEventListener("post-created", handler);
+}, []);
+```
+
+## Thay đổi component quan trọng
+
+### CreatePost.js
+
+- Prop `modal` (bool, default `false`):
+    - `modal=false`: render inline trên newsfeed (mặc định, không nghe event)
+    - `modal=true`: ẩn cho đến khi nhận event `open-create-post`, render overlay modal (z-50, backdrop)
+- Sau khi đăng thành công: dispatch `post-created` với detail là newPost object
+- Vẫn gọi prop `onPostCreated` nếu được truyền vào
+
+### Navbar.js (components/layout/Navbar.js)
+
+- Mount `<CreatePost currentUser={currentUser} modal={true} />` globally trong fragment
+- Nút "Tạo bài": không dùng Link, dùng `<button>` dispatch `open-create-post`
+- Không có route /compose — đã xóa
+
+### app/(main)/page.js (newsfeed)
+
+- Lắng nghe event `post-created` để prepend bài mới lên đầu feed
+- Không cần refetch toàn bộ feed sau khi đăng bài
 
 ## Database — Prisma models hiện có
 
@@ -112,17 +157,47 @@ Conversation (lastMessageAt), Message (content, mediaUrl, isRead)
 ✅ ConversationList: preview, unread badge, real-time new_dm
 ✅ ChatWindow: date grouping, optimistic send, typing indicator, read receipt
 ✅ MessageInput: auto-resize, debounce typing, Enter/Shift+Enter
+✅ SocketContext: singleton, connect 1 lần ở layout level
 
-## Đang làm — Ngày 11
+## Bugs đã fix
 
-Testing & Bug fixes
-Deploy chuẩn bị bảo vệ
+### Ngày 11
+
+✅ Socket reconnect loop → SocketContext provider (singleton tại layout level)
+✅ Cloudinary credentials trống → đã điền .env
+✅ AI mock mode → MOCK_MODE = true trong ai.service.js
+✅ CreatePost toolbar blur collapse → setTimeout 200ms
+✅ Navbar profile link /profile/undefined → useMemo với currentUser
+✅ Message duplicate → guard senderId !== currentUser.id trong socket handler
+✅ Nút "Nhắn tin" thiếu trên profile page → đã thêm
+✅ Modal tạo conversation mới (✏️ button) → đã fix
+✅ Field name mismatch participantId → userId
+✅ useSocket() gọi trong useEffect → chuyển lên top level của component
+
+### Ngày 12
+
+✅ Navbar "Tạo bài" → /compose 404 → đổi thành button dispatch custom event + modal
+✅ Modal CreatePost không update newsfeed → custom event 'post-created' + listener ở page.js
+
+## Còn lại
+
+🔧 Real-time message giữa 2 user:
+
+- Triệu chứng: join_conversation event không đến được backend handler
+- Nghi ngờ: JWT_REFRESH_SECRET sai hoặc socket auth fail silently
+- Cần debug: log socket.on('error') và middleware auth ở socketManager.js
+  🔧 Search page — chưa test
+  🔧 Dark mode — chưa test toàn bộ trang
+  🔧 Settings — chưa test form đổi mật khẩu + privacy
+  🚀 Deploy lên Railway (backend) + Vercel (frontend)
 
 ## Ghi chú
 
 Desktop path: /c/Users/PC/OneDrive/Desktop/threads-clone
 Mở backend: cd backend && npm run dev
 Mở frontend: cd frontend && npm run dev
-Cần ANTHROPIC*API_KEY trong backend/.env
-Cần CLOUDINARY*\* vars trong backend/.env
+Socket dùng refreshToken (7 ngày) thay vì accessToken (15 phút)
+Backend socket verify bằng JWT_REFRESH_SECRET
+AI đang MOCK_MODE — cần thêm credit Anthropic để dùng thật
 Sau Prisma migration: restart backend (EPERM DLL issue trên Windows)
+Route /compose không tồn tại và không cần tạo
