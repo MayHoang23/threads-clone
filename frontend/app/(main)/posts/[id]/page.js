@@ -12,12 +12,12 @@ function DetailSkeleton() {
   return (
     <div className="px-4 py-4 animate-pulse">
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
+        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
         <div className="flex-1 space-y-3">
-          <div className="h-3 bg-gray-200 rounded-full w-1/4" />
-          <div className="h-3 bg-gray-200 rounded-full w-3/4" />
-          <div className="h-3 bg-gray-200 rounded-full w-1/2" />
-          <div className="h-48 bg-gray-100 rounded-2xl" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full w-1/4" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full w-1/2" />
+          <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl" />
         </div>
       </div>
     </div>
@@ -52,17 +52,17 @@ export default function PostDetailPage({ params }) {
   return (
     <div>
       {/* Header với nút Back */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => router.back()}
-            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors -ml-1.5"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors -ml-1.5"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-5 h-5 text-gray-900 dark:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="font-semibold text-base">Bài viết</h1>
+          <h1 className="font-semibold text-base text-gray-900 dark:text-white">Bài viết</h1>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ export default function PostDetailPage({ params }) {
         /* Error state */
         <div className="py-24 text-center px-4">
           <div className="text-5xl mb-4">😕</div>
-          <p className="font-semibold text-gray-700 mb-2">{error}</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-2">{error}</p>
           <button
             onClick={() => router.back()}
             className="mt-2 text-sm text-black underline underline-offset-2"

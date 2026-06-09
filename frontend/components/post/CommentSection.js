@@ -14,7 +14,7 @@ function timeAgo(dateStr) {
 function UserAvatar({ user, size = "md" }) {
   const cls = size === "sm" ? "w-7 h-7 text-xs" : "w-8 h-8 text-sm";
   return (
-    <div className={`${cls} rounded-full overflow-hidden bg-gray-200 flex-shrink-0`}>
+    <div className={`${cls} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0`}>
       {user?.avatar ? (
         <img src={user.avatar} alt="" className="w-full h-full object-cover" />
       ) : (
@@ -57,13 +57,13 @@ function CommentItem({ comment, postId, onReplyAdded }) {
         <UserAvatar user={comment.user} />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
-            <span className="font-semibold text-sm">{comment.user?.username}</span>
-            <span className="text-xs text-gray-400">{timeAgo(comment.createdAt)}</span>
+            <span className="font-semibold text-sm text-gray-900 dark:text-white">{comment.user?.username}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(comment.createdAt)}</span>
           </div>
-          <p className="text-sm text-gray-800 mt-0.5 leading-relaxed break-words">{comment.content}</p>
+          <p className="text-sm text-gray-800 dark:text-gray-200 mt-0.5 leading-relaxed break-words">{comment.content}</p>
           <button
             onClick={() => setShowReply((v) => !v)}
-            className="text-xs text-gray-400 hover:text-gray-700 mt-1.5 font-medium transition-colors"
+            className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mt-1.5 font-medium transition-colors"
           >
             Trả lời
           </button>
@@ -75,14 +75,14 @@ function CommentItem({ comment, postId, onReplyAdded }) {
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Trả lời @${comment.user?.username}...`}
-                className="flex-1 text-sm bg-gray-100 rounded-2xl px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 transition-all min-w-0"
+                className="flex-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all min-w-0"
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleReply()}
                 autoFocus
               />
               <button
                 onClick={handleReply}
                 disabled={!replyText.trim() || posting}
-                className="text-sm font-semibold text-black disabled:opacity-30 transition-opacity flex-shrink-0"
+                className="text-sm font-semibold text-black dark:text-white disabled:opacity-30 transition-opacity flex-shrink-0"
               >
                 {posting ? (
                   <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -98,16 +98,16 @@ function CommentItem({ comment, postId, onReplyAdded }) {
 
       {/* Replies nested — thụt vào bên phải với đường viền */}
       {comment.replies?.length > 0 && (
-        <div className="ml-11 mt-1 pl-3 border-l-2 border-gray-100 space-y-2">
+        <div className="ml-11 mt-1 pl-3 border-l-2 border-gray-100 dark:border-gray-700 space-y-2">
           {comment.replies.map((reply) => (
             <div key={reply.id} className="flex gap-2.5 pt-2">
               <UserAvatar user={reply.user} size="sm" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-semibold text-xs">{reply.user?.username}</span>
+                  <span className="font-semibold text-xs text-gray-900 dark:text-white">{reply.user?.username}</span>
                   <span className="text-xs text-gray-400">{timeAgo(reply.createdAt)}</span>
                 </div>
-                <p className="text-sm text-gray-800 mt-0.5 leading-relaxed break-words">{reply.content}</p>
+                <p className="text-sm text-gray-800 dark:text-gray-200 mt-0.5 leading-relaxed break-words">{reply.content}</p>
               </div>
             </div>
           ))}
@@ -165,16 +165,16 @@ export default function CommentSection({ postId, currentUser }) {
   return (
     <div>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h3 className="font-semibold text-sm text-gray-700">
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
           Bình luận{comments.length > 0 ? ` (${comments.length})` : ""}
         </h3>
       </div>
 
       {/* Form thêm comment mới */}
       {currentUser && (
-        <div className="px-4 py-3 border-b border-gray-100 flex gap-3">
-          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex gap-3">
+          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
             {currentUser.avatar ? (
               <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -188,13 +188,13 @@ export default function CommentSection({ postId, currentUser }) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Thêm bình luận..."
-              className="flex-1 text-sm bg-gray-100 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-black/10 transition-all min-w-0"
+              className="flex-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all min-w-0"
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
             />
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim() || posting}
-              className="text-sm font-semibold text-black disabled:opacity-30 transition-opacity flex-shrink-0"
+              className="text-sm font-semibold text-black dark:text-white disabled:opacity-30 transition-opacity flex-shrink-0"
             >
               Gửi
             </button>
@@ -206,18 +206,18 @@ export default function CommentSection({ postId, currentUser }) {
       <div className="px-4">
         {loading ? (
           <div className="py-10 flex justify-center">
-            <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-gray-200 dark:border-gray-700 border-t-black dark:border-t-white rounded-full animate-spin" />
           </div>
         ) : comments.length === 0 ? (
-          <div className="py-14 text-center text-gray-400">
-            <svg className="w-8 h-8 mx-auto mb-3 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="py-14 text-center text-gray-400 dark:text-gray-500">
+            <svg className="w-8 h-8 mx-auto mb-3 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
             </svg>
-            <p className="text-sm font-medium text-gray-500">Chưa có bình luận</p>
-            <p className="text-xs mt-1">Hãy là người đầu tiên bình luận!</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Chưa có bình luận</p>
+            <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">Hãy là người đầu tiên bình luận!</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {comments.map((comment) => (
               <CommentItem
                 key={comment.id}

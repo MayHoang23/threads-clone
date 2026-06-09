@@ -205,8 +205,24 @@ export default function ProfilePage() {
 
   const handlePostDeleted = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setSavedPosts((prev) => prev.filter((p) => p.id !== postId));
     setProfile((p) => p ? { ...p, postCount: Math.max(0, p.postCount - 1) } : p);
   };
+
+  // Sync tab Đã lưu real-time khi save/unsave từ bất kỳ đâu
+  useEffect(() => {
+    const onSaved = (e) => setSavedPosts((prev) => {
+      if (prev.some((p) => p.id === e.detail.id)) return prev;
+      return [e.detail, ...prev];
+    });
+    const onUnsaved = (e) => setSavedPosts((prev) => prev.filter((p) => p.id !== e.detail.id));
+    window.addEventListener("post-saved", onSaved);
+    window.addEventListener("post-unsaved", onUnsaved);
+    return () => {
+      window.removeEventListener("post-saved", onSaved);
+      window.removeEventListener("post-unsaved", onUnsaved);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -445,6 +461,7 @@ export default function ProfilePage() {
               post={post}
               currentUser={currentUser}
               onDelete={handlePostDeleted}
+              onUnsave={activeTab === "saved" ? () => setSavedPosts((prev) => prev.filter((p) => p.id !== post.id)) : undefined}
             />
           ))}
 

@@ -56,7 +56,7 @@ function Avatar({ user, size = "md" }) {
   );
 }
 
-export default function PostCard({ post: initialPost, currentUser, onDelete }) {
+export default function PostCard({ post: initialPost, currentUser, onDelete, onUnsave }) {
   const [post, setPost] = useState(initialPost);
   const [showMenu, setShowMenu] = useState(false);
   const [heartAnim, setHeartAnim] = useState(false);
@@ -91,6 +91,12 @@ export default function PostCard({ post: initialPost, currentUser, onDelete }) {
     setPost((p) => ({ ...p, isSaved: !wasSaved }));
     try {
       await fetchAPI(`/posts/${post.id}/save`, { method: "POST" });
+      if (wasSaved) {
+        window.dispatchEvent(new CustomEvent("post-unsaved", { detail: post }));
+        onUnsave?.(post);
+      } else {
+        window.dispatchEvent(new CustomEvent("post-saved", { detail: post }));
+      }
     } catch {
       setPost((p) => ({ ...p, isSaved: wasSaved }));
     }
