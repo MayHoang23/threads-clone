@@ -385,7 +385,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md">
+      <div className="sticky top-0 z-10 px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
         <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Cài đặt</h1>
       </div>
 

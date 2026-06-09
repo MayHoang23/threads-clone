@@ -32,7 +32,7 @@ export default function MainLayout({ children }) {
 
   return (
     <SocketProvider>
-      <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-200">
+      <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300">
         {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
         <Navbar />
 
@@ -40,7 +40,7 @@ export default function MainLayout({ children }) {
         <div className="lg:pl-64">
           <div className="max-w-5xl mx-auto flex">
             {/* Feed / content chính — giới hạn 620px, có border hai bên */}
-            <main className="flex-1 max-w-[620px] min-h-screen border-x border-gray-100 dark:border-gray-800">
+            <main className="flex-1 max-w-[620px] min-h-screen border-x border-gray-100 dark:border-gray-800 transition-colors duration-300">
               {children}
             </main>
 

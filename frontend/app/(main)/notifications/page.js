@@ -153,7 +153,7 @@ export default function NotificationsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="font-bold text-xl">Thông báo</h1>
           {unreadCount > 0 && (

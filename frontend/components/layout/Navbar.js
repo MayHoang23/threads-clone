@@ -92,7 +92,7 @@ export default function Navbar() {
   return (
     <>
       {/* ===== DESKTOP: sidebar cố định bên trái ===== */}
-      <nav className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 z-40 px-3 py-6 transition-colors duration-200">
+      <nav className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 z-40 px-3 py-6 transition-colors duration-300">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 px-3 py-2 mb-8 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
           <div className="w-8 h-8 bg-black dark:bg-white rounded-xl flex items-center justify-center flex-shrink-0">
@@ -200,7 +200,7 @@ export default function Navbar() {
       <CreatePost currentUser={currentUser} modal={true} />
 
       {/* ===== MOBILE: navbar cố định phía dưới ===== */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 z-40 safe-area-pb transition-colors duration-200">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 z-40 safe-area-pb transition-colors duration-200">
         <div className="flex items-center justify-around max-w-md mx-auto px-2 py-2">
           {MOBILE_NAV_ITEMS.map(({ href, label, Icon, isCompose, isNotification }) => {
             if (isCompose) {
