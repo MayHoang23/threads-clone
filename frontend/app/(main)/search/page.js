@@ -76,7 +76,7 @@ export default function SearchPage() {
   return (
     <div>
       {/* ===== SEARCH INPUT ===== */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <div className="relative">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -96,7 +96,7 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm kiếm người dùng, bài viết, hashtag..."
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
+            className="w-full pl-10 pr-10 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-all"
           />
           {/* Nút xóa — chỉ hiện khi đang có query */}
           {query && (
@@ -114,15 +114,15 @@ export default function SearchPage() {
 
       {/* ===== TABS — chỉ hiện khi đã có kết quả ===== */}
       {searched && (
-        <div className="flex border-b border-gray-100 sticky top-[61px] z-10 bg-white">
+        <div className="flex border-b border-gray-100 dark:border-gray-800 sticky top-[61px] z-10 bg-white dark:bg-gray-950">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 py-3 text-xs font-semibold text-center transition-colors ${
                 activeTab === tab.key
-                  ? "border-b-2 border-black text-black"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "border-b-2 border-black dark:border-white text-black dark:text-white"
+                  : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               }`}
             >
               {tab.label}
@@ -151,7 +151,7 @@ export default function SearchPage() {
       {!loading && !searched && !query && (
         <div className="py-20 text-center px-6">
           <div className="text-5xl mb-4">✨</div>
-          <p className="text-sm text-gray-400">Nhập từ khóa để bắt đầu tìm kiếm</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Nhập từ khóa để bắt đầu tìm kiếm</p>
         </div>
       )}
 

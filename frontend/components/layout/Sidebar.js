@@ -22,7 +22,7 @@ export default function Sidebar() {
     <div className="space-y-8 pt-2">
       {/* Gợi ý người theo dõi */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">Gợi ý cho bạn</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Gợi ý cho bạn</h3>
         <div className="space-y-4">
           {SUGGESTED_USERS.map((user) => (
             <div key={user.username} className="flex items-center gap-3">
@@ -31,10 +31,10 @@ export default function Sidebar() {
                 {user.username[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user.username}</p>
-                <p className="text-xs text-gray-400">{user.followers} người theo dõi</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.username}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{user.followers} người theo dõi</p>
               </div>
-              <button className="text-xs font-semibold text-black border border-gray-300 px-3 py-1.5 rounded-full hover:bg-gray-50 transition-colors flex-shrink-0">
+              <button className="text-xs font-semibold text-black dark:text-white border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
                 Follow
               </button>
             </div>
@@ -47,7 +47,7 @@ export default function Sidebar() {
 
       {/* Hashtag đang trending */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-4">Đang hot 🔥</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Đang hot 🔥</h3>
         <div className="space-y-3">
           {TRENDING_TAGS.map((tag, i) => (
             <Link
@@ -56,22 +56,22 @@ export default function Sidebar() {
               className="flex items-center justify-between group"
             >
               <div>
-                <p className="text-sm font-medium text-gray-800 group-hover:text-blue-500 transition-colors">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-500 transition-colors">
                   #{tag.name}
                 </p>
-                <p className="text-xs text-gray-400">{tag.count}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{tag.count}</p>
               </div>
-              <span className="text-xs text-gray-300">#{i + 1}</span>
+              <span className="text-xs text-gray-300 dark:text-gray-600">#{i + 1}</span>
             </Link>
           ))}
         </div>
       </div>
 
       {/* Footer links nhỏ */}
-      <div className="text-xs text-gray-300 space-y-1 pb-4">
+      <div className="text-xs text-gray-300 dark:text-gray-600 space-y-1 pb-4">
         <div className="flex flex-wrap gap-x-2 gap-y-1">
           {["Điều khoản", "Quyền riêng tư", "Cookies", "Trợ giúp"].map((t) => (
-            <span key={t} className="hover:text-gray-500 cursor-pointer transition-colors">{t}</span>
+            <span key={t} className="hover:text-gray-500 dark:hover:text-gray-400 cursor-pointer transition-colors">{t}</span>
           ))}
         </div>
         <p>© 2024 Threads Clone</p>

@@ -56,8 +56,8 @@ function NotificationItem({ notification, onRead, onClose }) {
   return (
     <button
       onClick={handleClick}
-      className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left ${
-        !notification.isRead ? "bg-blue-50/60" : ""
+      className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left ${
+        !notification.isRead ? "bg-blue-50/60 dark:bg-blue-950/40" : ""
       }`}
     >
       {/* Avatar người gửi */}
@@ -74,13 +74,13 @@ function NotificationItem({ notification, onRead, onClose }) {
       {/* Nội dung */}
       <div className="flex-1 min-w-0">
         <p className="text-sm leading-snug">
-          <span className="font-semibold">{notification.sender.displayName || notification.sender.username}</span>
+          <span className="font-semibold text-gray-900 dark:text-white">{notification.sender.displayName || notification.sender.username}</span>
           {" "}{getNotificationText(notification.type)}
         </p>
         {notification.post?.content && (
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{notification.post.content}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{notification.post.content}</p>
         )}
-        <p className="text-xs text-gray-400 mt-1">{timeAgo(notification.createdAt)}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{timeAgo(notification.createdAt)}</p>
       </div>
 
       {/* Chấm xanh = chưa đọc */}
@@ -179,8 +179,8 @@ export default function NotificationBell({ isActive }) {
         onClick={handleToggle}
         className={`flex items-center gap-3.5 px-3 py-2.5 rounded-2xl transition-colors w-full font-medium text-sm ${
           isOpen || isActive
-            ? "bg-gray-100 text-black font-semibold"
-            : "text-gray-600 hover:bg-gray-50 hover:text-black"
+            ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white font-semibold"
+            : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
         }`}
       >
         {/* Icon + badge */}
@@ -208,10 +208,10 @@ export default function NotificationBell({ isActive }) {
 
       {/* ===== DROPDOWN ===== */}
       {isOpen && (
-        <div className="absolute left-full top-0 ml-3 w-[340px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+        <div className="absolute left-full top-0 ml-3 w-[340px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
           {/* Header dropdown */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="font-bold text-base">Thông báo</h3>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+            <h3 className="font-bold text-base text-gray-900 dark:text-white">Thông báo</h3>
             <div className="flex gap-2">
               {unreadCount > 0 && (
                 <button
@@ -224,7 +224,7 @@ export default function NotificationBell({ isActive }) {
               <Link
                 href="/notifications"
                 onClick={() => setIsOpen(false)}
-                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
               >
                 Xem tất cả
               </Link>
@@ -240,7 +240,7 @@ export default function NotificationBell({ isActive }) {
             ) : notifications.length === 0 ? (
               <div className="py-12 text-center px-4">
                 <div className="text-4xl mb-3">🔔</div>
-                <p className="text-sm text-gray-400">Chưa có thông báo nào</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">Chưa có thông báo nào</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-50">

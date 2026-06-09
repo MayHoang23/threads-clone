@@ -178,6 +178,7 @@ Conversation (lastMessageAt), Message (content, mediaUrl, isRead)
 
 ✅ Navbar "Tạo bài" → /compose 404 → đổi thành button dispatch custom event + modal
 ✅ Modal CreatePost không update newsfeed → custom event 'post-created' + listener ở page.js
+✅ Dark mode flash trắng khi F5 → ThemeContext lazy init từ DOM class, bỏ useEffect đọc localStorage
 
 ## Còn lại
 

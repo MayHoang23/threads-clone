@@ -4,26 +4,26 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getAccessToken } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
 
 // Skeleton cho header profile
 function ProfileHeaderSkeleton() {
   return (
     <div className="animate-pulse">
-      <div className="h-32 bg-gray-200 w-full" />
+      <div className="h-32 bg-gray-200 dark:bg-gray-700 w-full" />
       <div className="px-4 pb-4">
-        <div className="flex justify-between items-start -mt-8 mb-3">
-          <div className="w-20 h-20 rounded-full bg-gray-300 border-4 border-white" />
-          <div className="mt-10 h-9 w-24 bg-gray-200 rounded-full" />
+        <div className="flex justify-between items-start -mt-11 mb-3">
+          <div className="w-20 h-20 rounded-full bg-gray-300 dark:bg-gray-600 border-4 border-white dark:border-gray-900" />
+          <div className="mt-10 h-9 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
         </div>
-        <div className="h-5 bg-gray-200 rounded w-32 mb-2" />
-        <div className="h-4 bg-gray-200 rounded w-24 mb-3" />
-        <div className="h-4 bg-gray-200 rounded w-48 mb-4" />
+        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-3" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4" />
         <div className="flex gap-6">
-          <div className="h-4 bg-gray-200 rounded w-20" />
-          <div className="h-4 bg-gray-200 rounded w-20" />
-          <div className="h-4 bg-gray-200 rounded w-20" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" />
         </div>
       </div>
     </div>
@@ -45,9 +45,47 @@ export default function ProfilePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const bottomRef = useRef(null);
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   const isOwnProfile = currentUser?.username === username;
+
+  const handleUploadMedia = async (file, field) => {
+    const setUploading = field === "avatar" ? setUploadingAvatar : setUploadingCover;
+    setUploading(true);
+    try {
+      const token = getAccessToken();
+      const formData = new FormData();
+      formData.append("image", file);
+      const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const res = await fetch(`${base}/media/upload-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data?.success) {
+        setProfile((prev) => ({ ...prev, [field]: data.data.url }));
+        if (field === "avatar") {
+          const stored = localStorage.getItem("user");
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localStorage.setItem("user", JSON.stringify({ ...parsed, avatar: data.data.url }));
+          }
+        }
+        await fetch(`${base}/users/profile`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ [field]: data.data.url }),
+        });
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Load profile khi vào trang hoặc đổi username
   useEffect(() => {
@@ -191,21 +229,66 @@ export default function ProfilePage() {
 
   return (
     <div>
-      {/* ===== COVER IMAGE ===== */}
-      <div className="relative h-32 bg-gray-200 overflow-hidden">
-        {profile.coverImage ? (
-          <img src={profile.coverImage} alt="cover" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-        )}
-      </div>
+      {/* Hidden inputs upload — chỉ dùng khi isOwnProfile */}
+      {isOwnProfile && (
+        <>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUploadMedia(file, "avatar");
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUploadMedia(file, "coverImage");
+              e.target.value = "";
+            }}
+          />
+        </>
+      )}
 
-      {/* ===== HEADER INFO ===== */}
-      <div className="px-4 pb-0">
-        {/* Avatar + Action button — flex row */}
-        <div className="flex justify-between items-start -mt-10 mb-3">
-          {/* Avatar — đặt trên cover */}
-          <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white bg-gray-200 flex-shrink-0">
+      {/* ===== COVER IMAGE + AVATAR ===== */}
+      <div className="relative">
+        <div
+          className={`relative h-40 bg-gradient-to-br from-violet-400 via-fuchsia-400 to-pink-400 dark:from-violet-900 dark:via-fuchsia-900 dark:to-pink-900 overflow-hidden group ${isOwnProfile ? "cursor-pointer" : ""}`}
+          onClick={() => isOwnProfile && coverInputRef.current?.click()}
+        >
+          {profile.coverImage && (
+            <img src={profile.coverImage} alt="cover" className="w-full h-full object-cover" />
+          )}
+          {/* Loading overlay cover */}
+          {uploadingCover && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
+          {/* Hover overlay cover — chỉ khi isOwnProfile */}
+          {isOwnProfile && !uploadingCover && (
+            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span className="text-white text-sm font-medium">Đổi ảnh bìa</span>
+            </div>
+          )}
+        </div>
+        {/* Avatar — absolute, đè lên ranh giới cover/content, không bị clip */}
+        <div
+          className={`absolute bottom-0 left-4 translate-y-1/2 group ${isOwnProfile ? "cursor-pointer" : ""}`}
+          onClick={() => isOwnProfile && avatarInputRef.current?.click()}
+        >
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white dark:border-gray-900 bg-gray-200 dark:bg-gray-700 flex-shrink-0">
             {profile.avatar ? (
               <img src={profile.avatar} alt={profile.username} className="w-full h-full object-cover" />
             ) : (
@@ -213,14 +296,37 @@ export default function ProfilePage() {
                 {profile.username?.[0]?.toUpperCase()}
               </div>
             )}
+            {/* Loading overlay */}
+            {uploadingAvatar && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
+            {/* Hover overlay — chỉ khi isOwnProfile và không đang upload */}
+            {isOwnProfile && !uploadingAvatar && (
+              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </div>
+            )}
           </div>
+        </div>
+      </div>
+
+      {/* ===== HEADER INFO ===== */}
+      <div className="px-4 pb-0">
+        {/* Placeholder avatar + Action button — flex row */}
+        <div className="flex justify-between items-start mt-10 mb-3">
+          <div />
 
           {/* Nút hành động */}
-          <div className="mt-12 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             {isOwnProfile ? (
               <Link
                 href="/profile/edit"
-                className="px-5 py-1.5 rounded-full border border-gray-300 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                className="px-5 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Chỉnh sửa
               </Link>
@@ -231,7 +337,7 @@ export default function ProfilePage() {
                   disabled={followLoading}
                   className={`px-5 py-1.5 rounded-full text-sm font-semibold border transition-colors disabled:opacity-60 ${
                     profile.isFollowing
-                      ? "border-gray-300 text-gray-700 hover:bg-gray-50"
+                      ? "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                       : "bg-black text-white border-black hover:bg-gray-800"
                   }`}
                 >
@@ -246,7 +352,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleStartChat}
                   disabled={chatLoading}
-                  className="px-5 py-1.5 rounded-full text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-60"
+                  className="px-5 py-1.5 rounded-full text-sm font-semibold border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
                 >
                   {chatLoading ? (
                     <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -262,44 +368,44 @@ export default function ProfilePage() {
         {/* Tên + username + bio */}
         <div className="mb-3">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <h1 className="font-bold text-xl text-gray-900">{profile.displayName || profile.username}</h1>
+            <h1 className="font-bold text-xl text-gray-900 dark:text-white">{profile.displayName || profile.username}</h1>
             {profile.isVerified && (
               <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-.45 4.506 3.745 3.745 0 01-4.506.45A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-4.506-.45 3.745 3.745 0 01-.45-4.506A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 01.45-4.506 3.745 3.745 0 014.506-.45A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 014.506.45 3.745 3.745 0 01.45 4.506A3.745 3.745 0 0121 12z" />
               </svg>
             )}
           </div>
-          <p className="text-sm text-gray-500 mb-2">@{profile.username}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">@{profile.username}</p>
           {profile.bio && (
-            <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
+            <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
           )}
         </div>
 
         {/* Thống kê: bài viết / followers / following */}
         <div className="flex gap-5 text-sm mb-4">
-          <span className="text-gray-700">
-            <span className="font-semibold text-gray-900">{profile.postCount}</span>
+          <span className="text-gray-700 dark:text-gray-300">
+            <span className="font-semibold text-gray-900 dark:text-white">{profile.postCount}</span>
             {" "}bài viết
           </span>
-          <Link href={`/profile/${username}/followers`} className="text-gray-700 hover:underline">
-            <span className="font-semibold text-gray-900">{profile.followerCount}</span>
+          <Link href={`/profile/${username}/followers`} className="text-gray-700 dark:text-gray-300 hover:underline">
+            <span className="font-semibold text-gray-900 dark:text-white">{profile.followerCount}</span>
             {" "}followers
           </Link>
-          <Link href={`/profile/${username}/following`} className="text-gray-700 hover:underline">
-            <span className="font-semibold text-gray-900">{profile.followingCount}</span>
+          <Link href={`/profile/${username}/following`} className="text-gray-700 dark:text-gray-300 hover:underline">
+            <span className="font-semibold text-gray-900 dark:text-white">{profile.followingCount}</span>
             {" "}following
           </Link>
         </div>
       </div>
 
       {/* ===== TABS ===== */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => handleTabChange("posts")}
           className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
             activeTab === "posts"
-              ? "border-b-2 border-black text-black"
-              : "text-gray-400 hover:text-gray-600"
+              ? "border-b-2 border-black dark:border-white text-black dark:text-white"
+              : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           }`}
         >
           Bài viết
@@ -310,8 +416,8 @@ export default function ProfilePage() {
             onClick={() => handleTabChange("saved")}
             className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
               activeTab === "saved"
-                ? "border-b-2 border-black text-black"
-                : "text-gray-400 hover:text-gray-600"
+                ? "border-b-2 border-black dark:border-white text-black dark:text-white"
+                : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             }`}
           >
             Đã lưu

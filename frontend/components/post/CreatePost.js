@@ -218,7 +218,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
           onBlur={handleBlur}
           placeholder="Có gì mới không?"
           rows={isExpanded ? 3 : 1}
-          className="w-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none resize-none bg-transparent leading-relaxed"
+          className="w-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none resize-none bg-transparent leading-relaxed"
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleSubmit();
           }}
@@ -375,7 +375,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
 
   // Inline render (newsfeed)
   return (
-    <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800">
+    <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800 dark:bg-gray-950">
       {formInner}
     </div>
   );
