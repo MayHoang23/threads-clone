@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { getCurrentUser, getAccessToken } from "@/lib/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function EditProfilePage() {
   const router = useRouter();
   const currentUser = getCurrentUser();
+  const { t } = useLanguage();
 
   const [form, setForm] = useState({
     displayName: "",
@@ -122,7 +124,7 @@ export default function EditProfilePage() {
             <path d="M19 12H5M12 5l-7 7 7 7" />
           </svg>
         </button>
-        <h1 className="font-bold text-base">Chỉnh sửa profile</h1>
+        <h1 className="font-bold text-base">{t("editProfile.title")}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="px-4 py-5 space-y-5">
@@ -169,7 +171,7 @@ export default function EditProfilePage() {
                   <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                   <circle cx="12" cy="13" r="4" />
                 </svg>
-                Đổi ảnh bìa
+                {t("profile.changeCover")}
               </span>
             </div>
           )}
@@ -207,13 +209,13 @@ export default function EditProfilePage() {
         <div className="space-y-4">
           {/* Tên hiển thị */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Tên hiển thị</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t("editProfile.displayName")}</label>
             <input
               type="text"
               name="displayName"
               value={form.displayName}
               onChange={handleChange}
-              placeholder="Tên của bạn"
+              placeholder={t("editProfile.displayName")}
               maxLength={50}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
             />
@@ -221,12 +223,12 @@ export default function EditProfilePage() {
 
           {/* Bio */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Bio</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t("editProfile.bio")}</label>
             <textarea
               name="bio"
               value={form.bio}
               onChange={handleChange}
-              placeholder="Giới thiệu bản thân..."
+              placeholder={t("editProfile.bioPlaceholder")}
               maxLength={160}
               rows={3}
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-white transition-colors resize-none"
@@ -236,7 +238,7 @@ export default function EditProfilePage() {
 
           {/* Avatar URL */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">URL Avatar</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t("editProfile.avatarUrl")}</label>
             <input
               type="url"
               name="avatar"
@@ -249,7 +251,7 @@ export default function EditProfilePage() {
 
           {/* Cover Image URL */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">URL Ảnh bìa</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t("editProfile.coverUrl")}</label>
             <input
               type="url"
               name="coverImage"
@@ -269,8 +271,8 @@ export default function EditProfilePage() {
           {/* Tài khoản riêng tư */}
           <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-700">
             <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Tài khoản riêng tư</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Chỉ người được chấp nhận mới thấy bài viết</p>
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{t("editProfile.privateAccount")}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{t("editProfile.privateDesc")}</p>
             </div>
             <button
               type="button"
@@ -285,7 +287,7 @@ export default function EditProfilePage() {
         {/* Thông báo lỗi / thành công */}
         {uploadError && <p className="text-red-500 text-sm text-center">{uploadError}</p>}
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-        {success && <p className="text-green-600 text-sm text-center font-medium">Cập nhật thành công!</p>}
+        {success && <p className="text-green-600 text-sm text-center font-medium">{t("editProfile.success")}</p>}
 
         {/* Nút lưu */}
         <button
@@ -296,10 +298,10 @@ export default function EditProfilePage() {
           {loading ? (
             <>
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Đang lưu...
+              {t("editProfile.saving")}
             </>
           ) : (
-            "Lưu thay đổi"
+            t("editProfile.save")
           )}
         </button>
       </form>

@@ -5,16 +5,18 @@ import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
 import UserCard from "@/components/user/UserCard";
-
-const TABS = [
-  { key: "all", label: "Tất cả" },
-  { key: "users", label: "Người dùng" },
-  { key: "posts", label: "Bài viết" },
-  { key: "hashtags", label: "Hashtag" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SearchPage() {
   const currentUser = getCurrentUser();
+  const { t } = useLanguage();
+
+  const TABS = [
+    { key: "all", label: t("search.all") },
+    { key: "users", label: t("search.users") },
+    { key: "posts", label: t("search.posts") },
+    { key: "hashtags", label: t("search.hashtags") },
+  ];
 
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -119,7 +121,7 @@ export default function SearchPage() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tìm kiếm người dùng, bài viết, hashtag..."
+            placeholder={t("search.placeholder")}
             className="w-full pl-10 pr-10 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-all"
           />
           {/* Nút xóa — chỉ hiện khi đang có query */}
@@ -166,8 +168,8 @@ export default function SearchPage() {
       {!loading && searched && !hasResults && (
         <div className="py-20 text-center px-6">
           <div className="text-5xl mb-4">🔍</div>
-          <p className="font-semibold text-gray-700 mb-1">Không tìm thấy kết quả</p>
-          <p className="text-sm text-gray-400">Thử từ khóa khác hoặc kiểm tra chính tả</p>
+          <p className="font-semibold text-gray-700 mb-1">{t("search.noResults")}</p>
+          <p className="text-sm text-gray-400">{t("search.noResultsDesc")}</p>
         </div>
       )}
 
@@ -175,7 +177,7 @@ export default function SearchPage() {
       {!loading && !searched && !query && (
         <div className="py-20 text-center px-6">
           <div className="text-5xl mb-4">✨</div>
-          <p className="text-sm text-gray-400 dark:text-gray-500">Nhập từ khóa để bắt đầu tìm kiếm</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t("search.typeToSearch")}</p>
         </div>
       )}
 
@@ -187,7 +189,7 @@ export default function SearchPage() {
             <section>
               {activeTab === "all" && (
                 <div className="px-4 pt-4 pb-2">
-                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Người dùng</h2>
+                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t("search.users")}</h2>
                 </div>
               )}
               <div className="divide-y divide-gray-50">
@@ -208,7 +210,7 @@ export default function SearchPage() {
             <section>
               {activeTab === "all" && (
                 <div className="px-4 pt-4 pb-2 border-t border-gray-100">
-                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Bài viết</h2>
+                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t("search.posts")}</h2>
                 </div>
               )}
               {results.posts.map((post) => (
@@ -226,7 +228,7 @@ export default function SearchPage() {
             <section>
               {activeTab === "all" && (
                 <div className="px-4 pt-4 pb-2 border-t border-gray-100">
-                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Hashtag</h2>
+                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t("search.hashtags")}</h2>
                 </div>
               )}
               <div className="divide-y divide-gray-50">
@@ -250,13 +252,13 @@ export default function SearchPage() {
 
           {/* Empty state cho tab cụ thể */}
           {activeTab === "users" && results.users.length === 0 && (
-            <div className="py-16 text-center text-sm text-gray-400">Không tìm thấy người dùng nào</div>
+            <div className="py-16 text-center text-sm text-gray-400">{t("search.noUsers")}</div>
           )}
           {activeTab === "posts" && results.posts.length === 0 && (
-            <div className="py-16 text-center text-sm text-gray-400">Không tìm thấy bài viết nào</div>
+            <div className="py-16 text-center text-sm text-gray-400">{t("search.noPosts")}</div>
           )}
           {activeTab === "hashtags" && results.hashtags.length === 0 && (
-            <div className="py-16 text-center text-sm text-gray-400">Không tìm thấy hashtag nào</div>
+            <div className="py-16 text-center text-sm text-gray-400">{t("search.noHashtags")}</div>
           )}
         </div>
       )}

@@ -7,6 +7,7 @@ import { useState, useMemo } from "react";
 import NotificationBell, { MobileNotificationBell } from "@/components/notifications/NotificationBell";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CreatePost from "@/components/post/CreatePost";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // SVG icons cho từng mục nav (filled = active, outline = inactive)
 const HomeIcon = ({ active }) =>
@@ -61,28 +62,29 @@ export default function Navbar() {
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const currentUser = getCurrentUser();
+  const { t } = useLanguage();
 
   const openCreatePost = () => window.dispatchEvent(new CustomEvent("open-create-post"));
 
   // NAV_ITEMS không có Thông báo — thay bằng NotificationBell component riêng
   const NAV_ITEMS = useMemo(() => [
-    { href: "/", label: "Trang chủ", Icon: HomeIcon },
-    { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
-    { href: null, label: "Tạo bài", Icon: ComposeIcon, isCompose: true },
-    { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
-    { href: "/settings", label: "Cài đặt", Icon: SettingsIcon },
-    { href: `/profile/${currentUser?.username}`, label: "Hồ sơ", Icon: ProfileIcon },
-  ], [currentUser?.username]);
+    { href: "/", label: t("nav.home"), Icon: HomeIcon },
+    { href: "/search", label: t("nav.search"), Icon: SearchIcon },
+    { href: null, label: t("nav.create"), Icon: ComposeIcon, isCompose: true },
+    { href: "/messages", label: t("nav.messages"), Icon: MessagesIcon },
+    { href: "/settings", label: t("nav.settings"), Icon: SettingsIcon },
+    { href: `/profile/${currentUser?.username}`, label: t("nav.profile"), Icon: ProfileIcon },
+  ], [currentUser?.username, t]);
 
   // NAV_ITEMS mobile có đầy đủ để build bottom bar
   const MOBILE_NAV_ITEMS = useMemo(() => [
-    { href: "/", label: "Trang chủ", Icon: HomeIcon },
-    { href: "/search", label: "Tìm kiếm", Icon: SearchIcon },
-    { href: null, label: "Tạo bài", Icon: ComposeIcon, isCompose: true },
-    { href: "/messages", label: "Tin nhắn", Icon: MessagesIcon },
-    { href: "/notifications", label: "Thông báo", isNotification: true },
-    { href: `/profile/${currentUser?.username}`, label: "Hồ sơ", Icon: ProfileIcon },
-  ], [currentUser?.username]);
+    { href: "/", label: t("nav.home"), Icon: HomeIcon },
+    { href: "/search", label: t("nav.search"), Icon: SearchIcon },
+    { href: null, label: t("nav.create"), Icon: ComposeIcon, isCompose: true },
+    { href: "/messages", label: t("nav.messages"), Icon: MessagesIcon },
+    { href: "/notifications", label: t("nav.notifications"), isNotification: true },
+    { href: `/profile/${currentUser?.username}`, label: t("nav.profile"), Icon: ProfileIcon },
+  ], [currentUser?.username, t]);
 
   const handleLogout = async () => {
     await logout();
@@ -141,7 +143,7 @@ export default function Navbar() {
           <div className="relative">
             {/* Theme toggle */}
             <div className="flex items-center justify-between px-3 py-2 mb-1">
-              <span className="text-xs text-gray-400 dark:text-gray-500">Giao diện</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{t("nav.theme")}</span>
               <ThemeToggle />
             </div>
 
@@ -173,21 +175,21 @@ export default function Navbar() {
                     className="flex items-center px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
-                    Xem hồ sơ
+                    {t("nav.viewProfile")}
                   </Link>
                   <Link
                     href="/settings"
                     className="flex items-center px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
-                    Cài đặt
+                    {t("nav.settings")}
                   </Link>
                   <div className="border-t border-gray-100 dark:border-gray-800" />
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center px-4 py-3 text-sm font-semibold text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
-                    Đăng xuất
+                    {t("nav.logout")}
                   </button>
                 </div>
               </>

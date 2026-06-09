@@ -6,6 +6,7 @@ import { isAuthenticated } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { SocketProvider } from "@/contexts/SocketContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 export default function MainLayout({ children }) {
   const [ready, setReady] = useState(false);
@@ -31,6 +32,7 @@ export default function MainLayout({ children }) {
   }
 
   return (
+    <LanguageProvider>
     <SocketProvider>
       <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300">
         {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
@@ -57,5 +59,6 @@ export default function MainLayout({ children }) {
         <div className="h-16 lg:hidden" />
       </div>
     </SocketProvider>
+    </LanguageProvider>
   );
 }

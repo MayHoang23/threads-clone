@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr, justNow = "vừa xong") {
   const s = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (s < 60) return "vừa xong";
+  if (s < 60) return justNow;
   if (s < 3600) return `${Math.floor(s / 60)}ph`;
   if (s < 86400) return `${Math.floor(s / 3600)}g`;
   return `${Math.floor(s / 86400)}ng`;
@@ -27,7 +28,7 @@ function UserAvatar({ user, size = "md" }) {
 }
 
 // Component hiển thị 1 comment + form reply
-function CommentItem({ comment, postId, onReplyAdded }) {
+function CommentItem({ comment, postId, onReplyAdded, t }) {
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [posting, setPosting] = useState(false);
@@ -58,14 +59,14 @@ function CommentItem({ comment, postId, onReplyAdded }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-semibold text-sm text-gray-900 dark:text-white">{comment.user?.username}</span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(comment.createdAt)}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(comment.createdAt, t("common.justNow"))}</span>
           </div>
           <p className="text-sm text-gray-800 dark:text-gray-200 mt-0.5 leading-relaxed break-words">{comment.content}</p>
           <button
             onClick={() => setShowReply((v) => !v)}
             className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mt-1.5 font-medium transition-colors"
           >
-            Trả lời
+            {t("comments.reply")}
           </button>
 
           {/* Form reply */}
@@ -89,7 +90,7 @@ function CommentItem({ comment, postId, onReplyAdded }) {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
-                ) : "Gửi"}
+                ) : t("comments.send")}
               </button>
             </div>
           )}
@@ -122,6 +123,7 @@ export default function CommentSection({ postId, currentUser }) {
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
   const [posting, setPosting] = useState(false);
+  const { t } = useLanguage();
 
   // Load comments khi component mount
   useEffect(() => {
@@ -167,7 +169,7 @@ export default function CommentSection({ postId, currentUser }) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-          Bình luận{comments.length > 0 ? ` (${comments.length})` : ""}
+          {t("comments.title")}{comments.length > 0 ? ` (${comments.length})` : ""}
         </h3>
       </div>
 
@@ -187,7 +189,7 @@ export default function CommentSection({ postId, currentUser }) {
             <input
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Thêm bình luận..."
+              placeholder={t("comments.placeholder")}
               className="flex-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all min-w-0"
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
             />
@@ -196,7 +198,7 @@ export default function CommentSection({ postId, currentUser }) {
               disabled={!newComment.trim() || posting}
               className="text-sm font-semibold text-black dark:text-white disabled:opacity-30 transition-opacity flex-shrink-0"
             >
-              Gửi
+              {t("comments.send")}
             </button>
           </div>
         </div>
@@ -213,8 +215,8 @@ export default function CommentSection({ postId, currentUser }) {
             <svg className="w-8 h-8 mx-auto mb-3 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
             </svg>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Chưa có bình luận</p>
-            <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">Hãy là người đầu tiên bình luận!</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("comments.empty")}</p>
+            <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">{t("comments.emptyDesc")}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -224,6 +226,7 @@ export default function CommentSection({ postId, currentUser }) {
                 comment={comment}
                 postId={postId}
                 onReplyAdded={handleReplyAdded}
+                t={t}
               />
             ))}
           </div>

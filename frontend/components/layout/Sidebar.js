@@ -1,7 +1,7 @@
-import Link from "next/link";
+"use client";
 
-// Sidebar tĩnh — có thể thay bằng API thật sau này
-// Server Component: không cần "use client"
+import Link from "next/link";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const SUGGESTED_USERS = [
   { username: "design.daily", displayName: "Design Daily", gradient: "from-orange-400 to-pink-500", followers: "24.1K" },
@@ -18,11 +18,13 @@ const TRENDING_TAGS = [
 ];
 
 export default function Sidebar() {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-8 pt-2">
       {/* Gợi ý người theo dõi */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Gợi ý cho bạn</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{t("sidebar.suggestions")}</h3>
         <div className="space-y-4">
           {SUGGESTED_USERS.map((user) => (
             <div key={user.username} className="flex items-center gap-3">
@@ -32,22 +34,22 @@ export default function Sidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.username}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{user.followers} người theo dõi</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{user.followers} {t("sidebar.followers")}</p>
               </div>
               <button className="text-xs font-semibold text-black dark:text-white border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
-                Follow
+                {t("sidebar.follow")}
               </button>
             </div>
           ))}
         </div>
         <button className="mt-3 text-xs text-blue-500 hover:underline font-medium">
-          Xem thêm →
+          {t("sidebar.seeMore")}
         </button>
       </div>
 
       {/* Hashtag đang trending */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Đang hot 🔥</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{t("sidebar.trending")}</h3>
         <div className="space-y-3">
           {TRENDING_TAGS.map((tag, i) => (
             <Link
@@ -70,11 +72,16 @@ export default function Sidebar() {
       {/* Footer links nhỏ */}
       <div className="text-xs text-gray-300 dark:text-gray-600 space-y-1 pb-4">
         <div className="flex flex-wrap gap-x-2 gap-y-1">
-          {["Điều khoản", "Quyền riêng tư", "Cookies", "Trợ giúp"].map((t) => (
-            <span key={t} className="hover:text-gray-500 dark:hover:text-gray-400 cursor-pointer transition-colors">{t}</span>
+          {[
+            t("sidebar.terms"),
+            t("sidebar.privacy"),
+            t("sidebar.cookies"),
+            t("sidebar.help"),
+          ].map((label) => (
+            <span key={label} className="hover:text-gray-500 dark:hover:text-gray-400 cursor-pointer transition-colors">{label}</span>
           ))}
         </div>
-        <p>© 2024 Threads Clone</p>
+        <p>{t("sidebar.copyright")}</p>
       </div>
     </div>
   );

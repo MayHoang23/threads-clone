@@ -5,6 +5,7 @@ import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
 import CreatePost from "@/components/post/CreatePost";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Skeleton placeholder cho 1 bài viết khi đang load
 function PostSkeleton() {
@@ -34,6 +35,7 @@ export default function NewsfeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const bottomRef = useRef(null);
   const currentUser = getCurrentUser();
+  const { t } = useLanguage();
 
   // Gọi API lấy feed, có hỗ trợ cursor (cho infinite scroll)
   const fetchFeed = async (cursorParam = null) => {
@@ -98,13 +100,13 @@ export default function NewsfeedPage() {
       {/* Header sticky cho mobile */}
       <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800 lg:hidden">
         <div className="px-4 py-3">
-          <h1 className="font-bold text-lg">Dành cho bạn</h1>
+          <h1 className="font-bold text-lg">{t("home.forYou")}</h1>
         </div>
       </div>
 
       {/* Header desktop */}
       <div className="hidden lg:block border-b border-gray-100 px-4 py-4">
-        <h1 className="font-bold text-base text-gray-900 dark:text-white">Dành cho bạn</h1>
+        <h1 className="font-bold text-base text-gray-900 dark:text-white">{t("home.forYou")}</h1>
       </div>
 
       {/* Ô tạo bài mới */}
@@ -118,10 +120,8 @@ export default function NewsfeedPage() {
         // Empty state khi chưa có bài
         <div className="py-24 text-center px-4">
           <div className="text-6xl mb-4">🌱</div>
-          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Feed của bạn đang trống</p>
-          <p className="text-sm text-gray-400">
-            Hãy follow người khác hoặc đăng bài đầu tiên!
-          </p>
+          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{t("home.empty")}</p>
+          <p className="text-sm text-gray-400">{t("home.emptyDesc")}</p>
         </div>
       ) : (
         <>
@@ -140,7 +140,7 @@ export default function NewsfeedPage() {
               <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
             )}
             {!hasMore && posts.length > 0 && (
-              <p className="text-xs text-gray-400">Bạn đã xem hết rồi 🎉</p>
+              <p className="text-xs text-gray-400">{t("home.end")}</p>
             )}
           </div>
         </>

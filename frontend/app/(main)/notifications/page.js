@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Format thời gian kiểu Threads
 function timeAgo(dateStr) {
@@ -17,14 +18,14 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString("vi-VN");
 }
 
-function getNotificationText(type) {
+function getNotificationText(type, t) {
   switch (type) {
-    case "LIKE": return "đã thích bài viết của bạn";
-    case "COMMENT": return "đã bình luận về bài viết của bạn";
-    case "FOLLOW": return "đã bắt đầu theo dõi bạn";
-    case "FRIEND_REQUEST": return "đã gửi lời mời kết bạn";
-    case "MENTION": return "đã nhắc đến bạn";
-    default: return "đã tương tác với bạn";
+    case "LIKE": return t("notifications.liked");
+    case "COMMENT": return t("notifications.commented");
+    case "FOLLOW": return t("notifications.followed");
+    case "FRIEND_REQUEST": return t("notifications.friendRequest");
+    case "MENTION": return t("notifications.mentioned");
+    default: return t("notifications.interacted");
   }
 }
 
@@ -76,6 +77,7 @@ function NotificationSkeleton() {
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
@@ -155,14 +157,14 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between px-4 py-3">
-          <h1 className="font-bold text-xl">Thông báo</h1>
+          <h1 className="font-bold text-xl">{t("notifications.title")}</h1>
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
               disabled={markingAll}
               className="text-sm text-blue-500 font-semibold hover:text-blue-600 transition-colors disabled:opacity-60"
             >
-              {markingAll ? "Đang xử lý..." : "Đánh dấu tất cả đã đọc"}
+              {markingAll ? t("notifications.processing") : t("notifications.markAllReadFull")}
             </button>
           )}
         </div>
@@ -177,8 +179,8 @@ export default function NotificationsPage() {
       {!loading && notifications.length === 0 && (
         <div className="py-24 text-center px-6">
           <div className="text-6xl mb-4">🔔</div>
-          <p className="font-semibold text-gray-700 mb-1">Chưa có thông báo</p>
-          <p className="text-sm text-gray-400">Khi có người thích hoặc bình luận bài của bạn, bạn sẽ thấy ở đây</p>
+          <p className="font-semibold text-gray-700 mb-1">{t("notifications.empty")}</p>
+          <p className="text-sm text-gray-400">{t("notifications.emptyDesc")}</p>
         </div>
       )}
 
@@ -217,7 +219,7 @@ export default function NotificationsPage() {
                     <span className="font-semibold">
                       {notification.sender.displayName || notification.sender.username}
                     </span>
-                    {" "}{getNotificationText(notification.type)}
+                    {" "}{getNotificationText(notification.type, t)}
                   </p>
                   {/* Preview nội dung bài viết liên quan */}
                   {notification.post?.content && (
@@ -253,7 +255,7 @@ export default function NotificationsPage() {
               <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
             )}
             {!hasMore && (
-              <p className="text-xs text-gray-400">Đã hết thông báo</p>
+              <p className="text-xs text-gray-400">{t("notifications.end")}</p>
             )}
           </div>
         </>

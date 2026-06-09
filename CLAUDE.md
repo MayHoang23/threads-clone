@@ -235,3 +235,42 @@ Route /compose không tồn tại và không cần tạo
 ✅ Tab Đã lưu lỗi 404 → try/catch setSavedPosts([])
 ✅ Followers/Following Link 404 → tạo route mới
 ✅ Toggle isPrivate bị lệch → dùng left positioning thay translate
+
+## Bugs đã fix Ngày 12 (bổ sung)
+
+✅ Navbar "Tạo bài" → /compose 404 → button dispatch custom event + modal
+✅ Modal CreatePost không update newsfeed → custom event 'post-created'
+✅ Dark mode flash trắng khi F5 → ThemeContext lazy init từ DOM class
+✅ PostDetail + CommentSection dark mode
+✅ Sidebar dark mode
+✅ NotificationBell dark mode + active state
+✅ CreatePost dark mode (inline + modal)
+✅ Search page dark mode
+✅ Edit Profile dark mode + toggle fix
+✅ Profile cover gradient + avatar upload click
+✅ Followers/Following pages
+✅ Saved posts sync real-time (post-saved/post-unsaved events)
+✅ Follow state sync cross-page (follow-changed event)
+✅ Search/Following API trả về isFollowing đúng
+✅ Navbar "Xem hồ sơ" link đúng username
+✅ Messages bubble màu phân biệt (violet = mình, xám = đối phương)
+✅ Scrollbar đồng nhất sáng/tối
+✅ Header backdrop-blur lag → bỏ opacity
+✅ Dark mode transition instant (không lag)
+✅ UserCard dark mode
+✅ PostCard dark mode
+
+## Custom Events (window)
+
+| Event name        | Detail                        | Mô tả                                        |
+|-------------------|-------------------------------|----------------------------------------------|
+| open-create-post  | (không có)                    | Mở modal CreatePost từ bất kỳ đâu            |
+| post-created      | newPost object                | Prepend bài mới vào newsfeed                 |
+| post-saved        | post object                   | Sync saved posts khi save                    |
+| post-unsaved      | post object                   | Sync saved posts khi unsave                  |
+| follow-changed    | { username, isFollowing }     | Sync follow state cross-page                 |
+
+## Còn lại
+
+🌐 Đa ngôn ngữ (vi/en/zh) — chưa implement
+🚀 Deploy lên Railway (backend) + Vercel (frontend)

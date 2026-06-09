@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { useSocket } from "@/contexts/SocketContext";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatWindow from "@/components/messages/ChatWindow";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
@@ -25,6 +26,7 @@ export default function MessagesPage() {
   const router = useRouter();
   const currentUser = getCurrentUser();
   const socket = useSocket();
+  const { t } = useLanguage();
 
   // Conversation đang được chọn (full object)
   const selectedConv = conversations.find((c) => c.id === selectedId);
@@ -140,7 +142,7 @@ export default function MessagesPage() {
       {/* Header sticky */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex-shrink-0">
         <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-          Tin nhắn
+          {t("messages.title")}
           {totalUnread > 0 && (
             <span className="ml-2 text-sm font-semibold text-white bg-black dark:bg-white dark:text-black rounded-full px-2 py-0.5">
               {totalUnread > 99 ? "99+" : totalUnread}
@@ -149,7 +151,7 @@ export default function MessagesPage() {
         </h1>
         <button
           onClick={() => setShowNewChat(true)}
-          title="Cuộc trò chuyện mới"
+          title={t("messages.newConversation")}
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -215,9 +217,9 @@ export default function MessagesPage() {
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Tin nhắn của bạn</h3>
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("messages.selectConversation")}</h3>
               <p className="text-sm text-gray-400 dark:text-gray-500 max-w-xs">
-                Chọn một cuộc trò chuyện bên trái hoặc nhắn tin với người dùng từ trang hồ sơ của họ.
+                {t("messages.selectConversationDesc")}
               </p>
             </div>
           )}
@@ -233,7 +235,7 @@ export default function MessagesPage() {
           <div className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="font-bold text-base text-gray-900 dark:text-gray-100">Tin nhắn mới</h2>
+              <h2 className="font-bold text-base text-gray-900 dark:text-gray-100">{t("messages.newConversation")}</h2>
               <button
                 onClick={closeNewChat}
                 className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
@@ -253,7 +255,7 @@ export default function MessagesPage() {
                 <input
                   autoFocus
                   type="text"
-                  placeholder="Tìm kiếm người dùng..."
+                  placeholder={t("messages.searchUser")}
                   value={searchQuery}
                   onChange={handleSearchChange}
                   className="flex-1 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none"
@@ -267,9 +269,9 @@ export default function MessagesPage() {
             {/* Kết quả tìm kiếm */}
             <div className="max-h-64 overflow-y-auto">
               {searchResults.length === 0 && searchQuery.trim() && !searching ? (
-                <p className="py-8 text-center text-sm text-gray-400">Không tìm thấy người dùng</p>
+                <p className="py-8 text-center text-sm text-gray-400">{t("messages.noUserFound")}</p>
               ) : searchResults.length === 0 && !searchQuery.trim() ? (
-                <p className="py-8 text-center text-sm text-gray-400">Nhập tên để tìm kiếm</p>
+                <p className="py-8 text-center text-sm text-gray-400">{t("messages.searchPlaceholder")}</p>
               ) : (
                 searchResults.map((user) => (
                   <button

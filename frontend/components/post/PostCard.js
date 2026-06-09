@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Format thời gian kiểu Threads: "vừa xong", "5ph", "2g", "3ng"
-function timeAgo(dateStr) {
+function timeAgo(dateStr, justNow = "vừa xong") {
   const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (seconds < 60) return "vừa xong";
+  if (seconds < 60) return justNow;
   const m = Math.floor(seconds / 60);
   if (m < 60) return `${m}ph`;
   const h = Math.floor(m / 60);
@@ -60,6 +61,7 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
   const [post, setPost] = useState(initialPost);
   const [showMenu, setShowMenu] = useState(false);
   const [heartAnim, setHeartAnim] = useState(false);
+  const { t } = useLanguage();
 
   const isOwner = currentUser?.id === post.author?.id;
 
@@ -103,7 +105,7 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Xóa bài viết này?")) return;
+    if (!window.confirm(t("post.confirmDelete"))) return;
     setShowMenu(false);
     await fetchAPI(`/posts/${post.id}`, { method: "DELETE" });
     onDelete?.(post.id);
@@ -144,7 +146,7 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
                     <path d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-.45 4.506 3.745 3.745 0 01-4.506.45A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-4.506-.45 3.745 3.745 0 01-.45-4.506A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 01.45-4.506 3.745 3.745 0 014.506-.45A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 014.506.45 3.745 3.745 0 01.45 4.506A3.745 3.745 0 0121 12z" />
                   </svg>
                 )}
-                <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{timeAgo(post.createdAt)}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{timeAgo(post.createdAt, t("common.justNow"))}</span>
               </div>
 
               {/* Menu 3 chấm */}
@@ -165,18 +167,18 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
                     {isOwner ? (
                       <>
                         <button className="w-full text-left px-4 py-3 font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                          Chỉnh sửa
+                          {t("post.edit")}
                         </button>
                         <button
                           onClick={handleDelete}
                           className="w-full text-left px-4 py-3 font-semibold text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
-                          Xóa bài viết
+                          {t("post.delete")}
                         </button>
                       </>
                     ) : (
                       <button className="w-full text-left px-4 py-3 font-semibold text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        Báo cáo
+                        {t("post.report")}
                       </button>
                     )}
                   </div>
@@ -334,11 +336,11 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
               <div className="flex gap-3 mt-1.5">
                 {post.commentCount > 0 && (
                   <Link href={`/posts/${post.id}`} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                    {post.commentCount} bình luận
+                    {post.commentCount} {t("post.comments")}
                   </Link>
                 )}
                 {post.likeCount > 0 && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{post.likeCount} lượt thích</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{post.likeCount} {t("post.likes")}</span>
                 )}
               </div>
             )}

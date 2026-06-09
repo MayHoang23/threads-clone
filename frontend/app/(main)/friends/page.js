@@ -5,12 +5,7 @@ import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import UserCard from "@/components/user/UserCard";
-
-const TABS = [
-  { key: "requests", label: "Lời mời" },
-  { key: "friends", label: "Bạn bè" },
-  { key: "suggestions", label: "Gợi ý" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Skeleton cho 1 người dùng
 function UserSkeleton() {
@@ -27,7 +22,7 @@ function UserSkeleton() {
 }
 
 // Card cho 1 lời mời kết bạn
-function FriendRequestCard({ request, onRespond }) {
+function FriendRequestCard({ request, onRespond, t }) {
   const [loading, setLoading] = useState(null); // "accept" | "reject" | null
 
   const handleRespond = async (action) => {
@@ -82,7 +77,7 @@ function FriendRequestCard({ request, onRespond }) {
         >
           {loading === "accept" ? (
             <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : "Chấp nhận"}
+          ) : t("friends.accept")}
         </button>
         <button
           onClick={() => handleRespond("reject")}
@@ -91,7 +86,7 @@ function FriendRequestCard({ request, onRespond }) {
         >
           {loading === "reject" ? (
             <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          ) : "Từ chối"}
+          ) : t("friends.decline")}
         </button>
       </div>
     </div>
@@ -100,6 +95,12 @@ function FriendRequestCard({ request, onRespond }) {
 
 export default function FriendsPage() {
   const currentUser = getCurrentUser();
+  const { t } = useLanguage();
+  const TABS = [
+    { key: "requests", label: t("friends.requests") },
+    { key: "friends", label: t("friends.friends") },
+    { key: "suggestions", label: t("friends.suggestions") },
+  ];
   const [activeTab, setActiveTab] = useState("requests");
   const [requests, setRequests] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -186,9 +187,9 @@ export default function FriendsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
         <div className="px-4 py-3">
-          <h1 className="font-bold text-lg">Bạn bè</h1>
+          <h1 className="font-bold text-lg">{t("friends.title")}</h1>
         </div>
         {/* Tabs */}
         <div className="flex">
@@ -228,13 +229,13 @@ export default function FriendsPage() {
           {requests.length === 0 ? (
             <div className="py-20 text-center px-6">
               <div className="text-5xl mb-4">📭</div>
-              <p className="text-sm text-gray-400">Không có lời mời kết bạn nào</p>
+              <p className="text-sm text-gray-400">{t("friends.noRequests")}</p>
             </div>
           ) : (
             <div>
-              <p className="px-4 pt-4 pb-2 text-xs text-gray-400">{requests.length} lời mời</p>
+              <p className="px-4 pt-4 pb-2 text-xs text-gray-400">{requests.length} {t("friends.requestCount")}</p>
               {requests.map((req) => (
-                <FriendRequestCard key={req.id} request={req} onRespond={handleRespond} />
+                <FriendRequestCard key={req.id} request={req} onRespond={handleRespond} t={t} />
               ))}
             </div>
           )}
@@ -247,8 +248,8 @@ export default function FriendsPage() {
           {friends.length === 0 ? (
             <div className="py-20 text-center px-6">
               <div className="text-5xl mb-4">👥</div>
-              <p className="font-semibold text-gray-700 mb-1">Chưa follow ai</p>
-              <p className="text-sm text-gray-400">Tìm kiếm người dùng và follow họ</p>
+              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{t("friends.noFriends")}</p>
+              <p className="text-sm text-gray-400">{t("friends.noFriendsDesc")}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -271,12 +272,12 @@ export default function FriendsPage() {
           {suggestions.length === 0 ? (
             <div className="py-20 text-center px-6">
               <div className="text-5xl mb-4">🌟</div>
-              <p className="font-semibold text-gray-700 mb-1">Chưa có gợi ý</p>
-              <p className="text-sm text-gray-400">Follow thêm người để nhận gợi ý</p>
+              <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">{t("friends.noSuggestions")}</p>
+              <p className="text-sm text-gray-400">{t("friends.noSuggestionsDesc")}</p>
             </div>
           ) : (
             <div>
-              <p className="px-4 pt-4 pb-2 text-xs text-gray-400">Bạn của bạn bè</p>
+              <p className="px-4 pt-4 pb-2 text-xs text-gray-400">{t("friends.friendsOfFriends")}</p>
               <div className="divide-y divide-gray-50">
                 {suggestions.map((user) => (
                   <UserCard

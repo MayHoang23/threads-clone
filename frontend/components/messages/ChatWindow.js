@@ -4,18 +4,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchAPI } from "@/lib/api";
 import { useSocket } from "@/contexts/SocketContext";
 import MessageInput from "./MessageInput";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ========================
 // HELPER: Nhóm tin theo ngày
 // ========================
-function getDateLabel(dateStr) {
+function getDateLabel(dateStr, todayLabel, yesterdayLabel) {
   const date = new Date(dateStr);
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  if (date.toDateString() === today.toDateString()) return "Hôm nay";
-  if (date.toDateString() === yesterday.toDateString()) return "Hôm qua";
+  if (date.toDateString() === today.toDateString()) return todayLabel;
+  if (date.toDateString() === yesterday.toDateString()) return yesterdayLabel;
   return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
@@ -91,6 +92,7 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
   const [loadingInit, setLoadingInit] = useState(true);
   const [typingUser, setTypingUser] = useState(null); // user đang gõ
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const { t } = useLanguage();
 
   const socket = useSocket();
 
@@ -291,7 +293,7 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
   let lastDateLabel = null;
 
   for (const msg of messages) {
-    const label = getDateLabel(msg.createdAt);
+    const label = getDateLabel(msg.createdAt, t("messages.today"), t("messages.yesterday"));
     if (label !== lastDateLabel) {
       groupedMessages.push({ type: "date_divider", label, id: `divider_${msg.id}` });
       lastDateLabel = label;
@@ -310,8 +312,8 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
         </div>
-        <p className="font-semibold text-gray-700 dark:text-gray-300">Chọn một cuộc trò chuyện</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Hoặc bắt đầu cuộc trò chuyện mới</p>
+        <p className="font-semibold text-gray-700 dark:text-gray-300">{t("messages.selectConversation")}</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{t("messages.startChat")}</p>
       </div>
     );
   }
@@ -412,7 +414,7 @@ export default function ChatWindow({ conversationId, otherUser, currentUser, onB
                 {/* Thời gian + read receipt */}
                 <div className={`flex items-center gap-1 mt-0.5 ${isMine ? "flex-row-reverse" : ""}`}>
                   <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                    {item.failed ? "Gửi thất bại" : item.pending ? "Đang gửi..." : formatTime(item.createdAt)}
+                    {item.failed ? t("messages.failed") : item.pending ? t("messages.sending") : formatTime(item.createdAt)}
                   </span>
                   {isMine && !item.pending && !item.failed && (
                     <ReadReceipt isSent={true} isRead={item.isRead} />

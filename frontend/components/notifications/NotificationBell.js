@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { useSocket } from "@/contexts/SocketContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Format thời gian ngắn gọn: "2ph", "3g", "5ng"
 function timeAgo(dateStr) {
@@ -17,15 +18,15 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}ng`;
 }
 
-// Text mô tả hành động theo loại notification
-function getNotificationText(type) {
+// Text mô tả hành động theo loại notification — nhận t() từ bên ngoài
+function getNotificationText(type, t) {
   switch (type) {
-    case "LIKE": return "đã thích bài viết của bạn";
-    case "COMMENT": return "đã bình luận về bài viết của bạn";
-    case "FOLLOW": return "đã bắt đầu theo dõi bạn";
-    case "FRIEND_REQUEST": return "đã gửi lời mời kết bạn";
-    case "MENTION": return "đã nhắc đến bạn";
-    default: return "đã tương tác với bạn";
+    case "LIKE": return t("notifications.liked");
+    case "COMMENT": return t("notifications.commented");
+    case "FOLLOW": return t("notifications.followed");
+    case "FRIEND_REQUEST": return t("notifications.friendRequest");
+    case "MENTION": return t("notifications.mentioned");
+    default: return t("notifications.interacted");
   }
 }
 
@@ -39,7 +40,7 @@ function getNotificationHref(notification) {
 }
 
 // 1 dòng notification trong dropdown
-function NotificationItem({ notification, onRead, onClose }) {
+function NotificationItem({ notification, onRead, onClose, t }) {
   const router = useRouter();
   const href = getNotificationHref(notification);
 
@@ -75,7 +76,7 @@ function NotificationItem({ notification, onRead, onClose }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm leading-snug">
           <span className="font-semibold text-gray-900 dark:text-white">{notification.sender.displayName || notification.sender.username}</span>
-          {" "}{getNotificationText(notification.type)}
+          {" "}{getNotificationText(notification.type, t)}
         </p>
         {notification.post?.content && (
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{notification.post.content}</p>
@@ -102,6 +103,7 @@ export default function NotificationBell({ isActive }) {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const socket = useSocket();
+  const { t } = useLanguage();
 
   // Load số chưa đọc khi mount
   useEffect(() => {
@@ -203,7 +205,7 @@ export default function NotificationBell({ isActive }) {
             </span>
           )}
         </div>
-        Thông báo
+        {t("nav.notifications")}
       </button>
 
       {/* ===== DROPDOWN ===== */}
@@ -211,14 +213,14 @@ export default function NotificationBell({ isActive }) {
         <div className="absolute left-full top-0 ml-3 w-[340px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
           {/* Header dropdown */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-            <h3 className="font-bold text-base text-gray-900 dark:text-white">Thông báo</h3>
+            <h3 className="font-bold text-base text-gray-900 dark:text-white">{t("notifications.title")}</h3>
             <div className="flex gap-2">
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllRead}
                   className="text-xs text-blue-500 font-semibold hover:text-blue-600 transition-colors"
                 >
-                  Đánh dấu đã đọc
+                  {t("notifications.markAllRead")}
                 </button>
               )}
               <Link
@@ -226,7 +228,7 @@ export default function NotificationBell({ isActive }) {
                 onClick={() => setIsOpen(false)}
                 className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
               >
-                Xem tất cả
+                {t("notifications.viewAll")}
               </Link>
             </div>
           </div>
@@ -240,7 +242,7 @@ export default function NotificationBell({ isActive }) {
             ) : notifications.length === 0 ? (
               <div className="py-12 text-center px-4">
                 <div className="text-4xl mb-3">🔔</div>
-                <p className="text-sm text-gray-400 dark:text-gray-500">Chưa có thông báo nào</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">{t("notifications.empty")}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-50">
@@ -250,6 +252,7 @@ export default function NotificationBell({ isActive }) {
                     notification={n}
                     onRead={handleRead}
                     onClose={() => setIsOpen(false)}
+                    t={t}
                   />
                 ))}
               </div>

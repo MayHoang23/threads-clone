@@ -5,12 +5,7 @@ import { fetchAPI } from "@/lib/api";
 import MediaUpload from "./MediaUpload";
 import CaptionGenerator from "@/components/ai/CaptionGenerator";
 import HashtagSuggester from "@/components/ai/HashtagSuggester";
-
-const PRIVACY_OPTIONS = [
-  { value: "PUBLIC", label: "🌍 Mọi người" },
-  { value: "FRIENDS", label: "👥 Bạn bè" },
-  { value: "PRIVATE", label: "🔒 Chỉ mình tôi" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function Avatar({ user }) {
   return (
@@ -46,6 +41,7 @@ async function cleanupMedia(mediaItems) {
 // modal=true  → hidden until 'open-create-post' event fires, then shows as overlay
 // modal=false → always renders inline (newsfeed), no event listener
 export default function CreatePost({ currentUser, onPostCreated, modal = false }) {
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [content, setContent] = useState("");
   const [privacy, setPrivacy] = useState("PUBLIC");
@@ -216,7 +212,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
           onChange={handleContentChange}
           onFocus={() => setFocused(true)}
           onBlur={handleBlur}
-          placeholder="Có gì mới không?"
+          placeholder={t("post.placeholder")}
           rows={isExpanded ? 3 : 1}
           className="w-full text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 outline-none resize-none bg-transparent leading-relaxed"
           onKeyDown={(e) => {
@@ -295,7 +291,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
               {isUploading && (
                 <span className="text-xs text-gray-400 ml-1 flex items-center gap-1">
                   <span className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                  Đang tải...
+                  {t("post.uploading")}
                 </span>
               )}
             </div>
@@ -306,11 +302,9 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
                 onChange={(e) => setPrivacy(e.target.value)}
                 className="text-xs text-gray-400 bg-transparent outline-none cursor-pointer hover:text-gray-600 transition-colors dark:hover:text-gray-300"
               >
-                {PRIVACY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
+                <option value="PUBLIC">{t("post.public")}</option>
+                <option value="FRIENDS">{t("post.friends")}</option>
+                <option value="PRIVATE">{t("post.private")}</option>
               </select>
 
               <span className={`text-xs ${charsLeft < 20 ? "text-red-500" : "text-gray-400"}`}>
@@ -328,10 +322,10 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    Đang đăng
+                    {t("post.publishing")}
                   </span>
                 ) : (
-                  "Đăng"
+                  t("post.publish")
                 )}
               </button>
             </div>
@@ -353,11 +347,11 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
       >
         <div className="bg-white dark:bg-gray-950 rounded-2xl w-full max-w-lg mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Tạo bài viết</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">{t("post.createTitle")}</h2>
             <button
               onClick={closeModal}
               className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
-              aria-label="Đóng"
+              aria-label={t("common.close")}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />

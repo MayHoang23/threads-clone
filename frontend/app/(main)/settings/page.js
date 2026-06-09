@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ========================
 // TOAST COMPONENT (không dùng thư viện ngoài)
@@ -107,41 +108,41 @@ function PasswordInput({ label, value, onChange, placeholder }) {
 }
 
 // ========================
-// CÁC MỤC TRONG SIDEBAR
-// ========================
-const SECTIONS = [
-  { key: "account", label: "Tài khoản", icon: "👤" },
-  { key: "privacy", label: "Quyền riêng tư", icon: "🔒" },
-  { key: "notifications", label: "Thông báo", icon: "🔔" },
-  { key: "appearance", label: "Giao diện", icon: "🎨" },
-];
-
-// ========================
 // MAIN PAGE
 // ========================
 export default function SettingsPage() {
   const { isDark } = useTheme();
+  const { t, locale, changeLanguage } = useLanguage();
+
+  const SECTIONS = [
+    { key: "account", label: t("settings.account"), icon: "👤" },
+    { key: "privacy", label: t("settings.privacy"), icon: "🔒" },
+    { key: "notifications", label: t("settings.notificationsTab"), icon: "🔔" },
+    { key: "appearance", label: t("settings.appearance"), icon: "🎨" },
+    { key: "language", label: t("settings.language"), icon: "🌐" },
+  ];
+
+  const LANGUAGES = [
+    { code: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+    { code: "en", label: "English", flag: "🇺🇸" },
+    { code: "zh", label: "中文", flag: "🇨🇳" },
+  ];
 
   const [activeSection, setActiveSection] = useState("account");
   const [toast, setToast] = useState(null);
-
-  // Loading state riêng cho từng section
   const [loadingSection, setLoadingSection] = useState(null);
 
-  // State form đổi mật khẩu
   const [pwForm, setPwForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  // State quyền riêng tư
   const [privacy, setPrivacy] = useState({
     isPrivate: false,
     allowMessagesFrom: "EVERYONE",
   });
 
-  // State thông báo
   const [notifs, setNotifs] = useState({
     likeNotif: true,
     commentNotif: true,
@@ -149,7 +150,6 @@ export default function SettingsPage() {
     emailNotif: false,
   });
 
-  // Lấy settings hiện tại khi mount
   useEffect(() => {
     (async () => {
       try {
@@ -165,7 +165,7 @@ export default function SettingsPage() {
           });
         }
       } catch {
-        // Không hiện lỗi — giữ giá trị mặc định
+        // giữ giá trị mặc định
       }
     })();
   }, []);
@@ -174,16 +174,13 @@ export default function SettingsPage() {
     setToast({ message, type });
   };
 
-  // ========================
-  // ĐỔI MẬT KHẨU
-  // ========================
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (pwForm.newPassword.length < 8) {
-      return showToast("Mật khẩu mới phải có ít nhất 8 ký tự", "error");
+      return showToast(t("settings.passwordShort"), "error");
     }
     if (pwForm.newPassword !== pwForm.confirmPassword) {
-      return showToast("Mật khẩu xác nhận không khớp", "error");
+      return showToast(t("settings.passwordMismatch"), "error");
     }
 
     setLoadingSection("account");
@@ -193,17 +190,14 @@ export default function SettingsPage() {
         body: JSON.stringify(pwForm),
       });
       setPwForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      showToast("Đổi mật khẩu thành công!");
+      showToast(t("settings.passwordChanged"));
     } catch (err) {
-      showToast(err.message || "Đổi mật khẩu thất bại", "error");
+      showToast(err.message || t("settings.passwordFailed"), "error");
     } finally {
       setLoadingSection(null);
     }
   };
 
-  // ========================
-  // LƯU QUYỀN RIÊNG TƯ
-  // ========================
   const handleSavePrivacy = async () => {
     setLoadingSection("privacy");
     try {
@@ -211,17 +205,14 @@ export default function SettingsPage() {
         method: "PATCH",
         body: JSON.stringify(privacy),
       });
-      showToast("Cập nhật quyền riêng tư thành công!");
+      showToast(t("settings.privacyUpdated"));
     } catch (err) {
-      showToast(err.message || "Cập nhật thất bại", "error");
+      showToast(err.message || t("settings.updateFailed"), "error");
     } finally {
       setLoadingSection(null);
     }
   };
 
-  // ========================
-  // LƯU THÔNG BÁO
-  // ========================
   const handleSaveNotifs = async () => {
     setLoadingSection("notifications");
     try {
@@ -229,52 +220,48 @@ export default function SettingsPage() {
         method: "PATCH",
         body: JSON.stringify(notifs),
       });
-      showToast("Cập nhật thông báo thành công!");
+      showToast(t("settings.notifsUpdated"));
     } catch (err) {
-      showToast(err.message || "Cập nhật thất bại", "error");
+      showToast(err.message || t("settings.updateFailed"), "error");
     } finally {
       setLoadingSection(null);
     }
   };
 
-  // ========================
-  // RENDER CONTENT TỪNG SECTION
-  // ========================
   const renderSection = () => {
     switch (activeSection) {
       case "account":
         return (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Đổi mật khẩu</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.changePassword")}</h2>
             <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
               <PasswordInput
-                label="Mật khẩu hiện tại"
+                label={t("settings.currentPassword")}
                 value={pwForm.currentPassword}
                 onChange={(v) => setPwForm((f) => ({ ...f, currentPassword: v }))}
-                placeholder="Nhập mật khẩu hiện tại"
+                placeholder={t("settings.currentPasswordPlaceholder")}
               />
               <PasswordInput
-                label="Mật khẩu mới"
+                label={t("settings.newPassword")}
                 value={pwForm.newPassword}
                 onChange={(v) => setPwForm((f) => ({ ...f, newPassword: v }))}
-                placeholder="Ít nhất 8 ký tự"
+                placeholder={t("settings.newPasswordPlaceholder")}
               />
               <PasswordInput
-                label="Xác nhận mật khẩu mới"
+                label={t("settings.confirmPassword")}
                 value={pwForm.confirmPassword}
                 onChange={(v) => setPwForm((f) => ({ ...f, confirmPassword: v }))}
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder={t("settings.confirmPasswordPlaceholder")}
               />
-              {/* Hiển thị lỗi khớp mật khẩu trực tiếp */}
               {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
-                <p className="text-xs text-red-500">Mật khẩu không khớp</p>
+                <p className="text-xs text-red-500">{t("settings.passwordNoMatch")}</p>
               )}
               <button
                 type="submit"
                 disabled={loadingSection === "account" || !pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword}
                 className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                {loadingSection === "account" ? "Đang lưu..." : "Đổi mật khẩu"}
+                {loadingSection === "account" ? t("settings.saving") : t("settings.changePasswordBtn")}
               </button>
             </form>
           </div>
@@ -283,26 +270,26 @@ export default function SettingsPage() {
       case "privacy":
         return (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Quyền riêng tư</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.privacy")}</h2>
             <div className="max-w-sm space-y-1 divide-y divide-gray-100 dark:divide-gray-800">
               <Toggle
                 checked={privacy.isPrivate}
                 onChange={(v) => setPrivacy((p) => ({ ...p, isPrivate: v }))}
-                label="Tài khoản riêng tư"
-                description="Chỉ người được chấp nhận mới thấy bài viết của bạn"
+                label={t("settings.privateAccount")}
+                description={t("settings.privateDesc")}
               />
               <div className="py-3">
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  Ai có thể nhắn tin cho bạn
+                  {t("settings.whoCanMessage")}
                 </label>
                 <select
                   value={privacy.allowMessagesFrom}
                   onChange={(e) => setPrivacy((p) => ({ ...p, allowMessagesFrom: e.target.value }))}
                   className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-900 dark:text-gray-100 focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
                 >
-                  <option value="EVERYONE">Mọi người</option>
-                  <option value="FOLLOWING">Người bạn đang follow</option>
-                  <option value="NONE">Không ai</option>
+                  <option value="EVERYONE">{t("settings.everyone")}</option>
+                  <option value="FOLLOWING">{t("settings.followersOnly")}</option>
+                  <option value="NONE">{t("settings.noOne")}</option>
                 </select>
               </div>
             </div>
@@ -311,7 +298,7 @@ export default function SettingsPage() {
               disabled={loadingSection === "privacy"}
               className="mt-6 px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              {loadingSection === "privacy" ? "Đang lưu..." : "Lưu thay đổi"}
+              {loadingSection === "privacy" ? t("settings.saving") : t("settings.saveChanges")}
             </button>
           </div>
         );
@@ -319,31 +306,31 @@ export default function SettingsPage() {
       case "notifications":
         return (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Thông báo</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.notificationsTab")}</h2>
             <div className="max-w-sm divide-y divide-gray-100 dark:divide-gray-800">
               <Toggle
                 checked={notifs.likeNotif}
                 onChange={(v) => setNotifs((n) => ({ ...n, likeNotif: v }))}
-                label="Lượt thích"
-                description="Nhận thông báo khi ai đó thích bài viết của bạn"
+                label={t("settings.likeNotif")}
+                description={t("settings.likeNotifDesc")}
               />
               <Toggle
                 checked={notifs.commentNotif}
                 onChange={(v) => setNotifs((n) => ({ ...n, commentNotif: v }))}
-                label="Bình luận"
-                description="Nhận thông báo khi ai đó bình luận bài của bạn"
+                label={t("settings.commentNotif")}
+                description={t("settings.commentNotifDesc")}
               />
               <Toggle
                 checked={notifs.followNotif}
                 onChange={(v) => setNotifs((n) => ({ ...n, followNotif: v }))}
-                label="Lượt theo dõi"
-                description="Nhận thông báo khi ai đó follow bạn"
+                label={t("settings.followNotif")}
+                description={t("settings.followNotifDesc")}
               />
               <Toggle
                 checked={notifs.emailNotif}
                 onChange={(v) => setNotifs((n) => ({ ...n, emailNotif: v }))}
-                label="Thông báo email"
-                description="Gửi thông báo quan trọng qua email"
+                label={t("settings.emailNotif")}
+                description={t("settings.emailNotifDesc")}
               />
             </div>
             <button
@@ -351,7 +338,7 @@ export default function SettingsPage() {
               disabled={loadingSection === "notifications"}
               className="mt-6 px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
-              {loadingSection === "notifications" ? "Đang lưu..." : "Lưu thay đổi"}
+              {loadingSection === "notifications" ? t("settings.saving") : t("settings.saveChanges")}
             </button>
           </div>
         );
@@ -359,20 +346,45 @@ export default function SettingsPage() {
       case "appearance":
         return (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Giao diện</h2>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.appearance")}</h2>
             <div className="max-w-sm">
               <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Chế độ tối</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("settings.darkMode")}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {isDark ? "Đang bật" : "Đang tắt"}
+                    {isDark ? t("settings.darkModeOn") : t("settings.darkModeOff")}
                   </p>
                 </div>
                 <ThemeToggle />
               </div>
               <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
-                Tùy chỉnh sẽ được lưu tự động và áp dụng ngay lập tức.
+                {t("settings.darkModeHint")}
               </p>
+            </div>
+          </div>
+        );
+
+      case "language":
+        return (
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{t("settings.selectLanguage")}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t("settings.languageDesc")}</p>
+            <div className="max-w-sm space-y-3">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors ${
+                    locale === lang.code
+                      ? "border-black dark:border-white bg-black dark:bg-white text-white dark:text-black"
+                      : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
+                  }`}
+                >
+                  <span className="text-2xl">{lang.flag}</span>
+                  <span className="font-medium">{lang.label}</span>
+                  {locale === lang.code && <span className="ml-auto">✓</span>}
+                </button>
+              ))}
             </div>
           </div>
         );
@@ -386,7 +398,7 @@ export default function SettingsPage() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="sticky top-0 z-10 px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Cài đặt</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t("settings.title")}</h1>
       </div>
 
       <div className="flex">

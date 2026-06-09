@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { getSocket } from "@/lib/socket";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Format thời gian ngắn gọn
 function timeAgo(dateStr) {
@@ -38,6 +39,7 @@ function Avatar({ user, size = "w-12 h-12" }) {
 //   onUpdate(updatedConv): callback khi nhận "new_dm" — update preview + unread
 export default function ConversationList({ conversations, selectedId, onSelect, onUpdate, currentUserId }) {
   const socketRef = useRef(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const socket = getSocket();
@@ -61,8 +63,8 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>
         </div>
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Chưa có tin nhắn nào</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Nhắn tin với bạn bè từ trang hồ sơ của họ</p>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("messages.noConversations")}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{t("messages.noConversationsDesc")}</p>
       </div>
     );
   }
@@ -73,9 +75,9 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
         const isSelected = conv.id === selectedId;
         const hasUnread = conv.unreadCount > 0;
         const preview = conv.lastMessage
-          ? (conv.lastMessage.senderId === currentUserId ? "Bạn: " : "") +
-            (conv.lastMessage.mediaUrl ? "📷 Ảnh" : conv.lastMessage.content?.slice(0, 50) || "")
-          : "Hãy bắt đầu cuộc trò chuyện";
+          ? (conv.lastMessage.senderId === currentUserId ? t("messages.you") : "") +
+            (conv.lastMessage.mediaUrl ? t("messages.photo") : conv.lastMessage.content?.slice(0, 50) || "")
+          : t("messages.startConversation");
 
         return (
           <button

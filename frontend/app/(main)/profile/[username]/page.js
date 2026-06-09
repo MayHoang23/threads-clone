@@ -6,6 +6,7 @@ import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 import { getCurrentUser, getAccessToken } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Skeleton cho header profile
 function ProfileHeaderSkeleton() {
@@ -51,6 +52,7 @@ export default function ProfilePage() {
   const avatarInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
+  const { t } = useLanguage();
   const isOwnProfile = currentUser?.username === username;
 
   const handleUploadMedia = async (file, field) => {
@@ -312,7 +314,7 @@ export default function ProfilePage() {
                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                 <circle cx="12" cy="13" r="4" />
               </svg>
-              <span className="text-white text-sm font-medium">Đổi ảnh bìa</span>
+              <span className="text-white text-sm font-medium">{t("profile.changeCover")}</span>
             </div>
           )}
         </div>
@@ -361,7 +363,7 @@ export default function ProfilePage() {
                 href="/profile/edit"
                 className="px-5 py-1.5 rounded-full border border-gray-300 dark:border-gray-600 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                Chỉnh sửa
+                {t("profile.editProfile")}
               </Link>
             ) : (
               <>
@@ -377,9 +379,9 @@ export default function ProfilePage() {
                   {followLoading ? (
                     <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   ) : profile.isFollowing ? (
-                    "Đang follow"
+                    t("profile.followingBtn")
                   ) : (
-                    "Follow"
+                    t("profile.follow")
                   )}
                 </button>
                 <button
@@ -390,7 +392,7 @@ export default function ProfilePage() {
                   {chatLoading ? (
                     <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
                   ) : (
-                    "Nhắn tin"
+                    t("profile.message")
                   )}
                 </button>
               </>
@@ -418,15 +420,15 @@ export default function ProfilePage() {
         <div className="flex gap-5 text-sm mb-4">
           <span className="text-gray-700 dark:text-gray-300">
             <span className="font-semibold text-gray-900 dark:text-white">{profile.postCount}</span>
-            {" "}bài viết
+            {" "}{t("profile.postsCount")}
           </span>
           <Link href={`/profile/${username}/followers`} className="text-gray-700 dark:text-gray-300 hover:underline">
             <span className="font-semibold text-gray-900 dark:text-white">{profile.followerCount}</span>
-            {" "}followers
+            {" "}{t("profile.followers")}
           </Link>
           <Link href={`/profile/${username}/following`} className="text-gray-700 dark:text-gray-300 hover:underline">
             <span className="font-semibold text-gray-900 dark:text-white">{profile.followingCount}</span>
-            {" "}following
+            {" "}{t("profile.following")}
           </Link>
         </div>
       </div>
@@ -441,7 +443,7 @@ export default function ProfilePage() {
               : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           }`}
         >
-          Bài viết
+          {t("profile.posts")}
         </button>
         {/* Tab Đã lưu chỉ hiện khi xem profile của chính mình */}
         {isOwnProfile && (
@@ -453,7 +455,7 @@ export default function ProfilePage() {
                 : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             }`}
           >
-            Đã lưu
+            {t("profile.saved")}
           </button>
         )}
       </div>
@@ -462,7 +464,7 @@ export default function ProfilePage() {
       {displayPosts.length === 0 ? (
         <div className="py-20 text-center px-4">
           <p className="text-gray-400 text-sm">
-            {activeTab === "saved" ? "Chưa có bài viết nào được lưu" : "Chưa có bài viết nào"}
+            {activeTab === "saved" ? t("post.noSaved") : t("post.noPost")}
           </p>
         </div>
       ) : (
@@ -484,7 +486,7 @@ export default function ProfilePage() {
                 <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
               )}
               {!hasMore && posts.length > 0 && (
-                <p className="text-xs text-gray-400">Đã hết bài viết</p>
+                <p className="text-xs text-gray-400">{t("profile.end")}</p>
               )}
             </div>
           )}
