@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 import vi from "@/lib/translations/vi";
 import en from "@/lib/translations/en";
 import zh from "@/lib/translations/zh";
@@ -10,14 +10,11 @@ const translations = { vi, en, zh };
 const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
-  const [locale, setLocale] = useState("vi");
-
-  useEffect(() => {
+  const [locale, setLocale] = useState(() => {
+    if (typeof window === "undefined") return "vi";
     const saved = localStorage.getItem("locale");
-    if (saved && ["vi", "en", "zh"].includes(saved)) {
-      setLocale(saved);
-    }
-  }, []);
+    return saved && ["vi", "en", "zh"].includes(saved) ? saved : "vi";
+  });
 
   const changeLanguage = (newLocale) => {
     setLocale(newLocale);
