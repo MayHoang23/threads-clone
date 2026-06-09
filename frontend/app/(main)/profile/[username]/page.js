@@ -146,8 +146,13 @@ export default function ProfilePage() {
   const handleTabChange = async (tab) => {
     setActiveTab(tab);
     if (tab === "saved" && savedPosts.length === 0) {
-      const res = await fetchAPI(`/posts/saved`);
-      if (res?.success) setSavedPosts(res.data.posts ?? []);
+      try {
+        const res = await fetchAPI(`/posts/saved`);
+        if (res?.success) setSavedPosts(res.data.posts ?? []);
+        else setSavedPosts([]);
+      } catch {
+        setSavedPosts([]);
+      }
     }
   };
 
