@@ -238,7 +238,7 @@ const getFollowers = async (userId) => {
     orderBy: { createdAt: "desc" },
   });
 
-  return follows.map((f) => f.follower);
+  return follows.map((f) => ({ ...f.follower, isFollowing: false }));
 };
 
 // ========================
@@ -254,7 +254,7 @@ const getFollowing = async (userId) => {
     orderBy: { createdAt: "desc" },
   });
 
-  return follows.map((f) => f.following);
+  return follows.map((f) => ({ ...f.following, isFollowing: true }));
 };
 
 // ========================
@@ -366,6 +366,23 @@ const search = async (query, currentUserId = null) => {
     take: 10,
   });
 
+  // Check isFollowing cho từng user trong kết quả search
+  let followingIds = new Set();
+  if (currentUserId) {
+    const follows = await prisma.follow.findMany({
+      where: {
+        followerId: currentUserId,
+        followingId: { in: users.map((u) => u.id) },
+      },
+      select: { followingId: true },
+    });
+    followingIds = new Set(follows.map((f) => f.followingId));
+  }
+  const usersWithFollow = users.map((u) => ({
+    ...u,
+    isFollowing: followingIds.has(u.id),
+  }));
+
   // Tìm bài viết có nội dung chứa từ khóa (chỉ PUBLIC)
   const posts = await prisma.post.findMany({
     where: {
@@ -409,7 +426,7 @@ const search = async (query, currentUserId = null) => {
   }));
 
   return {
-    users,
+    users: usersWithFollow,
     posts: formattedPosts,
     hashtags: hashtags.map((h) => ({ name: h.name, postCount: h._count.posts })),
   };

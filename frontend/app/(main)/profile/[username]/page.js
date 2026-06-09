@@ -209,6 +209,18 @@ export default function ProfilePage() {
     setProfile((p) => p ? { ...p, postCount: Math.max(0, p.postCount - 1) } : p);
   };
 
+  // Sync follow state cross-page
+  useEffect(() => {
+    const handler = (e) => {
+      const { username: changedUsername, isFollowing } = e.detail;
+      if (changedUsername === username) {
+        setProfile((prev) => prev ? { ...prev, isFollowing } : prev);
+      }
+    };
+    window.addEventListener("follow-changed", handler);
+    return () => window.removeEventListener("follow-changed", handler);
+  }, [username]);
+
   // Sync tab Đã lưu real-time khi save/unsave từ bất kỳ đâu
   useEffect(() => {
     const onSaved = (e) => setSavedPosts((prev) => {

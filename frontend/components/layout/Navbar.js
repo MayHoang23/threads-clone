@@ -169,7 +169,7 @@ export default function Navbar() {
                 <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
                 <div className="absolute bottom-14 left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-20">
                   <Link
-                    href="/profile"
+                    href={`/profile/${currentUser?.username}`}
                     className="flex items-center px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >

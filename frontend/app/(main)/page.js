@@ -96,7 +96,7 @@ export default function NewsfeedPage() {
   return (
     <div>
       {/* Header sticky cho mobile */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 lg:hidden">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 lg:hidden">
         <div className="px-4 py-3">
           <h1 className="font-bold text-lg">Dành cho bạn</h1>
         </div>
@@ -104,7 +104,7 @@ export default function NewsfeedPage() {
 
       {/* Header desktop */}
       <div className="hidden lg:block border-b border-gray-100 px-4 py-4">
-        <h1 className="font-bold text-base text-gray-900">Dành cho bạn</h1>
+        <h1 className="font-bold text-base text-gray-900 dark:text-white">Dành cho bạn</h1>
       </div>
 
       {/* Ô tạo bài mới */}
@@ -118,7 +118,7 @@ export default function NewsfeedPage() {
         // Empty state khi chưa có bài
         <div className="py-24 text-center px-4">
           <div className="text-6xl mb-4">🌱</div>
-          <p className="font-semibold text-gray-700 mb-1">Feed của bạn đang trống</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1">Feed của bạn đang trống</p>
           <p className="text-sm text-gray-400">
             Hãy follow người khác hoặc đăng bài đầu tiên!
           </p>

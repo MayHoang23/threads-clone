@@ -67,8 +67,9 @@ Dùng window.dispatchEvent để giao tiếp giữa các component không có pr
 
 | Event name       | Detail         | Mô tả                                     |
 | ---------------- | -------------- | ----------------------------------------- |
-| open-create-post | (không có)     | Mở modal CreatePost từ bất kỳ đâu         |
-| post-created     | newPost object | Prepend bài mới vào newsfeed sau khi đăng |
+| open-create-post | (không có)                    | Mở modal CreatePost từ bất kỳ đâu         |
+| post-created     | newPost object                | Prepend bài mới vào newsfeed sau khi đăng |
+| follow-changed   | { username, isFollowing }     | Sync follow state cross-page               |
 
 Pattern dùng:
 
@@ -174,11 +175,26 @@ Conversation (lastMessageAt), Message (content, mediaUrl, isRead)
 ✅ Field name mismatch participantId → userId
 ✅ useSocket() gọi trong useEffect → chuyển lên top level của component
 
-### Ngày 12
+### Bugs đã fix bổ sung Ngày 12
 
 ✅ Navbar "Tạo bài" → /compose 404 → đổi thành button dispatch custom event + modal
 ✅ Modal CreatePost không update newsfeed → custom event 'post-created' + listener ở page.js
 ✅ Dark mode flash trắng khi F5 → ThemeContext lazy init từ DOM class, bỏ useEffect đọc localStorage
+✅ PostDetail page dark mode (header, skeleton, error state)
+✅ CommentSection dark mode (input, buttons, comments, replies)
+✅ Sidebar dark mode
+✅ NotificationBell dark mode + active state
+✅ CreatePost dark mode (inline + modal)
+✅ Search page dark mode (input, tabs)
+✅ Edit Profile dark mode (inputs, labels, toggle)
+✅ Profile page cover gradient (thay bg-gray-200)
+✅ Avatar upload thẳng từ profile page (click avatar/cover → Cloudinary)
+✅ Followers/Following pages tạo mới
+✅ Saved posts sync real-time (custom event post-saved/post-unsaved)
+✅ Tab Đã lưu lỗi 404 → try/catch setSavedPosts([])
+✅ Followers/Following Link 404 → tạo route mới
+✅ Toggle isPrivate bị lệch → dùng left positioning thay translate
+EOF
 
 ## Còn lại
 
@@ -202,3 +218,20 @@ Backend socket verify bằng JWT_REFRESH_SECRET
 AI đang MOCK_MODE — cần thêm credit Anthropic để dùng thật
 Sau Prisma migration: restart backend (EPERM DLL issue trên Windows)
 Route /compose không tồn tại và không cần tạo
+
+## Bugs đã fix bổ sung Ngày 12
+
+✅ PostDetail page dark mode (header, skeleton, error state)
+✅ CommentSection dark mode (input, buttons, comments, replies)
+✅ Sidebar dark mode
+✅ NotificationBell dark mode + active state
+✅ CreatePost dark mode (inline + modal)
+✅ Search page dark mode (input, tabs)
+✅ Edit Profile dark mode (inputs, labels, toggle)
+✅ Profile page cover gradient (thay bg-gray-200)
+✅ Avatar upload thẳng từ profile page (click avatar/cover → Cloudinary)
+✅ Followers/Following pages tạo mới
+✅ Saved posts sync real-time (custom event post-saved/post-unsaved)
+✅ Tab Đã lưu lỗi 404 → try/catch setSavedPosts([])
+✅ Followers/Following Link 404 → tạo route mới
+✅ Toggle isPrivate bị lệch → dùng left positioning thay translate

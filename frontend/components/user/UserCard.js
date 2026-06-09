@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 
-export default function UserCard({ user: initialUser, currentUserId, showFollowButton = true }) {
+export default function UserCard({ user: initialUser, currentUserId, showFollowButton = true, onFollowChange }) {
   const [user, setUser] = useState(initialUser);
   const [loading, setLoading] = useState(false);
+
+  // Sync khi initialUser.isFollowing thay đổi từ parent
+  useEffect(() => {
+    setUser(initialUser);
+  }, [initialUser.isFollowing]);
 
   const isOwnProfile = currentUserId === user.id;
 
@@ -21,8 +26,12 @@ export default function UserCard({ user: initialUser, currentUserId, showFollowB
     try {
       const res = await fetchAPI(`/users/${user.username}/follow`, { method: "POST" });
       if (!res?.success) {
-        // Rollback nếu API lỗi
         setUser((u) => ({ ...u, isFollowing: wasFollowing }));
+      } else {
+        onFollowChange?.(user.username, !wasFollowing);
+        window.dispatchEvent(new CustomEvent("follow-changed", {
+          detail: { username: user.username, isFollowing: !wasFollowing },
+        }));
       }
     } catch {
       setUser((u) => ({ ...u, isFollowing: wasFollowing }));
@@ -48,7 +57,7 @@ export default function UserCard({ user: initialUser, currentUserId, showFollowB
         {/* Tên + username */}
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <span className="font-semibold text-sm text-gray-900 truncate">
+            <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
               {user.displayName || user.username}
             </span>
             {user.isVerified && (
@@ -57,7 +66,7 @@ export default function UserCard({ user: initialUser, currentUserId, showFollowB
               </svg>
             )}
           </div>
-          <span className="text-sm text-gray-400 truncate block">@{user.username}</span>
+          <span className="text-sm text-gray-400 dark:text-gray-500 truncate block">@{user.username}</span>
         </div>
       </Link>
 
@@ -68,7 +77,7 @@ export default function UserCard({ user: initialUser, currentUserId, showFollowB
           disabled={loading}
           className={`ml-3 flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
             user.isFollowing
-              ? "border-gray-300 text-gray-700 hover:bg-gray-50"
+              ? "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               : "border-black bg-black text-white hover:bg-gray-800"
           } disabled:opacity-50`}
         >

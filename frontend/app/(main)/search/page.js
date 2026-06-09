@@ -29,6 +29,21 @@ export default function SearchPage() {
     inputRef.current?.focus();
   }, []);
 
+  // Sync follow state cross-page
+  useEffect(() => {
+    const handler = (e) => {
+      const { username, isFollowing } = e.detail;
+      setResults((prev) => ({
+        ...prev,
+        users: prev.users.map((u) =>
+          u.username === username ? { ...u, isFollowing } : u
+        ),
+      }));
+    };
+    window.addEventListener("follow-changed", handler);
+    return () => window.removeEventListener("follow-changed", handler);
+  }, []);
+
   // Debounce 500ms: chờ người dùng ngừng gõ mới gọi API
   useEffect(() => {
     if (!query.trim()) {
@@ -56,6 +71,15 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFollowChange = (username, isFollowing) => {
+    setResults((prev) => ({
+      ...prev,
+      users: prev.users.map((u) =>
+        u.username === username ? { ...u, isFollowing } : u
+      ),
+    }));
   };
 
   const handleClear = () => {
@@ -172,6 +196,7 @@ export default function SearchPage() {
                     key={user.id}
                     user={user}
                     currentUserId={currentUser?.id}
+                    onFollowChange={handleFollowChange}
                   />
                 ))}
               </div>

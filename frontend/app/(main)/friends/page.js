@@ -121,7 +121,7 @@ export default function FriendsPage() {
         // Lấy danh sách bạn bè = following của mình mà cũng follow lại mình
         // (đơn giản: lấy following của mình)
         const res = await fetchAPI(`/users/${currentUser?.username}/following`);
-        if (res?.success) setFriends(res.data);
+        if (res?.success) setFriends(res.data.map((u) => ({ ...u, isFollowing: true })));
       } else if (tab === "suggestions") {
         await loadSuggestions();
       }
@@ -159,8 +159,24 @@ export default function FriendsPage() {
       })
     );
 
-    setSuggestions(Array.from(candidateMap.values()).slice(0, 10));
+    setSuggestions(Array.from(candidateMap.values()).slice(0, 10).map((u) => ({ ...u, isFollowing: false })));
   };
+
+  const handleFollowChange = (username, isFollowing) => {
+    setFriends((prev) => prev.map((u) => u.username === username ? { ...u, isFollowing } : u));
+    setSuggestions((prev) => prev.map((u) => u.username === username ? { ...u, isFollowing } : u));
+  };
+
+  // Sync follow state cross-page
+  useEffect(() => {
+    const handler = (e) => {
+      const { username, isFollowing } = e.detail;
+      setFriends((prev) => prev.map((u) => u.username === username ? { ...u, isFollowing } : u));
+      setSuggestions((prev) => prev.map((u) => u.username === username ? { ...u, isFollowing } : u));
+    };
+    window.addEventListener("follow-changed", handler);
+    return () => window.removeEventListener("follow-changed", handler);
+  }, []);
 
   // Khi respond lời mời → xóa khỏi danh sách
   const handleRespond = (requestId) => {
@@ -239,8 +255,9 @@ export default function FriendsPage() {
               {friends.map((user) => (
                 <UserCard
                   key={user.id}
-                  user={{ ...user, isFollowing: true }}
+                  user={user}
                   currentUserId={currentUser?.id}
+                  onFollowChange={handleFollowChange}
                 />
               ))}
             </div>
@@ -264,8 +281,9 @@ export default function FriendsPage() {
                 {suggestions.map((user) => (
                   <UserCard
                     key={user.id}
-                    user={{ ...user, isFollowing: false }}
+                    user={user}
                     currentUserId={currentUser?.id}
+                    onFollowChange={handleFollowChange}
                   />
                 ))}
               </div>
