@@ -5,6 +5,22 @@ import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// Fallback tĩnh khi API suggestions fail / rỗng
+const FALLBACK_USERS = [
+  { username: "design.daily", displayName: "Design Daily", gradient: "from-orange-400 to-pink-500", followers: "24.1K", isFollowing: false },
+  { username: "code.journey", displayName: "Code Journey", gradient: "from-blue-400 to-indigo-500", followers: "11.8K", isFollowing: false },
+  { username: "photo.vibes", displayName: "Photo Vibes", gradient: "from-green-400 to-teal-500", followers: "48.3K", isFollowing: false },
+];
+
+// Dựng object followStates { [username]: isFollowing } từ danh sách user
+const buildFollowStates = (users) => {
+  const states = {};
+  users.forEach((u) => {
+    states[u.username] = u.isFollowing;
+  });
+  return states;
+};
+
 // Fallback tĩnh khi API trending fail
 const TRENDING_TAGS = [
   { name: "threads", count: "125K bài" },
@@ -17,25 +33,31 @@ const TRENDING_TAGS = [
 export default function Sidebar() {
   const { t } = useLanguage();
 
-  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  // Khởi tạo = FALLBACK_USERS để hiện ngay khi load, trước khi API về
+  const [suggestedUsers, setSuggestedUsers] = useState(FALLBACK_USERS);
   const [trendingTags, setTrendingTags] = useState(TRENDING_TAGS);
   // Trạng thái follow theo username (optimistic)
-  const [followStates, setFollowStates] = useState({});
+  const [followStates, setFollowStates] = useState(() => buildFollowStates(FALLBACK_USERS));
 
   // Fetch gợi ý người theo dõi
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
         const data = await fetchAPI("/users/suggestions");
-        if (data?.success) {
+        if (data?.success && data.data.length > 0) {
+          // API thành công và có dữ liệu → dùng data thật
           setSuggestedUsers(data.data);
-          const states = {};
-          data.data.forEach((u) => {
-            states[u.username] = u.isFollowing;
-          });
-          setFollowStates(states);
+          setFollowStates(buildFollowStates(data.data));
+        } else {
+          // API trả rỗng → fallback tĩnh
+          setSuggestedUsers(FALLBACK_USERS);
+          setFollowStates(buildFollowStates(FALLBACK_USERS));
         }
-      } catch {}
+      } catch {
+        // API fail → fallback tĩnh
+        setSuggestedUsers(FALLBACK_USERS);
+        setFollowStates(buildFollowStates(FALLBACK_USERS));
+      }
     };
     fetchSuggestions();
   }, []);

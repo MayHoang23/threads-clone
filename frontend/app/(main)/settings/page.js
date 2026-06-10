@@ -464,7 +464,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+      <div className="sticky top-0 z-10 px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-[#F9F9F9] dark:bg-gray-950">
         <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t("settings.title")}</h1>
       </div>
 

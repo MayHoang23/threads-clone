@@ -228,7 +228,7 @@ const toggleFollow = async (followerId, followingId) => {
 // ========================
 // LẤY DANH SÁCH FOLLOWERS (người follow mình)
 // ========================
-const getFollowers = async (userId) => {
+const getFollowers = async (userId, currentUserId = null) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError("Người dùng không tồn tại", 404);
 
@@ -238,13 +238,29 @@ const getFollowers = async (userId) => {
     orderBy: { createdAt: "desc" },
   });
 
-  return follows.map((f) => ({ ...f.follower, isFollowing: false }));
+  const followerList = follows.map((f) => f.follower);
+
+  if (currentUserId) {
+    const myFollows = await prisma.follow.findMany({
+      where: {
+        followerId: currentUserId,
+        followingId: { in: followerList.map((u) => u.id) },
+      },
+      select: { followingId: true },
+    });
+    const myFollowingIds = new Set(myFollows.map((f) => f.followingId));
+    return followerList.map((u) => ({
+      ...u,
+      isFollowing: myFollowingIds.has(u.id),
+    }));
+  }
+  return followerList.map((u) => ({ ...u, isFollowing: false }));
 };
 
 // ========================
 // LẤY DANH SÁCH FOLLOWING (người mình đang follow)
 // ========================
-const getFollowing = async (userId) => {
+const getFollowing = async (userId, currentUserId = null) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new AppError("Người dùng không tồn tại", 404);
 
@@ -254,7 +270,23 @@ const getFollowing = async (userId) => {
     orderBy: { createdAt: "desc" },
   });
 
-  return follows.map((f) => ({ ...f.following, isFollowing: true }));
+  const followingList = follows.map((f) => f.following);
+
+  if (currentUserId) {
+    const myFollows = await prisma.follow.findMany({
+      where: {
+        followerId: currentUserId,
+        followingId: { in: followingList.map((u) => u.id) },
+      },
+      select: { followingId: true },
+    });
+    const myFollowingIds = new Set(myFollows.map((f) => f.followingId));
+    return followingList.map((u) => ({
+      ...u,
+      isFollowing: myFollowingIds.has(u.id),
+    }));
+  }
+  return followingList.map((u) => ({ ...u, isFollowing: false }));
 };
 
 // ========================

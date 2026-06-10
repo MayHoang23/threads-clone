@@ -52,7 +52,7 @@ export default function PostDetailPage({ params }) {
   return (
     <div>
       {/* Header với nút Back */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-10 bg-[#F9F9F9] dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => router.back()}

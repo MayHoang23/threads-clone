@@ -73,7 +73,7 @@ const getFollowers = async (req, res, next) => {
     if (!target) {
       return res.status(404).json({ success: false, data: null, message: "Người dùng không tồn tại" });
     }
-    const followers = await userService.getFollowers(target.id);
+    const followers = await userService.getFollowers(target.id, req.user?.id);
     res.json({ success: true, data: followers, message: "Lấy danh sách followers thành công" });
   } catch (err) {
     next(err);
@@ -91,7 +91,7 @@ const getFollowing = async (req, res, next) => {
     if (!target) {
       return res.status(404).json({ success: false, data: null, message: "Người dùng không tồn tại" });
     }
-    const following = await userService.getFollowing(target.id);
+    const following = await userService.getFollowing(target.id, req.user?.id);
     res.json({ success: true, data: following, message: "Lấy danh sách following thành công" });
   } catch (err) {
     next(err);

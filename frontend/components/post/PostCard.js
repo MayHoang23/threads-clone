@@ -118,7 +118,7 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
         <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
       )}
 
-      <article className="px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50/20 dark:hover:bg-gray-800/20 transition-colors">
+      <article className="px-4 pt-4 pb-2 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100/40 dark:hover:bg-gray-800/20 transition-colors">
         <div className="flex gap-3">
           {/* ---- Cột trái: avatar + đường thread ---- */}
           <div className="flex flex-col items-center">

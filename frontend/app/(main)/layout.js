@@ -25,7 +25,7 @@ export default function MainLayout({ children }) {
   // Hiển thị loading spinner khi đang kiểm tra auth
   if (!ready) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F9F9F9] dark:bg-gray-950 flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-gray-200 dark:border-gray-700 border-t-black dark:border-t-white rounded-full animate-spin" />
       </div>
     );
@@ -34,7 +34,7 @@ export default function MainLayout({ children }) {
   return (
     <LanguageProvider>
     <SocketProvider>
-      <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300">
+      <div className="min-h-screen bg-[#F9F9F9] dark:bg-gray-950 transition-colors duration-300">
         {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
         <Navbar />
 

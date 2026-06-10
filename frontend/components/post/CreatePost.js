@@ -369,7 +369,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
 
   // Inline render (newsfeed)
   return (
-    <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+    <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-[#F9F9F9] dark:bg-gray-950">
       {formInner}
     </div>
   );

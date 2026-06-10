@@ -84,6 +84,11 @@ export default function FollowersPage() {
               key={user.id}
               user={user}
               currentUserId={currentUser?.id}
+              onFollowChange={(username, isFollowing) => {
+                setUsers((prev) => prev.map((u) =>
+                  u.username === username ? { ...u, isFollowing } : u
+                ));
+              }}
             />
           ))}
         </div>

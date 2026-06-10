@@ -43,10 +43,10 @@ router.get("/:username/posts", optionalAuthenticate, controller.getUserPosts);
 // Follow / unfollow
 router.post("/:username/follow", authenticate, controller.toggleFollow);
 
-// Danh sách followers
-router.get("/:username/followers", controller.getFollowers);
+// Danh sách followers (optionalAuthenticate để biết isFollowing khi đã login)
+router.get("/:username/followers", optionalAuthenticate, controller.getFollowers);
 
-// Danh sách following
-router.get("/:username/following", controller.getFollowing);
+// Danh sách following (optionalAuthenticate để biết isFollowing khi đã login)
+router.get("/:username/following", optionalAuthenticate, controller.getFollowing);
 
 module.exports = router;
