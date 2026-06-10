@@ -377,6 +377,31 @@ const toggleSave = async (userId, postId) => {
 };
 
 // ========================
+// LẤY BÀI ĐÃ LƯU (cursor pagination)
+// ========================
+const getSavedPosts = async (userId, { cursor, limit = 10 }) => {
+  const saved = await prisma.savedPost.findMany({
+    where: { userId },
+    take: limit + 1,
+    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    orderBy: { createdAt: "desc" },
+    include: {
+      post: {
+        include: getPostInclude(userId),
+      },
+    },
+  });
+
+  const hasMore = saved.length > limit;
+  const items = hasMore ? saved.slice(0, limit) : saved;
+
+  return {
+    posts: items.map((s) => formatPost(s.post, userId)),
+    nextCursor: hasMore ? items[items.length - 1].id : null,
+  };
+};
+
+// ========================
 // TOP HASHTAG ĐANG HOT
 // ========================
 // Lấy top 5 hashtag có nhiều bài viết nhất
@@ -404,4 +429,5 @@ module.exports = {
   createComment,
   getComments,
   toggleSave,
+  getSavedPosts,
 };

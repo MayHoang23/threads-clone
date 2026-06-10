@@ -126,6 +126,21 @@ const toggleSave = async (req, res, next) => {
   }
 };
 
+// GET /api/v1/posts/saved
+const getSavedPosts = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { cursor, limit } = req.query;
+    const result = await postService.getSavedPosts(userId, {
+      cursor,
+      limit: limit ? parseInt(limit, 10) : 10,
+    });
+    return res.json({ success: true, data: result, message: "Lấy bài đã lưu thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -137,4 +152,5 @@ module.exports = {
   createComment,
   getComments,
   toggleSave,
+  getSavedPosts,
 };

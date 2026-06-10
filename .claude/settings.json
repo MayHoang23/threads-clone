@@ -17,7 +17,8 @@
       "Bash(node --check src/modules/posts/post.controller.js)",
       "Bash(node --check lib/translations/vi.js)",
       "Bash(node --check lib/translations/en.js)",
-      "Bash(node --check lib/translations/zh.js)"
+      "Bash(node --check lib/translations/zh.js)",
+      "Bash(node --check src/modules/posts/post.routes.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",

@@ -15,6 +15,10 @@ router.get("/feed", authenticate, postController.getFeed);
 // QUAN TRỌNG: phải đặt TRƯỚC /:id để không bị nhận nhầm là param :id
 router.get("/trending-hashtags", postController.getTrendingHashtags);
 
+// GET /api/v1/posts/saved — bài đã lưu của user
+// QUAN TRỌNG: phải đặt TRƯỚC /:id để không bị nhận nhầm là param :id
+router.get("/saved", authenticate, postController.getSavedPosts);
+
 // GET /api/v1/posts/:id — xem chi tiết (không bắt buộc login, nhưng nếu có thì biết isLiked/isSaved)
 router.get("/:id", optionalAuthenticate, postController.getPostById);
 
