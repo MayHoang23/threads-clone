@@ -277,9 +277,9 @@ export default function EditProfilePage() {
             <button
               type="button"
               onClick={() => setForm((f) => ({ ...f, isPrivate: !f.isPrivate }))}
-              className={`relative w-12 h-6 rounded-full transition-colors ${form.isPrivate ? "bg-black" : "bg-gray-300"}`}
+              className={`relative w-12 h-6 rounded-full transition-colors ${form.isPrivate ? "bg-black dark:bg-white" : "bg-gray-300 dark:bg-gray-600"}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${form.isPrivate ? "left-[26px]" : "left-0.5"}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white dark:bg-gray-900 rounded-full shadow transition-all duration-500 ease-in-out ${form.isPrivate ? "left-[26px]" : "left-0.5"}`} />
             </button>
           </div>
         </div>

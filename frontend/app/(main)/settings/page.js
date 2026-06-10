@@ -274,7 +274,14 @@ export default function SettingsPage() {
             <div className="max-w-sm space-y-1 divide-y divide-gray-100 dark:divide-gray-800">
               <Toggle
                 checked={privacy.isPrivate}
-                onChange={(v) => setPrivacy((p) => ({ ...p, isPrivate: v }))}
+                onChange={async (v) => {
+                  const newPrivacy = { ...privacy, isPrivate: v };
+                  setPrivacy(newPrivacy);
+                  try {
+                    await fetchAPI("/settings/privacy", { method: "PATCH", body: JSON.stringify(newPrivacy) });
+                    showToast("Đã lưu");
+                  } catch { showToast("Lưu thất bại", "error"); }
+                }}
                 label={t("settings.privateAccount")}
                 description={t("settings.privateDesc")}
               />
@@ -284,7 +291,14 @@ export default function SettingsPage() {
                 </label>
                 <select
                   value={privacy.allowMessagesFrom}
-                  onChange={(e) => setPrivacy((p) => ({ ...p, allowMessagesFrom: e.target.value }))}
+                  onChange={async (e) => {
+                    const newPrivacy = { ...privacy, allowMessagesFrom: e.target.value };
+                    setPrivacy(newPrivacy);
+                    try {
+                      await fetchAPI("/settings/privacy", { method: "PATCH", body: JSON.stringify(newPrivacy) });
+                      showToast("Đã lưu");
+                    } catch { showToast("Lưu thất bại", "error"); }
+                  }}
                   className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-900 dark:text-gray-100 focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
                 >
                   <option value="EVERYONE">{t("settings.everyone")}</option>
@@ -293,13 +307,6 @@ export default function SettingsPage() {
                 </select>
               </div>
             </div>
-            <button
-              onClick={handleSavePrivacy}
-              disabled={loadingSection === "privacy"}
-              className="mt-6 px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              {loadingSection === "privacy" ? t("settings.saving") : t("settings.saveChanges")}
-            </button>
           </div>
         );
 
@@ -310,36 +317,57 @@ export default function SettingsPage() {
             <div className="max-w-sm divide-y divide-gray-100 dark:divide-gray-800">
               <Toggle
                 checked={notifs.likeNotif}
-                onChange={(v) => setNotifs((n) => ({ ...n, likeNotif: v }))}
+                onChange={async (v) => {
+                  const newNotifs = { ...notifs, likeNotif: v };
+                  setNotifs(newNotifs);
+                  try {
+                    await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
+                    showToast("Đã lưu");
+                  } catch { showToast("Lưu thất bại", "error"); }
+                }}
                 label={t("settings.likeNotif")}
                 description={t("settings.likeNotifDesc")}
               />
               <Toggle
                 checked={notifs.commentNotif}
-                onChange={(v) => setNotifs((n) => ({ ...n, commentNotif: v }))}
+                onChange={async (v) => {
+                  const newNotifs = { ...notifs, commentNotif: v };
+                  setNotifs(newNotifs);
+                  try {
+                    await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
+                    showToast("Đã lưu");
+                  } catch { showToast("Lưu thất bại", "error"); }
+                }}
                 label={t("settings.commentNotif")}
                 description={t("settings.commentNotifDesc")}
               />
               <Toggle
                 checked={notifs.followNotif}
-                onChange={(v) => setNotifs((n) => ({ ...n, followNotif: v }))}
+                onChange={async (v) => {
+                  const newNotifs = { ...notifs, followNotif: v };
+                  setNotifs(newNotifs);
+                  try {
+                    await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
+                    showToast("Đã lưu");
+                  } catch { showToast("Lưu thất bại", "error"); }
+                }}
                 label={t("settings.followNotif")}
                 description={t("settings.followNotifDesc")}
               />
               <Toggle
                 checked={notifs.emailNotif}
-                onChange={(v) => setNotifs((n) => ({ ...n, emailNotif: v }))}
+                onChange={async (v) => {
+                  const newNotifs = { ...notifs, emailNotif: v };
+                  setNotifs(newNotifs);
+                  try {
+                    await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
+                    showToast("Đã lưu");
+                  } catch { showToast("Lưu thất bại", "error"); }
+                }}
                 label={t("settings.emailNotif")}
                 description={t("settings.emailNotifDesc")}
               />
             </div>
-            <button
-              onClick={handleSaveNotifs}
-              disabled={loadingSection === "notifications"}
-              className="mt-6 px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-            >
-              {loadingSection === "notifications" ? t("settings.saving") : t("settings.saveChanges")}
-            </button>
           </div>
         );
 
