@@ -346,6 +346,31 @@ const getFriendRequests = async (userId) => {
 };
 
 // ========================
+// GỢI Ý NGƯỜI THEO DÕI
+// ========================
+// Lấy tối đa 5 user chưa follow, không phải chính mình, không bị ban
+const getSuggestions = async (currentUserId, limit = 5) => {
+  // Những người mình đang follow → loại khỏi gợi ý
+  const following = await prisma.follow.findMany({
+    where: { followerId: currentUserId },
+    select: { followingId: true },
+  });
+  const followingIds = following.map((f) => f.followingId);
+
+  const users = await prisma.user.findMany({
+    where: {
+      id: { notIn: [...followingIds, currentUserId] },
+      isBanned: false,
+    },
+    select: USER_SELECT,
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  return users.map((u) => ({ ...u, isFollowing: false }));
+};
+
+// ========================
 // TÌM KIẾM (user + post + hashtag)
 // ========================
 const search = async (query, currentUserId = null) => {
@@ -442,5 +467,6 @@ module.exports = {
   sendFriendRequest,
   respondFriendRequest,
   getFriendRequests,
+  getSuggestions,
   search,
 };

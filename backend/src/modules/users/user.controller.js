@@ -142,6 +142,16 @@ const getFriendRequests = async (req, res, next) => {
   }
 };
 
+// GET /api/v1/users/suggestions
+const getSuggestions = async (req, res, next) => {
+  try {
+    const users = await userService.getSuggestions(req.user.id);
+    res.json({ success: true, data: users, message: "Lấy gợi ý người dùng thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /api/v1/search?q=keyword
 const search = async (req, res, next) => {
   try {
@@ -164,5 +174,6 @@ module.exports = {
   sendFriendRequest,
   respondFriendRequest,
   getFriendRequests,
+  getSuggestions,
   search,
 };

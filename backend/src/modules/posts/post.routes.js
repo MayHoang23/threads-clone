@@ -11,6 +11,10 @@ router.post("/", authenticate, postController.createPost);
 // Nếu đặt sau, Express sẽ nhận "feed" là giá trị của param :id
 router.get("/feed", authenticate, postController.getFeed);
 
+// GET /api/v1/posts/trending-hashtags — top hashtag hot
+// QUAN TRỌNG: phải đặt TRƯỚC /:id để không bị nhận nhầm là param :id
+router.get("/trending-hashtags", postController.getTrendingHashtags);
+
 // GET /api/v1/posts/:id — xem chi tiết (không bắt buộc login, nhưng nếu có thì biết isLiked/isSaved)
 router.get("/:id", optionalAuthenticate, postController.getPostById);
 

@@ -131,6 +131,7 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("account");
   const [toast, setToast] = useState(null);
   const [loadingSection, setLoadingSection] = useState(null);
+  const [showMessageDropdown, setShowMessageDropdown] = useState(false);
 
   const [pwForm, setPwForm] = useState({
     currentPassword: "",
@@ -289,22 +290,60 @@ export default function SettingsPage() {
                 <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                   {t("settings.whoCanMessage")}
                 </label>
-                <select
-                  value={privacy.allowMessagesFrom}
-                  onChange={async (e) => {
-                    const newPrivacy = { ...privacy, allowMessagesFrom: e.target.value };
-                    setPrivacy(newPrivacy);
-                    try {
-                      await fetchAPI("/settings/privacy", { method: "PATCH", body: JSON.stringify(newPrivacy) });
-                      showToast("Đã lưu");
-                    } catch { showToast("Lưu thất bại", "error"); }
-                  }}
-                  className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-gray-900 dark:text-gray-100 focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
-                >
-                  <option value="EVERYONE">{t("settings.everyone")}</option>
-                  <option value="FOLLOWING">{t("settings.followersOnly")}</option>
-                  <option value="NONE">{t("settings.noOne")}</option>
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowMessageDropdown((v) => !v)}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
+                  >
+                    <span>
+                      {privacy.allowMessagesFrom === "EVERYONE" ? t("settings.everyone") :
+                       privacy.allowMessagesFrom === "FOLLOWING" ? t("settings.followersOnly") :
+                       t("settings.noOne")}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${showMessageDropdown ? "rotate-180" : "rotate-0"}`}
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+
+                  {showMessageDropdown && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowMessageDropdown(false)} />
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg overflow-hidden z-20">
+                        {[
+                          { value: "EVERYONE", label: t("settings.everyone") },
+                          { value: "FOLLOWING", label: t("settings.followersOnly") },
+                          { value: "NONE", label: t("settings.noOne") },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={async () => {
+                              setShowMessageDropdown(false);
+                              const newPrivacy = { ...privacy, allowMessagesFrom: option.value };
+                              setPrivacy(newPrivacy);
+                              try {
+                                await fetchAPI("/settings/privacy", { method: "PATCH", body: JSON.stringify(newPrivacy) });
+                                showToast("Đã lưu");
+                              } catch { showToast("Lưu thất bại", "error"); }
+                            }}
+                            className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                              privacy.allowMessagesFrom === option.value
+                                ? "font-semibold text-black dark:text-white bg-gray-50 dark:bg-gray-700"
+                                : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>

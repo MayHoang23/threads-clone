@@ -197,6 +197,7 @@ export default {
     trending: "Đang hot 🔥",
     seeMore: "Xem thêm →",
     follow: "Follow",
+    following: "Đang follow",
     terms: "Điều khoản",
     privacy: "Quyền riêng tư",
     cookies: "Cookies",

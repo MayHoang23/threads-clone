@@ -197,6 +197,7 @@ export default {
     trending: "Trending 🔥",
     seeMore: "See more →",
     follow: "Follow",
+    following: "Following",
     terms: "Terms",
     privacy: "Privacy",
     cookies: "Cookies",

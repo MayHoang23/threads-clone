@@ -30,6 +30,16 @@ const getFeed = async (req, res, next) => {
   }
 };
 
+// GET /api/v1/posts/trending-hashtags
+const getTrendingHashtags = async (req, res, next) => {
+  try {
+    const hashtags = await postService.getTrendingHashtags();
+    res.json({ success: true, data: hashtags, message: "" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /api/v1/posts/:id
 const getPostById = async (req, res, next) => {
   try {
@@ -119,6 +129,7 @@ const toggleSave = async (req, res, next) => {
 module.exports = {
   createPost,
   getFeed,
+  getTrendingHashtags,
   getPostById,
   updatePost,
   deletePost,

@@ -9,7 +9,15 @@
       "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\components\\\\messages\")",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone\\\\frontend\\\\app\\\\\\(main\\)\\\\messages\")",
       "Bash(mkdir -p \"c:/Users/PC/OneDrive/Desktop/threads-clone/frontend/app/\\(main\\)/profile/[username]/followers\" \"c:/Users/PC/OneDrive/Desktop/threads-clone/frontend/app/\\(main\\)/profile/[username]/following\")",
-      "Bash(mkdir -p \"c:/Users/PC/OneDrive/Desktop/threads-clone/frontend/lib/translations\")"
+      "Bash(mkdir -p \"c:/Users/PC/OneDrive/Desktop/threads-clone/frontend/lib/translations\")",
+      "Bash(node --check src/modules/users/user.service.js)",
+      "Bash(node --check src/modules/users/user.controller.js)",
+      "Bash(node --check src/modules/users/user.routes.js)",
+      "Bash(node --check src/modules/posts/post.service.js)",
+      "Bash(node --check src/modules/posts/post.controller.js)",
+      "Bash(node --check lib/translations/vi.js)",
+      "Bash(node --check lib/translations/en.js)",
+      "Bash(node --check lib/translations/zh.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",

@@ -9,6 +9,11 @@ const { authenticate, optionalAuthenticate } = require("../../middlewares/auth.m
 router.get("/search", optionalAuthenticate, controller.search);
 
 // ========================
+// GỢI Ý NGƯỜI THEO DÕI — đặt TRƯỚC /:username để tránh bị match nhầm
+// ========================
+router.get("/suggestions", authenticate, controller.getSuggestions);
+
+// ========================
 // FRIEND REQUESTS — đặt TRƯỚC /:username để tránh bị match nhầm
 // ========================
 // Lấy danh sách lời mời đến

@@ -376,10 +376,28 @@ const toggleSave = async (userId, postId) => {
   return { saved: !existing };
 };
 
+// ========================
+// TOP HASHTAG ĐANG HOT
+// ========================
+// Lấy top 5 hashtag có nhiều bài viết nhất
+const getTrendingHashtags = async (limit = 5) => {
+  const hashtags = await prisma.hashtag.findMany({
+    include: { _count: { select: { posts: true } } },
+    orderBy: { posts: { _count: "desc" } },
+    take: limit,
+  });
+
+  // Bỏ hashtag không còn bài nào (do bài bị xóa → orphan)
+  return hashtags
+    .filter((h) => h._count.posts > 0)
+    .map((h) => ({ name: h.name, postCount: h._count.posts }));
+};
+
 module.exports = {
   createPost,
   getFeed,
   getPostById,
+  getTrendingHashtags,
   updatePost,
   deletePost,
   toggleLike,

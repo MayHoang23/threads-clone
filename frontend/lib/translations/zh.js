@@ -197,6 +197,7 @@ export default {
     trending: "热门话题 🔥",
     seeMore: "查看更多 →",
     follow: "关注",
+    following: "已关注",
     terms: "条款",
     privacy: "隐私",
     cookies: "Cookies",

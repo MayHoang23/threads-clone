@@ -1,14 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { fetchAPI } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const SUGGESTED_USERS = [
-  { username: "design.daily", displayName: "Design Daily", gradient: "from-orange-400 to-pink-500", followers: "24.1K" },
-  { username: "code.journey", displayName: "Code Journey", gradient: "from-blue-400 to-indigo-500", followers: "11.8K" },
-  { username: "photo.vibes", displayName: "Photo Vibes", gradient: "from-green-400 to-teal-500", followers: "48.3K" },
-];
-
+// Fallback tĩnh khi API trending fail
 const TRENDING_TAGS = [
   { name: "threads", count: "125K bài" },
   { name: "nextjs14", count: "43K bài" },
@@ -20,48 +17,122 @@ const TRENDING_TAGS = [
 export default function Sidebar() {
   const { t } = useLanguage();
 
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [trendingTags, setTrendingTags] = useState(TRENDING_TAGS);
+  // Trạng thái follow theo username (optimistic)
+  const [followStates, setFollowStates] = useState({});
+
+  // Fetch gợi ý người theo dõi
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const data = await fetchAPI("/users/suggestions");
+        if (data?.success) {
+          setSuggestedUsers(data.data);
+          const states = {};
+          data.data.forEach((u) => {
+            states[u.username] = u.isFollowing;
+          });
+          setFollowStates(states);
+        }
+      } catch {}
+    };
+    fetchSuggestions();
+  }, []);
+
+  // Fetch hashtag đang hot
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const data = await fetchAPI("/posts/trending-hashtags");
+        if (data?.success && data.data.length > 0) setTrendingTags(data.data);
+      } catch {}
+    };
+    fetchTrending();
+  }, []);
+
   return (
     <div className="space-y-8 pt-2">
       {/* Gợi ý người theo dõi */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{t("sidebar.suggestions")}</h3>
-        <div className="space-y-4">
-          {SUGGESTED_USERS.map((user) => (
-            <div key={user.username} className="flex items-center gap-3">
-              {/* Avatar với gradient màu riêng */}
-              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${user.gradient} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
-                {user.username[0].toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.username}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{user.followers} {t("sidebar.followers")}</p>
-              </div>
-              <button className="text-xs font-semibold text-black dark:text-white border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
-                {t("sidebar.follow")}
-              </button>
-            </div>
-          ))}
+      {suggestedUsers.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{t("sidebar.suggestions")}</h3>
+          <div className="space-y-4">
+            {suggestedUsers.map((user) => {
+              const isFollowing = followStates[user.username];
+              return (
+                <div key={user.username} className="flex items-center gap-3">
+                  {/* Avatar + tên → link tới profile */}
+                  <Link
+                    href={`/profile/${user.username}`}
+                    className="flex items-center gap-3 flex-1 min-w-0 group"
+                  >
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.username}
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {user.username[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:underline">
+                        {user.username}
+                      </p>
+                      {user.displayName && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.displayName}</p>
+                      )}
+                    </div>
+                  </Link>
+                  {/* Nút follow với optimistic update */}
+                  <button
+                    onClick={async () => {
+                      const was = followStates[user.username];
+                      setFollowStates((prev) => ({ ...prev, [user.username]: !was }));
+                      try {
+                        await fetchAPI(`/users/${user.username}/follow`, { method: "POST" });
+                      } catch {
+                        setFollowStates((prev) => ({ ...prev, [user.username]: was }));
+                      }
+                    }}
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors flex-shrink-0 ${
+                      isFollowing
+                        ? "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        : "bg-black dark:bg-white text-white dark:text-black hover:opacity-90"
+                    }`}
+                  >
+                    {isFollowing ? t("sidebar.following") : t("sidebar.follow")}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <Link href="/friends" className="inline-block mt-3 text-xs text-blue-500 hover:underline font-medium">
+            {t("sidebar.seeMore")}
+          </Link>
         </div>
-        <button className="mt-3 text-xs text-blue-500 hover:underline font-medium">
-          {t("sidebar.seeMore")}
-        </button>
-      </div>
+      )}
 
       {/* Hashtag đang trending */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">{t("sidebar.trending")}</h3>
         <div className="space-y-3">
-          {TRENDING_TAGS.map((tag, i) => (
+          {trendingTags.map((tag, i) => (
             <Link
               key={tag.name}
-              href={`/hashtag/${tag.name}`}
+              href={`/search?q=%23${tag.name}`}
               className="flex items-center justify-between group"
             >
               <div>
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-blue-500 transition-colors">
                   #{tag.name}
                 </p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{tag.count}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  {tag.postCount != null ? `${tag.postCount} bài` : tag.count}
+                </p>
               </div>
               <span className="text-xs text-gray-300 dark:text-gray-600">#{i + 1}</span>
             </Link>
@@ -70,18 +141,13 @@ export default function Sidebar() {
       </div>
 
       {/* Footer links nhỏ */}
-      <div className="text-xs text-gray-300 dark:text-gray-600 space-y-1 pb-4">
-        <div className="flex flex-wrap gap-x-2 gap-y-1">
-          {[
-            t("sidebar.terms"),
-            t("sidebar.privacy"),
-            t("sidebar.cookies"),
-            t("sidebar.help"),
-          ].map((label) => (
-            <span key={label} className="hover:text-gray-500 dark:hover:text-gray-400 cursor-pointer transition-colors">{label}</span>
+      <div className="text-xs text-gray-400 dark:text-gray-500 space-y-2 pb-4">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {["Điều khoản", "Quyền riêng tư", "Cookies", "Trợ giúp", "Giới thiệu", "Nghề nghiệp"].map((item) => (
+            <span key={item} className="hover:text-gray-600 dark:hover:text-gray-400 cursor-pointer transition-colors">{item}</span>
           ))}
         </div>
-        <p>{t("sidebar.copyright")}</p>
+        <p className="text-gray-300 dark:text-gray-600">© 2025 Threads Clone · Được tạo bởi Machine Hoàng</p>
       </div>
     </div>
   );
