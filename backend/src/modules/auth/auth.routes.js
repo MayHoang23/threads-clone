@@ -14,4 +14,13 @@ router.post("/refresh-token", authController.refreshToken);
 // POST /api/v1/auth/logout — Đăng xuất
 router.post("/logout", authController.logout);
 
+// GET /api/v1/auth/verify-email?token=... — Xác thực email sau đăng ký
+router.get("/verify-email", authController.verifyEmail);
+
+// POST /api/v1/auth/forgot-password — Gửi email đặt lại mật khẩu
+router.post("/forgot-password", authController.forgotPassword);
+
+// POST /api/v1/auth/reset-password — Đặt lại mật khẩu bằng token từ email
+router.post("/reset-password", authController.resetPassword);
+
 module.exports = router;

@@ -1,8 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const prisma = require("../../utils/prisma");
 const AppError = require("../../utils/AppError");
 const { generateAccessToken, generateRefreshToken } = require("../../utils/generateToken");
+const { sendVerificationEmail, sendResetPasswordEmail } = require("../../utils/email");
 
 // ========================
 // ĐĂNG KÝ
@@ -33,10 +35,24 @@ const register = async ({ username, email, password, displayName }) => {
     },
   });
 
-  const accessToken = generateAccessToken(user.id);
-  const refreshToken = generateRefreshToken(user.id);
+  // Tạo token xác thực email và gửi mail
+  const emailVerifyToken = crypto.randomBytes(32).toString("hex");
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerifyToken },
+  });
 
-  return { user, accessToken, refreshToken };
+  try {
+    await sendVerificationEmail(email, emailVerifyToken);
+  } catch (err) {
+    // Gửi mail thất bại → xóa user vừa tạo để đăng ký lại được, không bị kẹt "Email đã được sử dụng"
+    await prisma.user.delete({ where: { id: user.id } });
+    console.error("Lỗi gửi email xác thực:", err.message);
+    throw new AppError("Không gửi được email xác thực, vui lòng thử lại sau", 500);
+  }
+
+  // Không trả về tokens — user phải xác thực email trước khi đăng nhập
+  return { message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản." };
 };
 
 // ========================
@@ -55,6 +71,11 @@ const login = async ({ email, password }) => {
   // So sánh password người dùng nhập với password đã hash trong DB
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) throw new AppError("Email hoặc mật khẩu không đúng", 401);
+
+  // Chưa xác thực email → chặn đăng nhập
+  if (!user.emailVerified) {
+    throw new AppError("Vui lòng xác thực email trước khi đăng nhập", 403);
+  }
 
   const accessToken = generateAccessToken(user.id);
   const refreshToken = generateRefreshToken(user.id);
@@ -91,4 +112,59 @@ const refreshToken = async (token) => {
   return { accessToken };
 };
 
-module.exports = { register, login, refreshToken };
+// ========================
+// XÁC THỰC EMAIL
+// ========================
+const verifyEmail = async (token) => {
+  const user = await prisma.user.findFirst({ where: { emailVerifyToken: token } });
+  if (!user) throw new AppError("Token không hợp lệ hoặc đã hết hạn", 400);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: true, emailVerifyToken: null },
+  });
+  return { message: "Xác thực email thành công. Bạn có thể đăng nhập ngay." };
+};
+
+// ========================
+// QUÊN MẬT KHẨU — GỬI EMAIL RESET
+// ========================
+const forgotPassword = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  // Không tiết lộ email có tồn tại hay không
+  if (!user) return { message: "Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu." };
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 giờ
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { resetPasswordToken: token, resetPasswordExpiry: expiry },
+  });
+  await sendResetPasswordEmail(email, token);
+  return { message: "Nếu email tồn tại, bạn sẽ nhận được link đặt lại mật khẩu." };
+};
+
+// ========================
+// ĐẶT LẠI MẬT KHẨU
+// ========================
+const resetPassword = async (token, newPassword) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      resetPasswordToken: token,
+      resetPasswordExpiry: { gt: new Date() },
+    },
+  });
+  if (!user) throw new AppError("Token không hợp lệ hoặc đã hết hạn", 400);
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashed,
+      resetPasswordToken: null,
+      resetPasswordExpiry: null,
+    },
+  });
+  return { message: "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay." };
+};
+
+module.exports = { register, login, refreshToken, verifyEmail, forgotPassword, resetPassword };

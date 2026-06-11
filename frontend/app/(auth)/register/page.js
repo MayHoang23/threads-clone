@@ -15,6 +15,7 @@ export default function RegisterPage() {
     displayName: "",
   });
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState(""); // Thông báo cần xác thực email sau đăng ký
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -56,8 +57,13 @@ export default function RegisterPage() {
       );
 
       if (result.success) {
-        // Đăng ký thành công → chuyển về login để đăng nhập
-        router.push("/login");
+        // Backend yêu cầu xác thực email → hiện thông báo vàng thay vì redirect
+        if (result.message?.includes("xác thực")) {
+          setNotice(result.message);
+        } else {
+          // Đăng ký thành công → chuyển về login để đăng nhập
+          router.push("/login");
+        }
       } else {
         setError(result.message || "Đăng ký thất bại");
       }
@@ -155,6 +161,13 @@ export default function RegisterPage() {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
             <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
+        )}
+
+        {/* Thông báo cần xác thực email — màu vàng */}
+        {notice && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
+            <p className="text-yellow-700 text-sm text-center">{notice}</p>
           </div>
         )}
 

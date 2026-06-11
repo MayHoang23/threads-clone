@@ -112,6 +112,16 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Link quên mật khẩu */}
+        <div className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-gray-500 hover:text-black hover:underline underline-offset-2 transition-colors"
+          >
+            Quên mật khẩu?
+          </Link>
+        </div>
+
         {/* Thông báo lỗi */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">

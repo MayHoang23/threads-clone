@@ -95,4 +95,55 @@ const logout = (req, res) => {
   });
 };
 
-module.exports = { register, login, refreshToken, logout };
+// ========================
+// XÁC THỰC EMAIL
+// ========================
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({ success: false, data: null, message: "Thiếu token" });
+    }
+    const result = await authService.verifyEmail(token);
+    return res.json({ success: true, data: null, message: result.message });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ========================
+// QUÊN MẬT KHẨU
+// ========================
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, data: null, message: "Thiếu email" });
+    }
+    const result = await authService.forgotPassword(email);
+    return res.json({ success: true, data: null, message: result.message });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ========================
+// ĐẶT LẠI MẬT KHẨU
+// ========================
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, data: null, message: "Thiếu token hoặc mật khẩu" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, data: null, message: "Mật khẩu tối thiểu 6 ký tự" });
+    }
+    const result = await authService.resetPassword(token, password);
+    return res.json({ success: true, data: null, message: result.message });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, login, refreshToken, logout, verifyEmail, forgotPassword, resetPassword };
