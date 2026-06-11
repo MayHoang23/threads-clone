@@ -5,6 +5,7 @@ import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
 import CreatePost from "@/components/post/CreatePost";
+import StoryBar from "@/components/stories/StoryBar";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // Skeleton placeholder cho 1 bài viết khi đang load
@@ -108,6 +109,9 @@ export default function NewsfeedPage() {
       <div className="hidden lg:block border-b border-gray-100 px-4 py-4">
         <h1 className="font-bold text-base text-gray-900 dark:text-white">{t("home.forYou")}</h1>
       </div>
+
+      {/* Hàng stories */}
+      <StoryBar currentUser={currentUser} />
 
       {/* Ô tạo bài mới */}
       <CreatePost currentUser={currentUser} onPostCreated={handlePostCreated} />

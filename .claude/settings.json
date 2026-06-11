@@ -18,7 +18,20 @@
       "Bash(node --check lib/translations/vi.js)",
       "Bash(node --check lib/translations/en.js)",
       "Bash(node --check lib/translations/zh.js)",
-      "Bash(node --check src/modules/posts/post.routes.js)"
+      "Bash(node --check src/modules/posts/post.routes.js)",
+      "PowerShell(npx prisma migrate dev --name add_stories)",
+      "PowerShell(npx prisma generate)",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\")",
+      "PowerShell(Stop-Process -Id 10752 -Force -Confirm:$false)",
+      "PowerShell(npm install node-cron)",
+      "PowerShell(Start-Sleep -Seconds 3; try { $r = Invoke-RestMethod -Uri \"http://localhost:5000/api/v1/health\" -TimeoutSec 5; $r | ConvertTo-Json -Compress } catch { \"Health check failed: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(try { Invoke-RestMethod -Uri \"http://localhost:5000/api/v1/stories/feed\" -TimeoutSec 5 } catch { $code = $_.Exception.Response.StatusCode.value__; $body = $_.ErrorDetails.Message; \"Status: $code | Body: $body\" })",
+      "PowerShell(node -e \"const prisma = require\\('./src/utils/prisma'\\); prisma.user.delete\\({ where: { username: 'storytest_e2e' } }\\).then\\(\\(\\) => { console.log\\('Deleted test user'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\(e.message\\); process.exit\\(1\\); }\\);\")",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -TimeoutSec 60 -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"__next_error__|Unhandled Runtime Error|Failed to compile\"\\) { \"COMPILE ERROR DETECTED\" } else { \"No compile error markers in HTML\" } } catch { \"Request failed: $\\($_.Exception.Message\\) | Status: $\\($_.Exception.Response.StatusCode.value__\\)\" })",
+      "PowerShell(npx prisma migrate dev --name story_text_support)",
+      "PowerShell(Start-Sleep -Seconds 2; try { $r = Invoke-RestMethod -Uri \"http://localhost:5000/api/v1/health\" -TimeoutSec 5; \"Backend OK: $\\($r.message\\)\" } catch { \"Health check failed: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(node -e \"const prisma = require\\('./src/utils/prisma'\\); prisma.user.delete\\({ where: { username: 'storytest_text' } }\\).then\\(\\(\\) => { console.log\\('Deleted test user'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\(e.message\\); process.exit\\(1\\); }\\);\")",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3000/\" -TimeoutSec 60 -UseBasicParsing; \"Status: $\\($r.StatusCode\\)\"; if \\($r.Content -match \"__next_error__|Unhandled Runtime Error|Failed to compile\"\\) { \"COMPILE ERROR DETECTED\" } else { \"No compile error markers\" } } catch { \"Request failed: $\\($_.Exception.Message\\)\" })"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",

@@ -11,6 +11,7 @@ const mediaRoutes = require("./modules/media/media.routes");
 const aiRoutes = require("./modules/ai/ai.routes");
 const settingsRoutes = require("./modules/users/settings.routes");
 const messageRoutes = require("./modules/messages/message.routes");
+const storyRoutes = require("./modules/stories/story.routes");
 const { initSocket } = require("./socket/socketManager");
 
 const app = express();
@@ -59,6 +60,7 @@ app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1/ai", aiRoutes);
 app.use("/api/v1/settings", settingsRoutes);
 app.use("/api/v1/conversations", messageRoutes);
+app.use("/api/v1/stories", storyRoutes);
 
 // ========================
 // GLOBAL ERROR HANDLER
@@ -90,4 +92,19 @@ initSocket(server);
 
 server.listen(PORT, () => {
   console.log(`Server đang chạy tại http://localhost:${PORT}`);
+});
+
+// ========================
+// CRONJOB — xóa story hết hạn mỗi giờ (phút 0)
+// ========================
+const cron = require("node-cron");
+const { deleteExpiredStories } = require("./modules/stories/story.service");
+
+cron.schedule("0 * * * *", async () => {
+  try {
+    const count = await deleteExpiredStories();
+    console.log(`[Cron] Đã xóa ${count} story hết hạn`);
+  } catch (err) {
+    console.error("[Cron] Lỗi xóa story hết hạn:", err);
+  }
 });

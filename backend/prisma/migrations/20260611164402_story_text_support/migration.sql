@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Story" ADD COLUMN     "bgColor" TEXT,
+ALTER COLUMN "mediaUrl" DROP NOT NULL,
+ALTER COLUMN "mediaType" DROP NOT NULL;

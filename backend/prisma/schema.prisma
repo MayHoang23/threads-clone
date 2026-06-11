@@ -40,6 +40,8 @@ model User {
   savedPosts    SavedPost[]
   conversations ConversationMember[]
   settings      UserSettings?
+  stories       Story[]
+  storyViews    StoryView[]
 }
 
 // ========================
@@ -288,4 +290,33 @@ enum MessagesFrom {
   EVERYONE
   FOLLOWING
   NONE
+}
+
+// ========================
+// STORY (Tin 24h)
+// ========================
+model Story {
+  id        String      @id @default(cuid())
+  userId    String
+  mediaUrl  String?
+  mediaType String?     // "image" | "video" | "text"
+  caption   String?
+  bgColor   String?     // Màu nền cho story văn bản
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views     StoryView[]
+}
+
+model StoryView {
+  id       String   @id @default(cuid())
+  storyId  String
+  userId   String
+  viewedAt DateTime @default(now())
+
+  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
 }
