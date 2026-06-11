@@ -1,0 +1,153 @@
+const prisma = require("../../utils/prisma");
+const AppError = require("../../utils/AppError");
+
+// Dashboard — 4 thống kê
+const getDashboardStats = async () => {
+  const [totalUsers, totalPosts, totalReports, newUsersToday] = await Promise.all([
+    prisma.user.count(),
+    prisma.post.count(),
+    prisma.report.count({ where: { status: "PENDING" } }),
+    prisma.user.count({
+      where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+    }),
+  ]);
+  return { totalUsers, totalPosts, totalReports, newUsersToday };
+};
+
+// ── USERS ──────────────────────────────
+
+// Danh sách users — search + filter + sort + pagination (offset)
+const getUsers = async ({ page = 1, limit = 20, search = "", role = "", banned = "" }) => {
+  const where = {
+    ...(search && {
+      OR: [
+        { username: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { displayName: { contains: search, mode: "insensitive" } },
+      ],
+    }),
+    ...(role && { role }),
+    ...(banned !== "" && { isBanned: banned === "true" }),
+  };
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, username: true, email: true, displayName: true,
+        avatar: true, role: true, isBanned: true, emailVerified: true,
+        createdAt: true,
+        _count: { select: { posts: true, followers: true } },
+      },
+    }),
+    prisma.user.count({ where }),
+  ]);
+  return { users, total, page, totalPages: Math.ceil(total / limit) };
+};
+
+// Ban / Unban user
+const toggleBanUser = async (userId) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError("User không tồn tại", 404);
+  if (user.role === "ADMIN") throw new AppError("Không thể ban tài khoản Admin", 403);
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { isBanned: !user.isBanned },
+    select: { id: true, isBanned: true },
+  });
+  return updated;
+};
+
+// Đổi role user
+const updateUserRole = async (userId, role) => {
+  if (!["USER", "ADMIN"].includes(role)) throw new AppError("Role không hợp lệ", 400);
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { role },
+    select: { id: true, role: true },
+  });
+  return updated;
+};
+
+// Xóa user
+const deleteUser = async (userId, adminId) => {
+  if (userId === adminId) throw new AppError("Không thể tự xóa tài khoản của mình", 403);
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError("User không tồn tại", 404);
+  if (user.role === "ADMIN") throw new AppError("Không thể xóa tài khoản Admin", 403);
+  await prisma.user.delete({ where: { id: userId } });
+  return { message: "Đã xóa user thành công" };
+};
+
+// ── POSTS ─────────────────────────────
+
+// Danh sách posts — search + pagination (offset)
+const getPosts = async ({ page = 1, limit = 20, search = "" }) => {
+  const where = search
+    ? { content: { contains: search, mode: "insensitive" } }
+    : {};
+  const [posts, total] = await Promise.all([
+    prisma.post.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: { select: { id: true, username: true, avatar: true } },
+        _count: { select: { likes: true, comments: true } },
+      },
+    }),
+    prisma.post.count({ where }),
+  ]);
+  return { posts, total, page, totalPages: Math.ceil(total / limit) };
+};
+
+// Xóa post
+const deletePost = async (postId) => {
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) throw new AppError("Bài viết không tồn tại", 404);
+  await prisma.post.delete({ where: { id: postId } });
+  return { message: "Đã xóa bài viết thành công" };
+};
+
+// ── REPORTS ───────────────────────────
+
+// Danh sách reports — filter + pagination
+const getReports = async ({ page = 1, limit = 20, status = "" }) => {
+  const where = status ? { status } : {};
+  const [reports, total] = await Promise.all([
+    prisma.report.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        // Quan hệ trong model Report tên là `user` (người báo cáo), không phải `reporter`
+        user: { select: { id: true, username: true, avatar: true } },
+      },
+    }),
+    prisma.report.count({ where }),
+  ]);
+  return { reports, total, page, totalPages: Math.ceil(total / limit) };
+};
+
+// Resolve report
+const resolveReport = async (reportId) => {
+  const report = await prisma.report.findUnique({ where: { id: reportId } });
+  if (!report) throw new AppError("Report không tồn tại", 404);
+  const updated = await prisma.report.update({
+    where: { id: reportId },
+    // Enum ReportStatus chỉ có PENDING | REVIEWED | DISMISSED (không có RESOLVED)
+    data: { status: "REVIEWED" },
+  });
+  return updated;
+};
+
+module.exports = {
+  getDashboardStats,
+  getUsers, toggleBanUser, updateUserRole, deleteUser,
+  getPosts, deletePost,
+  getReports, resolveReport,
+};

@@ -12,6 +12,7 @@ const aiRoutes = require("./modules/ai/ai.routes");
 const settingsRoutes = require("./modules/users/settings.routes");
 const messageRoutes = require("./modules/messages/message.routes");
 const storyRoutes = require("./modules/stories/story.routes");
+const adminRoutes = require("./modules/admin/admin.routes");
 const { initSocket } = require("./socket/socketManager");
 
 const app = express();
@@ -61,6 +62,7 @@ app.use("/api/v1/ai", aiRoutes);
 app.use("/api/v1/settings", settingsRoutes);
 app.use("/api/v1/conversations", messageRoutes);
 app.use("/api/v1/stories", storyRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // ========================
 // GLOBAL ERROR HANDLER

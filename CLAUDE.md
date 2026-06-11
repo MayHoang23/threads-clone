@@ -46,7 +46,7 @@ threads-clone/
 ├── modules/users/
 ├── modules/notifications/
 ├── modules/media/
-├── modules/ai/ ← MOCK_MODE = true (chưa có Anthropic credit)
+├── modules/ai/ ← MOCK_MODE = false — dùng Gemini API (gemini-2.5-flash) (chưa có Anthropic credit)
 ├── modules/messages/
 ├── socket/socketManager.js ← dùng JWT_REFRESH_SECRET cho socket auth
 ├── config/cloudinary.js, anthropic.js
@@ -166,7 +166,7 @@ Conversation (lastMessageAt), Message (content, mediaUrl, isRead)
 
 ✅ Socket reconnect loop → SocketContext provider (singleton tại layout level)
 ✅ Cloudinary credentials trống → đã điền .env
-✅ AI mock mode → MOCK_MODE = true trong ai.service.js
+✅ AI mock mode → MOCK_MODE = false — dùng Gemini API (gemini-2.5-flash) trong ai.service.js
 ✅ CreatePost toolbar blur collapse → setTimeout 200ms
 ✅ Navbar profile link /profile/undefined → useMemo với currentUser
 ✅ Message duplicate → guard senderId !== currentUser.id trong socket handler
