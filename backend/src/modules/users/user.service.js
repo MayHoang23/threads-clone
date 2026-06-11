@@ -156,6 +156,7 @@ const getUserPosts = async (username, currentUserId = null, cursor = null, limit
   const posts = await prisma.post.findMany({
     where: {
       authorId: user.id,
+      isHidden: false, // Không hiển thị bài đã bị admin ẩn
       OR: privacyFilter,
     },
     orderBy: { createdAt: "desc" },
@@ -449,6 +450,7 @@ const search = async (query, currentUserId = null) => {
     where: {
       content: { contains: q, mode: "insensitive" },
       privacy: "PUBLIC",
+      isHidden: false, // Không trả về bài đã bị admin ẩn trong kết quả tìm kiếm
     },
     include: {
       author: { select: USER_SELECT },

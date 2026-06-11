@@ -42,11 +42,11 @@ const deleteUser = async (req, res, next) => {
 
 const getPosts = async (req, res, next) => {
   try {
-    const { page, limit, search } = req.query;
+    const { page, limit, search, hidden } = req.query;
     const data = await adminService.getPosts({
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 20,
-      search,
+      search, hidden,
     });
     return res.json({ success: true, data, message: "Lấy danh sách posts thành công" });
   } catch (err) { next(err); }
@@ -56,6 +56,13 @@ const deletePost = async (req, res, next) => {
   try {
     const data = await adminService.deletePost(req.params.postId);
     return res.json({ success: true, data: null, message: data.message });
+  } catch (err) { next(err); }
+};
+
+const restorePost = async (req, res, next) => {
+  try {
+    const data = await adminService.restorePost(req.params.postId);
+    return res.json({ success: true, data, message: "Đã khôi phục bài viết" });
   } catch (err) { next(err); }
 };
 
@@ -73,7 +80,8 @@ const getReports = async (req, res, next) => {
 
 const resolveReport = async (req, res, next) => {
   try {
-    const data = await adminService.resolveReport(req.params.reportId);
+    const { action } = req.body;
+    const data = await adminService.resolveReport(req.params.reportId, action);
     return res.json({ success: true, data, message: "Đã xử lý report" });
   } catch (err) { next(err); }
 };
@@ -81,6 +89,6 @@ const resolveReport = async (req, res, next) => {
 module.exports = {
   getDashboardStats,
   getUsers, toggleBanUser, updateUserRole, deleteUser,
-  getPosts, deletePost,
+  getPosts, deletePost, restorePost,
   getReports, resolveReport,
 };

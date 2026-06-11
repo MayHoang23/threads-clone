@@ -83,11 +83,13 @@ const deleteUser = async (userId, adminId) => {
 
 // ── POSTS ─────────────────────────────
 
-// Danh sách posts — search + pagination (offset)
-const getPosts = async ({ page = 1, limit = 20, search = "" }) => {
-  const where = search
-    ? { content: { contains: search, mode: "insensitive" } }
-    : {};
+// Danh sách posts — search + filter hidden + pagination (offset)
+const getPosts = async ({ page = 1, limit = 20, search = "", hidden = "" }) => {
+  const where = {
+    ...(search && { content: { contains: search, mode: "insensitive" } }),
+    // hidden = "" → tất cả; "true" → chỉ bài ẩn; "false" → chỉ bài hiển thị
+    ...(hidden !== "" && { isHidden: hidden === "true" }),
+  };
   const [posts, total] = await Promise.all([
     prisma.post.findMany({
       where,
@@ -134,20 +136,40 @@ const getReports = async ({ page = 1, limit = 20, status = "" }) => {
 };
 
 // Resolve report
-const resolveReport = async (reportId) => {
+const resolveReport = async (reportId, action = "reviewed") => {
   const report = await prisma.report.findUnique({ where: { id: reportId } });
   if (!report) throw new AppError("Report không tồn tại", 404);
+  // Enum ReportStatus chỉ có PENDING | REVIEWED | DISMISSED (không có RESOLVED)
+  const status = action === "dismissed" ? "DISMISSED" : "REVIEWED";
+
+  // Nếu xử lý vi phạm và report gắn với 1 bài → ẩn bài viết (thay vì xóa)
+  if (action === "reviewed" && report.postId) {
+    await prisma.post.update({
+      where: { id: report.postId },
+      data: { isHidden: true },
+    });
+  }
+
   const updated = await prisma.report.update({
     where: { id: reportId },
-    // Enum ReportStatus chỉ có PENDING | REVIEWED | DISMISSED (không có RESOLVED)
-    data: { status: "REVIEWED" },
+    data: { status },
   });
   return updated;
+};
+
+// Khôi phục bài viết đã bị ẩn
+const restorePost = async (postId) => {
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) throw new AppError("Bài viết không tồn tại", 404);
+  return prisma.post.update({
+    where: { id: postId },
+    data: { isHidden: false },
+  });
 };
 
 module.exports = {
   getDashboardStats,
   getUsers, toggleBanUser, updateUserRole, deleteUser,
-  getPosts, deletePost,
+  getPosts, deletePost, restorePost,
   getReports, resolveReport,
 };

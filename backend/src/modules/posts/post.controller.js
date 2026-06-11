@@ -1,4 +1,5 @@
 const postService = require("./post.service");
+const prisma = require("../../utils/prisma");
 
 // POST /api/v1/posts
 const createPost = async (req, res, next) => {
@@ -141,6 +142,23 @@ const getSavedPosts = async (req, res, next) => {
   }
 };
 
+// POST /api/v1/posts/:id/report
+const createReport = async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const report = await prisma.report.create({
+      data: {
+        postId: req.params.id,
+        userId: req.user.id,
+        reason: reason || "Vi phạm tiêu chuẩn cộng đồng",
+      },
+    });
+    return res.status(201).json({ success: true, data: report, message: "Đã gửi báo cáo" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createPost,
   getFeed,
@@ -153,4 +171,5 @@ module.exports = {
   getComments,
   toggleSave,
   getSavedPosts,
+  createReport,
 };

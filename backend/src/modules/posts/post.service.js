@@ -162,6 +162,7 @@ const getFeed = async (userId, cursor = null, limit = 10) => {
   const posts = await prisma.post.findMany({
     where: {
       authorId: { in: authorIds },
+      isHidden: false, // Bỏ qua bài đã bị admin ẩn
       OR: [
         // PUBLIC: mọi người đều thấy
         { privacy: "PUBLIC" },
@@ -192,8 +193,9 @@ const getFeed = async (userId, cursor = null, limit = 10) => {
 // XEM CHI TIẾT BÀI VIẾT
 // ========================
 const getPostById = async (postId, userId = null) => {
-  const post = await prisma.post.findUnique({
-    where: { id: postId },
+  // findFirst (không phải findUnique) để lọc thêm isHidden — bài bị admin ẩn coi như không tồn tại
+  const post = await prisma.post.findFirst({
+    where: { id: postId, isHidden: false },
     include: getPostInclude(userId),
   });
 

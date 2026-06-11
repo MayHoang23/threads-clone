@@ -50,12 +50,22 @@
       "Bash(node --check src/modules/admin/admin.service.js)",
       "Bash(node --check src/modules/admin/admin.controller.js)",
       "Bash(node --check src/modules/admin/admin.routes.js)",
-      "Bash(node --check src/index.js)"
+      "Bash(node --check src/index.js)",
+      "Read(//c/Users/PC/OneDrive/Desktop/threads-clone-admin/**)",
+      "Bash(ls -la app)",
+      "Bash(ls -la components)",
+      "Bash(ls -la lib)",
+      "Bash(npm run *)",
+      "Bash(tasklist)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",
       "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone\\frontend\\app\\(main)\\profile\\[username]",
-      "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone\\frontend\\lib"
+      "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone\\frontend\\lib",
+      "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone-admin\\lib",
+      "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone-admin\\app",
+      "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone-admin\\components\\layout",
+      "c:\\Users\\PC\\OneDrive\\Desktop\\threads-clone-admin"
     ]
   }
 }

@@ -111,6 +111,22 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
     onDelete?.(post.id);
   };
 
+  const handleReport = async () => {
+    setShowMenu(false);
+    const reason = prompt("Lý do báo cáo (tùy chọn):");
+    if (reason === null) return; // user bấm Cancel
+    try {
+      const res = await fetchAPI(`/posts/${post.id}/report`, {
+        method: "POST",
+        body: JSON.stringify({ reason: reason.trim() || "Vi phạm tiêu chuẩn cộng đồng" }),
+      });
+      if (res?.success) alert("Đã gửi báo cáo. Chúng tôi sẽ xem xét sớm.");
+      else alert(res?.message || "Báo cáo thất bại");
+    } catch {
+      alert("Lỗi kết nối");
+    }
+  };
+
   return (
     <>
       {/* Overlay bắt click ra ngoài để đóng menu */}
@@ -177,7 +193,10 @@ export default function PostCard({ post: initialPost, currentUser, onDelete, onU
                         </button>
                       </>
                     ) : (
-                      <button className="w-full text-left px-4 py-3 font-semibold text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <button
+                        onClick={handleReport}
+                        className="w-full text-left px-4 py-3 font-semibold text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
                         {t("post.report")}
                       </button>
                     )}

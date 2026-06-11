@@ -18,6 +18,7 @@ router.delete("/users/:userId", adminController.deleteUser);
 // Posts
 router.get("/posts", adminController.getPosts);
 router.delete("/posts/:postId", adminController.deletePost);
+router.patch("/posts/:postId/restore", adminController.restorePost);
 
 // Reports
 router.get("/reports", adminController.getReports);

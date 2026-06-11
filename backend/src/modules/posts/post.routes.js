@@ -40,4 +40,7 @@ router.get("/:id/comments", postController.getComments);
 // POST /api/v1/posts/:id/save — lưu / bỏ lưu bài
 router.post("/:id/save", authenticate, postController.toggleSave);
 
+// POST /api/v1/posts/:id/report — báo cáo bài viết
+router.post("/:id/report", authenticate, postController.createReport);
+
 module.exports = router;

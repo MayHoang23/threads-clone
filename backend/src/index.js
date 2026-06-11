@@ -26,6 +26,7 @@ app.use(cors({
     const allowedOrigins = [
       process.env.FRONTEND_URL,
       "http://localhost:3000",
+      "http://localhost:3001",
       /\.vercel\.app$/,
     ].filter(Boolean);
 
