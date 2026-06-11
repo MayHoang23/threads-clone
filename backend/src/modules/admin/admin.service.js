@@ -1,6 +1,7 @@
 const prisma = require("../../utils/prisma");
 const AppError = require("../../utils/AppError");
 const { createPostHiddenNotification } = require("../notifications/notification.service");
+const { getTrendingHashtags } = require("../posts/post.service");
 
 // Dashboard — 4 thống kê
 const getDashboardStats = async () => {
@@ -172,9 +173,48 @@ const restorePost = async (postId) => {
   });
 };
 
+// ── HASHTAGS ──────────────────────────
+
+// Lấy tất cả hashtag + số bài, có search + pagination
+const getHashtags = async ({ page = 1, limit = 20, search = "" }) => {
+  const where = search
+    ? { name: { contains: search, mode: "insensitive" } }
+    : {};
+  const [hashtags, total] = await Promise.all([
+    prisma.hashtag.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { posts: { _count: "desc" } },
+      include: { _count: { select: { posts: true } } },
+    }),
+    prisma.hashtag.count({ where }),
+  ]);
+  return {
+    hashtags: hashtags.map((h) => ({ id: h.id, name: h.name, postCount: h._count.posts })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  };
+};
+
+// Xóa hashtag (cascade xóa PostHashtag liên quan)
+const deleteHashtag = async (hashtagId) => {
+  const hashtag = await prisma.hashtag.findUnique({ where: { id: hashtagId } });
+  if (!hashtag) throw new AppError("Hashtag không tồn tại", 404);
+  await prisma.hashtag.delete({ where: { id: hashtagId } });
+  return { message: `Đã xóa #${hashtag.name}` };
+};
+
+// Lấy top trending (dùng lại hàm có sẵn)
+const getTopHashtags = async (limit = 10) => {
+  return getTrendingHashtags(limit);
+};
+
 module.exports = {
   getDashboardStats,
   getUsers, toggleBanUser, updateUserRole, deleteUser,
   getPosts, deletePost, restorePost,
   getReports, resolveReport,
+  getHashtags, deleteHashtag, getTopHashtags,
 };

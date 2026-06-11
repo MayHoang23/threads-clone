@@ -24,4 +24,9 @@ router.patch("/posts/:postId/restore", adminController.restorePost);
 router.get("/reports", adminController.getReports);
 router.patch("/reports/:reportId/resolve", adminController.resolveReport);
 
+// Hashtags
+router.get("/hashtags", adminController.getHashtags);
+router.get("/hashtags/top", adminController.getTopHashtags);
+router.delete("/hashtags/:hashtagId", adminController.deleteHashtag);
+
 module.exports = router;

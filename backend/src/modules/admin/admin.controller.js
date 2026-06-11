@@ -86,9 +86,36 @@ const resolveReport = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const getHashtags = async (req, res, next) => {
+  try {
+    const { page, limit, search } = req.query;
+    const data = await adminService.getHashtags({
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 20,
+      search,
+    });
+    return res.json({ success: true, data, message: "Lấy danh sách hashtag thành công" });
+  } catch (err) { next(err); }
+};
+
+const deleteHashtag = async (req, res, next) => {
+  try {
+    const data = await adminService.deleteHashtag(req.params.hashtagId);
+    return res.json({ success: true, data: null, message: data.message });
+  } catch (err) { next(err); }
+};
+
+const getTopHashtags = async (req, res, next) => {
+  try {
+    const data = await adminService.getTopHashtags(10);
+    return res.json({ success: true, data, message: "Lấy top hashtag thành công" });
+  } catch (err) { next(err); }
+};
+
 module.exports = {
   getDashboardStats,
   getUsers, toggleBanUser, updateUserRole, deleteUser,
   getPosts, deletePost, restorePost,
   getReports, resolveReport,
+  getHashtags, deleteHashtag, getTopHashtags,
 };
