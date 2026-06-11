@@ -77,7 +77,7 @@ const login = async ({ email, password }) => {
     throw new AppError("Vui lòng xác thực email trước khi đăng nhập", 403);
   }
 
-  const accessToken = generateAccessToken(user.id);
+  const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = generateRefreshToken(user.id);
 
   // Loại bỏ password khỏi object trả về
@@ -107,7 +107,7 @@ const refreshToken = async (token) => {
   if (user.isBanned) throw new AppError("Tài khoản của bạn đã bị khóa", 403);
 
   // Cấp access token mới
-  const accessToken = generateAccessToken(user.id);
+  const accessToken = generateAccessToken(user.id, user.role);
 
   return { accessToken };
 };

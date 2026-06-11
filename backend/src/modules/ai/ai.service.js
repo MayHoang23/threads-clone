@@ -1,4 +1,12 @@
-const MOCK_MODE = true; // Bật mock vì chưa có credit
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const MOCK_MODE = false;
+// gemini-1.5-flash đã bị Google gỡ (404) — dùng 2.5-flash là bản stable thay thế
+const GEMINI_MODEL = "gemini-2.5-flash";
+
+const getGeminiClient = () => {
+  return new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+};
 
 const generateCaption = async (topic, tone = "friendly") => {
   if (MOCK_MODE) {
@@ -8,42 +16,75 @@ const generateCaption = async (topic, tone = "friendly") => {
       `${topic} - mỗi ngày một niềm vui mới 💫`,
     ];
   }
-  // Code Anthropic API thật giữ nguyên bên dưới
-  const Anthropic = require("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 300,
-    messages: [{ role: "user", content: `Tạo 3 caption mạng xã hội về "${topic}", tone: ${tone}. Trả về JSON array.` }],
-  });
-  return JSON.parse(response.content[0].text);
+  try {
+    const genAI = getGeminiClient();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const prompt = `Tạo 3 caption mạng xã hội về "${topic}", tone: ${tone}.
+Yêu cầu: ngắn gọn, có emoji, phù hợp mạng xã hội Việt Nam.
+Trả về JSON array gồm 3 string, KHÔNG có markdown hay text thừa.
+Ví dụ: ["caption 1", "caption 2", "caption 3"]`;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const clean = text.replace(/```json|```/g, "").trim();
+    return JSON.parse(clean);
+  } catch (err) {
+    console.error("[AI] generateCaption error:", err.message);
+    return [
+      `${topic} - khoảnh khắc đáng nhớ! ✨`,
+      `Chia sẻ cùng mọi người về ${topic} 🌟`,
+      `${topic} - mỗi ngày một niềm vui mới 💫`,
+    ];
+  }
 };
 
 const suggestHashtags = async (content) => {
   if (MOCK_MODE) {
     return ["#threads", "#xuhuong", "#vietnam", "#lifestyle", "#daily"];
   }
-  const Anthropic = require("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 200,
-    messages: [{ role: "user", content: `Gợi ý 5 hashtag cho: "${content}". Trả về JSON array.` }],
-  });
-  return JSON.parse(response.content[0].text);
+  try {
+    const genAI = getGeminiClient();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const prompt = `Gợi ý 5 hashtag phù hợp cho nội dung: "${content}".
+Trả về JSON array gồm 5 string có dấu #, KHÔNG có markdown hay text thừa.
+Ví dụ: ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"]`;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const clean = text.replace(/```json|```/g, "").trim();
+    return JSON.parse(clean);
+  } catch (err) {
+    console.error("[AI] suggestHashtags error:", err.message);
+    return ["#threads", "#xuhuong", "#vietnam", "#lifestyle", "#daily"];
+  }
 };
 
 const moderateContent = async (content) => {
-  if (MOCK_MODE) return { safe: true, reason: null, isSafe: true, severity: "low" };
-  if (MOCK_MODE) return { safe: true, reason: null };
-  const Anthropic = require("@anthropic-ai/sdk");
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 100,
-    messages: [{ role: "user", content: `Kiểm duyệt nội dung: "${content}". Trả về JSON {safe: bool, reason: string|null}.` }],
-  });
-  return JSON.parse(response.content[0].text);
+  if (MOCK_MODE) {
+    return { safe: true, reason: null, isSafe: true, severity: "low" };
+  }
+  try {
+    const genAI = getGeminiClient();
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const prompt = `Kiểm duyệt nội dung mạng xã hội: "${content}".
+Trả về JSON object, KHÔNG có markdown hay text thừa.
+Ví dụ: {"safe": true, "reason": null, "isSafe": true, "severity": "low"}
+severity có thể là: "low", "medium", "high"`;
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const clean = text.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+    // Normalize: post.service check isSafe — nếu AI chỉ trả "safe" mà thiếu "isSafe"
+    // thì !undefined sẽ chặn oan mọi bài đăng
+    const isSafe = parsed.isSafe ?? parsed.safe ?? true;
+    return {
+      safe: isSafe,
+      isSafe,
+      reason: parsed.reason ?? null,
+      severity: parsed.severity ?? "low",
+    };
+  } catch (err) {
+    console.error("[AI] moderateContent error:", err.message);
+    return { safe: true, reason: null, isSafe: true, severity: "low" };
+  }
 };
 
 module.exports = { generateCaption, suggestHashtags, moderateContent };

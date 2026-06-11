@@ -80,3 +80,11 @@ export function getCurrentUser() {
     return null;
   }
 }
+
+// Kiểm tra user hiện tại có phải admin không
+// Lưu ý: role có trong localStorage từ response login — user đăng nhập trước
+// khi có tính năng role cần đăng nhập lại để localStorage cập nhật
+export const isAdmin = () => {
+  const user = getCurrentUser();
+  return user?.role === "ADMIN";
+};

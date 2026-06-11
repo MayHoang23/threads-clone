@@ -10,6 +10,7 @@ const USER_SELECT = {
   avatar: true,
   isVerified: true,
   isPrivate: true,
+  role: true,
 };
 
 // ========================
@@ -28,6 +29,7 @@ const getUserProfile = async (username, currentUserId = null) => {
       bio: true,
       isVerified: true,
       isPrivate: true,
+      role: true,
       createdAt: true,
       _count: {
         select: {
@@ -79,6 +81,7 @@ const getUserProfile = async (username, currentUserId = null) => {
     bio: user.bio,
     isVerified: user.isVerified,
     isPrivate: user.isPrivate,
+    role: user.role,
     createdAt: user.createdAt,
     postCount: user._count.posts,
     followerCount: user._count.followers,
@@ -112,6 +115,7 @@ const updateProfile = async (userId, { displayName, bio, avatar, coverImage, isP
       bio: true,
       isPrivate: true,
       isVerified: true,
+      role: true,
     },
   });
 

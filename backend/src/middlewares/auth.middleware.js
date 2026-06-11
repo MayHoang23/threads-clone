@@ -49,6 +49,7 @@ const authenticate = async (req, res, next) => {
         isPrivate: true,
         isVerified: true,
         isBanned: true,
+        role: true,
       },
     });
 
@@ -93,7 +94,7 @@ const optionalAuthenticate = async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, username: true, displayName: true, avatar: true, isVerified: true, isBanned: true },
+      select: { id: true, username: true, displayName: true, avatar: true, isVerified: true, isBanned: true, role: true },
     });
 
     if (user && !user.isBanned) req.user = user;
@@ -103,4 +104,16 @@ const optionalAuthenticate = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticate, optionalAuthenticate };
+// Middleware phân quyền admin — đặt SAU authenticate trong chuỗi middleware
+const requireAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "ADMIN") {
+    return res.status(403).json({
+      success: false,
+      data: null,
+      message: "Bạn không có quyền truy cập trang này",
+    });
+  }
+  next();
+};
+
+module.exports = { authenticate, optionalAuthenticate, requireAdmin };
