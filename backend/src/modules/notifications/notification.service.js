@@ -47,6 +47,30 @@ const createNotification = async (type, triggeredId, receiverId, postId = null) 
 };
 
 // ========================
+// TẠO NOTIFICATION HỆ THỐNG: BÀI VIẾT BỊ ẨN DO VI PHẠM
+// Không dùng createNotification vì không có triggeredBy là user (admin/hệ thống)
+// ========================
+const createPostHiddenNotification = async (postId, receiverId) => {
+  const notification = await prisma.notification.create({
+    data: {
+      type: "POST_HIDDEN",
+      receiverId,
+      postId,
+      isRead: false,
+      // triggeredId để null — hành động từ hệ thống, không phải user
+    },
+    include: {
+      post: { select: { id: true, content: true } },
+    },
+  });
+
+  // Emit real-time — formatNotification trả sender: null cho loại này
+  sendNotification(receiverId, formatNotification(notification));
+
+  return notification;
+};
+
+// ========================
 // LẤY DANH SÁCH NOTIFICATION (cursor pagination)
 // ========================
 const getNotifications = async (userId, cursor = null, limit = 20) => {
@@ -125,6 +149,7 @@ const deleteNotification = async (notificationId, userId) => {
 
 module.exports = {
   createNotification,
+  createPostHiddenNotification,
   getNotifications,
   getUnreadCount,
   markAsRead,

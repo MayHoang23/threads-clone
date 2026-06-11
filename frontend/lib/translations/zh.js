@@ -108,6 +108,7 @@ export default {
     friendRequest: "向你发送了好友请求",
     mentioned: "提到了你",
     interacted: "与你进行了互动",
+    postHidden: "你的帖子因违反社区准则已被隐藏。",
     emptyDesc: "当有人点赞或评论你的帖子时，你会在这里看到",
     end: "没有更多通知了",
   },

@@ -1,5 +1,6 @@
 const prisma = require("../../utils/prisma");
 const AppError = require("../../utils/AppError");
+const { createPostHiddenNotification } = require("../notifications/notification.service");
 
 // Dashboard — 4 thống kê
 const getDashboardStats = async () => {
@@ -144,10 +145,14 @@ const resolveReport = async (reportId, action = "reviewed") => {
 
   // Nếu xử lý vi phạm và report gắn với 1 bài → ẩn bài viết (thay vì xóa)
   if (action === "reviewed" && report.postId) {
-    await prisma.post.update({
+    // Post model dùng `authorId` (không phải userId) làm chủ bài
+    const post = await prisma.post.update({
       where: { id: report.postId },
       data: { isHidden: true },
+      select: { id: true, authorId: true },
     });
+    // Gửi notification cho chủ bài
+    await createPostHiddenNotification(post.id, post.authorId);
   }
 
   const updated = await prisma.report.update({

@@ -25,6 +25,7 @@ function getNotificationText(type, t) {
     case "FOLLOW": return t("notifications.followed");
     case "FRIEND_REQUEST": return t("notifications.friendRequest");
     case "MENTION": return t("notifications.mentioned");
+    case "POST_HIDDEN": return t("notifications.postHidden");
     default: return t("notifications.interacted");
   }
 }
@@ -32,6 +33,13 @@ function getNotificationText(type, t) {
 // Icon theo loại notification
 function NotificationIcon({ type }) {
   const base = "w-5 h-5";
+  if (type === "POST_HIDDEN") return (
+    <svg className={`${base} text-red-500`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
   if (type === "LIKE") return (
     <svg className={`${base} text-red-500`} viewBox="0 0 24 24" fill="currentColor">
       <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -140,7 +148,7 @@ export default function NotificationsPage() {
 
     // Navigate đến trang liên quan
     if (notification.type === "FOLLOW" || notification.type === "FRIEND_REQUEST") {
-      router.push(`/profile/${notification.sender.username}`);
+      router.push(`/profile/${notification.sender?.username}`);
     } else if (notification.post?.id) {
       router.push(`/posts/${notification.post.id}`);
     }
@@ -199,7 +207,16 @@ export default function NotificationsPage() {
                 {/* Cột trái: avatar + icon loại */}
                 <div className="relative flex-shrink-0">
                   <div className="w-11 h-11 rounded-full overflow-hidden">
-                    {notification.sender.avatar ? (
+                    {!notification.sender ? (
+                      // Notification hệ thống (POST_HIDDEN) — không có người gửi
+                      <div className="w-full h-full bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center text-white">
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                          <line x1="12" y1="9" x2="12" y2="13" />
+                          <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                      </div>
+                    ) : notification.sender.avatar ? (
                       <img src={notification.sender.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white font-bold text-base">
@@ -216,10 +233,12 @@ export default function NotificationsPage() {
                 {/* Nội dung */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm leading-relaxed">
-                    <span className="font-semibold">
-                      {notification.sender.displayName || notification.sender.username}
-                    </span>
-                    {" "}{getNotificationText(notification.type, t)}
+                    {notification.sender && (
+                      <span className="font-semibold">
+                        {notification.sender.displayName || notification.sender.username}{" "}
+                      </span>
+                    )}
+                    {getNotificationText(notification.type, t)}
                   </p>
                   {/* Preview nội dung bài viết liên quan */}
                   {notification.post?.content && (

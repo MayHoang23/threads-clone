@@ -108,6 +108,7 @@ export default {
     friendRequest: "đã gửi lời mời kết bạn",
     mentioned: "đã nhắc đến bạn",
     interacted: "đã tương tác với bạn",
+    postHidden: "Bài viết của bạn đã bị ẩn do vi phạm tiêu chuẩn cộng đồng.",
     emptyDesc: "Khi có người thích hoặc bình luận bài của bạn, bạn sẽ thấy ở đây",
     end: "Đã hết thông báo",
   },

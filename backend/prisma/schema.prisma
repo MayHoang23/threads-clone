@@ -243,10 +243,11 @@ model Notification {
   isRead      Boolean          @default(false)
   createdAt   DateTime         @default(now())
   receiverId  String
-  triggeredId String
+  // Nullable: notification hệ thống (vd POST_HIDDEN do admin ẩn bài) không có user kích hoạt
+  triggeredId String?
   postId      String?
   receiver    User             @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  triggered   User             @relation("triggered", fields: [triggeredId], references: [id], onDelete: Cascade)
+  triggered   User?            @relation("triggered", fields: [triggeredId], references: [id], onDelete: Cascade)
   post        Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
@@ -291,6 +292,7 @@ enum NotificationType {
   FOLLOW
   FRIEND_REQUEST
   MESSAGE
+  POST_HIDDEN
 }
 
 enum ReportStatus {

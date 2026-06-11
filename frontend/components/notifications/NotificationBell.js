@@ -26,6 +26,7 @@ function getNotificationText(type, t) {
     case "FOLLOW": return t("notifications.followed");
     case "FRIEND_REQUEST": return t("notifications.friendRequest");
     case "MENTION": return t("notifications.mentioned");
+    case "POST_HIDDEN": return t("notifications.postHidden");
     default: return t("notifications.interacted");
   }
 }
@@ -33,10 +34,23 @@ function getNotificationText(type, t) {
 // URL điều hướng khi click vào notification
 function getNotificationHref(notification) {
   if (notification.type === "FOLLOW" || notification.type === "FRIEND_REQUEST") {
-    return `/profile/${notification.sender.username}`;
+    return `/profile/${notification.sender?.username}`;
   }
   if (notification.post?.id) return `/posts/${notification.post.id}`;
   return "/notifications";
+}
+
+// Avatar icon hệ thống cho notification không có người gửi (vd POST_HIDDEN)
+function SystemAvatar() {
+  return (
+    <div className="w-full h-full bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center text-white">
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    </div>
+  );
 }
 
 // 1 dòng notification trong dropdown
@@ -61,9 +75,11 @@ function NotificationItem({ notification, onRead, onClose, t }) {
         !notification.isRead ? "bg-blue-50/60 dark:bg-blue-950/40" : ""
       }`}
     >
-      {/* Avatar người gửi */}
+      {/* Avatar người gửi — notification hệ thống (POST_HIDDEN) không có sender */}
       <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 mt-0.5">
-        {notification.sender.avatar ? (
+        {!notification.sender ? (
+          <SystemAvatar />
+        ) : notification.sender.avatar ? (
           <img src={notification.sender.avatar} alt="" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white text-sm font-bold">
@@ -75,8 +91,10 @@ function NotificationItem({ notification, onRead, onClose, t }) {
       {/* Nội dung */}
       <div className="flex-1 min-w-0">
         <p className="text-sm leading-snug">
-          <span className="font-semibold text-gray-900 dark:text-white">{notification.sender.displayName || notification.sender.username}</span>
-          {" "}{getNotificationText(notification.type, t)}
+          {notification.sender && (
+            <span className="font-semibold text-gray-900 dark:text-white">{notification.sender.displayName || notification.sender.username}{" "}</span>
+          )}
+          {getNotificationText(notification.type, t)}
         </p>
         {notification.post?.content && (
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{notification.post.content}</p>

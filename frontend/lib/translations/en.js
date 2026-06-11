@@ -108,6 +108,7 @@ export default {
     friendRequest: "sent you a friend request",
     mentioned: "mentioned you",
     interacted: "interacted with you",
+    postHidden: "Your post has been hidden for violating community standards.",
     emptyDesc: "When someone likes or comments on your post, you'll see it here",
     end: "No more notifications",
   },
