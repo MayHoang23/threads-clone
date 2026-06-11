@@ -3,17 +3,62 @@ const AppError = require("../../utils/AppError");
 const { createPostHiddenNotification } = require("../notifications/notification.service");
 const { getTrendingHashtags } = require("../posts/post.service");
 
-// Dashboard — 4 thống kê
+// Dashboard — thống kê tổng quan + biểu đồ 7 ngày + top hashtag
 const getDashboardStats = async () => {
-  const [totalUsers, totalPosts, totalReports, newUsersToday] = await Promise.all([
+  const now = new Date();
+  const today = new Date(now.setHours(0, 0, 0, 0));
+
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (6 - i));
+    return d;
+  });
+
+  const [totalUsers, totalPosts, totalReports, newUsersToday,
+    postsLast7Days, usersLast7Days, topHashtags] = await Promise.all([
     prisma.user.count(),
     prisma.post.count(),
     prisma.report.count({ where: { status: "PENDING" } }),
-    prisma.user.count({
-      where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
-    }),
+    prisma.user.count({ where: { createdAt: { gte: today } } }),
+
+    Promise.all(last7Days.map(async (day) => {
+      const nextDay = new Date(day);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const count = await prisma.post.count({
+        where: { createdAt: { gte: day, lt: nextDay } },
+      });
+      return {
+        date: day.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+        count,
+      };
+    })),
+
+    Promise.all(last7Days.map(async (day) => {
+      const nextDay = new Date(day);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const count = await prisma.user.count({
+        where: { createdAt: { gte: day, lt: nextDay } },
+      });
+      return {
+        date: day.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+        count,
+      };
+    })),
+
+    prisma.hashtag.findMany({
+      include: { _count: { select: { posts: true } } },
+      orderBy: { posts: { _count: "desc" } },
+      take: 5,
+    }).then(hs => hs
+      .filter(h => h._count.posts > 0)
+      .map(h => ({ name: h.name, postCount: h._count.posts }))
+    ),
   ]);
-  return { totalUsers, totalPosts, totalReports, newUsersToday };
+
+  return {
+    totalUsers, totalPosts, totalReports, newUsersToday,
+    postsLast7Days, usersLast7Days, topHashtags,
+  };
 };
 
 // ── USERS ──────────────────────────────
