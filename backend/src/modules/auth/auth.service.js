@@ -35,6 +35,15 @@ const register = async ({ username, email, password, displayName }) => {
     },
   });
 
+  // Bỏ qua xác thực email khi bật flag SKIP_EMAIL_VERIFY (dev/khi chưa cấu hình SMTP)
+  if (process.env.SKIP_EMAIL_VERIFY === "true") {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true },
+    });
+    return { message: "Đăng ký thành công. Bạn có thể đăng nhập ngay." };
+  }
+
   // Tạo token xác thực email và gửi mail
   const emailVerifyToken = crypto.randomBytes(32).toString("hex");
   await prisma.user.update({
@@ -72,8 +81,8 @@ const login = async ({ email, password }) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) throw new AppError("Email hoặc mật khẩu không đúng", 401);
 
-  // Chưa xác thực email → chặn đăng nhập
-  if (!user.emailVerified) {
+  // Chưa xác thực email → chặn đăng nhập (bỏ qua khi bật SKIP_EMAIL_VERIFY)
+  if (!user.emailVerified && process.env.SKIP_EMAIL_VERIFY !== "true") {
     throw new AppError("Vui lòng xác thực email trước khi đăng nhập", 403);
   }
 

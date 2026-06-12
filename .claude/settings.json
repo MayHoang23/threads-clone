@@ -56,7 +56,8 @@
       "Bash(ls -la components)",
       "Bash(ls -la lib)",
       "Bash(npm run *)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "PowerShell(npm install recharts --prefix \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone-admin\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",
