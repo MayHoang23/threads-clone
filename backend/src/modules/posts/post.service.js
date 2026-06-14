@@ -23,24 +23,35 @@ const AUTHOR_SELECT = {
   isVerified: true,
 };
 
-// Tạo include object cho post — có hoặc không có userId (để biết isLiked, isSaved)
-const getPostInclude = (userId) => {
+// Include cho bài NHÚNG (repostOf / quotedPost) — không lồng tiếp repost/quote
+// để tránh đệ quy vô hạn. Chỉ cần đủ field để render embedded card.
+const getEmbeddedInclude = (userId) => {
   const include = {
     author: { select: AUTHOR_SELECT },
     media: { select: { id: true, url: true, type: true } },
-    _count: { select: { likes: true, comments: true } },
+    _count: { select: { likes: true, comments: true, reposts: true } },
     hashtags: { include: { hashtag: { select: { name: true } } } },
   };
-  // Chỉ query likes/savedBy khi có userId (để check isLiked, isSaved)
+  // Chỉ query likes/savedBy/reposts khi có userId (để check isLiked, isSaved, isRepostedByMe)
   if (userId) {
     include.likes = { where: { userId }, select: { id: true } };
     include.savedBy = { where: { userId }, select: { id: true } };
+    include.reposts = { where: { authorId: userId }, select: { id: true } };
   }
   return include;
 };
 
-// Chuyển raw Prisma post → response object gọn gàng
+// Tạo include object cho post — kèm bài gốc (repostOf) và bài được quote (quotedPost)
+const getPostInclude = (userId) => {
+  const include = getEmbeddedInclude(userId);
+  include.repostOf = { include: getEmbeddedInclude(userId) };
+  include.quotedPost = { include: getEmbeddedInclude(userId) };
+  return include;
+};
+
+// Chuyển raw Prisma post → response object gọn gàng (đệ quy cho repostOf/quotedPost)
 function formatPost(post, userId = null) {
+  if (!post) return null;
   return {
     id: post.id,
     content: post.content,
@@ -52,17 +63,23 @@ function formatPost(post, userId = null) {
     hashtags: post.hashtags?.map((ph) => ph.hashtag.name) ?? [],
     likeCount: post._count?.likes ?? 0,
     commentCount: post._count?.comments ?? 0,
+    repostCount: post._count?.reposts ?? 0,
     // Nếu không có userId (chưa đăng nhập) → false
     isLiked: userId ? (post.likes?.length > 0) : false,
     isSaved: userId ? (post.savedBy?.length > 0) : false,
+    isRepostedByMe: userId ? (post.reposts?.length > 0) : false,
+    // Bài gốc (khi đây là repost) / bài được trích dẫn (khi đây là quote post)
+    repostOf: formatPost(post.repostOf, userId),
+    quotedPost: formatPost(post.quotedPost, userId),
   };
 }
 
 // ========================
 // TẠO BÀI VIẾT
 // ========================
-const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [] }) => {
-  if (!content?.trim() && mediaUrls.length === 0) {
+const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [], quotedPostId = null }) => {
+  // Quote post được phép không có nội dung/ảnh (chỉ trích dẫn bài gốc)
+  if (!content?.trim() && mediaUrls.length === 0 && !quotedPostId) {
     throw new AppError("Bài viết phải có nội dung hoặc ảnh/video", 400);
   }
 
@@ -93,6 +110,7 @@ const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [] 
         authorId: userId,
         content: content?.trim() || null,
         privacy,
+        ...(quotedPostId && { quotedPostId }),
       },
     });
 
@@ -432,4 +450,8 @@ module.exports = {
   getComments,
   toggleSave,
   getSavedPosts,
+  // Helper dùng lại trong repost.controller
+  formatPost,
+  getPostInclude,
+  AUTHOR_SELECT,
 };

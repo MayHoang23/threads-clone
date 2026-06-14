@@ -85,6 +85,14 @@ model Post {
   authorId  String
   author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
+  // Repost & Quote (self-relation) — onDelete SetNull để không xoá lan khi bài gốc bị xoá
+  repostOfId   String?
+  repostOf     Post?  @relation("Reposts", fields: [repostOfId], references: [id], onDelete: SetNull)
+  reposts      Post[] @relation("Reposts")
+  quotedPostId String?
+  quotedPost   Post?  @relation("Quotes", fields: [quotedPostId], references: [id], onDelete: SetNull)
+  quotes       Post[] @relation("Quotes")
+
   // Quan hệ
   media         Media[]
   likes         Like[]
@@ -293,6 +301,7 @@ enum NotificationType {
   FRIEND_REQUEST
   MESSAGE
   POST_HIDDEN
+  REPOST
 }
 
 enum ReportStatus {

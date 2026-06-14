@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const postController = require("./post.controller");
+const repostController = require("./repost.controller");
 const { authenticate, optionalAuthenticate } = require("../../middlewares/auth.middleware");
 
 // POST /api/v1/posts — tạo bài viết (bắt buộc đăng nhập)
@@ -42,5 +43,18 @@ router.post("/:id/save", authenticate, postController.toggleSave);
 
 // POST /api/v1/posts/:id/report — báo cáo bài viết
 router.post("/:id/report", authenticate, postController.createReport);
+
+// ===== REPOST & QUOTE =====
+// POST /api/v1/posts/:id/repost — repost bài viết
+router.post("/:id/repost", authenticate, repostController.repostPost);
+
+// DELETE /api/v1/posts/:id/repost — bỏ repost
+router.delete("/:id/repost", authenticate, repostController.unrepostPost);
+
+// POST /api/v1/posts/:id/quote — quote post (trích dẫn)
+router.post("/:id/quote", authenticate, repostController.quotePost);
+
+// GET /api/v1/posts/:id/reposts — danh sách người đã repost
+router.get("/:id/reposts", optionalAuthenticate, repostController.getReposts);
 
 module.exports = router;

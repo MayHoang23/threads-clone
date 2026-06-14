@@ -65,11 +65,11 @@ Auth header: Bearer token (middleware authenticate.js)
 
 Dùng window.dispatchEvent để giao tiếp giữa các component không có prop drilling:
 
-| Event name       | Detail         | Mô tả                                     |
-| ---------------- | -------------- | ----------------------------------------- |
-| open-create-post | (không có)                    | Mở modal CreatePost từ bất kỳ đâu         |
-| post-created     | newPost object                | Prepend bài mới vào newsfeed sau khi đăng |
-| follow-changed   | { username, isFollowing }     | Sync follow state cross-page               |
+| Event name       | Detail                    | Mô tả                                     |
+| ---------------- | ------------------------- | ----------------------------------------- |
+| open-create-post | (không có)                | Mở modal CreatePost từ bất kỳ đâu         |
+| post-created     | newPost object            | Prepend bài mới vào newsfeed sau khi đăng |
+| follow-changed   | { username, isFollowing } | Sync follow state cross-page              |
 
 Pattern dùng:
 
@@ -262,13 +262,14 @@ Route /compose không tồn tại và không cần tạo
 
 ## Custom Events (window)
 
-| Event name        | Detail                        | Mô tả                                        |
-|-------------------|-------------------------------|----------------------------------------------|
-| open-create-post  | (không có)                    | Mở modal CreatePost từ bất kỳ đâu            |
-| post-created      | newPost object                | Prepend bài mới vào newsfeed                 |
-| post-saved        | post object                   | Sync saved posts khi save                    |
-| post-unsaved      | post object                   | Sync saved posts khi unsave                  |
-| follow-changed    | { username, isFollowing }     | Sync follow state cross-page                 |
+| Event name       | Detail                    | Mô tả                             |
+| ---------------- | ------------------------- | --------------------------------- |
+| open-create-post | (không có)                | Mở modal CreatePost từ bất kỳ đâu |
+| post-created     | newPost object            | Prepend bài mới vào newsfeed      |
+| post-saved       | post object               | Sync saved posts khi save         |
+| post-unsaved     | post object               | Sync saved posts khi unsave       |
+| follow-changed   | { username, isFollowing } | Sync follow state cross-page      |
+| repost-changed   | { postId, isReposted }    | Sync trạng thái repost cross-card |
 
 ## Còn lại
 

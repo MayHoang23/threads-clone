@@ -26,6 +26,7 @@ function getNotificationText(type, t) {
     case "FOLLOW": return t("notifications.followed");
     case "FRIEND_REQUEST": return t("notifications.friendRequest");
     case "MENTION": return t("notifications.mentioned");
+    case "REPOST": return t("notifications.reposted");
     case "POST_HIDDEN": return t("notifications.postHidden");
     default: return t("notifications.interacted");
   }
