@@ -177,6 +177,11 @@ export default function NotificationBell({ isActive }) {
     }
     setIsOpen(true);
     if (!loaded) fetchNotifications();
+    // Mở dropdown = đã xem → reset badge về 0, persist qua read-all để không quay lại sau F5
+    if (unreadCount > 0) {
+      setUnreadCount(0);
+      fetchAPI("/notifications/read-all", { method: "PATCH" }).catch(() => {});
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -307,9 +312,18 @@ export function MobileNotificationBell({ isActive }) {
     return () => socket.off("new_notification", handler);
   }, [socket]);
 
+  // Bấm icon = đã xem → reset badge về 0, persist qua read-all
+  const handleClick = () => {
+    if (unreadCount > 0) {
+      setUnreadCount(0);
+      fetchAPI("/notifications/read-all", { method: "PATCH" }).catch(() => {});
+    }
+  };
+
   return (
     <Link
       href="/notifications"
+      onClick={handleClick}
       className={`relative flex flex-col items-center p-2 rounded-2xl transition-colors ${
         isActive ? "text-black" : "text-gray-400"
       }`}
