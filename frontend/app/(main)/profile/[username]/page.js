@@ -53,7 +53,9 @@ export default function ProfilePage() {
   const coverInputRef = useRef(null);
 
   const { t } = useLanguage();
-  const isOwnProfile = currentUser?.username === username;
+  // So sánh bằng id để chắc chắn là profile của chính mình
+  // (tránh lệch hoa/thường ở username trên URL hoặc currentUser thiếu username)
+  const isOwnProfile = !!currentUser?.id && currentUser.id === profile?.id;
 
   const handleUploadMedia = async (file, field) => {
     const setUploading = field === "avatar" ? setUploadingAvatar : setUploadingCover;
