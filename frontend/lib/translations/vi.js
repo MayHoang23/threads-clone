@@ -17,6 +17,12 @@ export default {
     emptyDesc: "Hãy follow người khác hoặc đăng bài đầu tiên!",
     end: "Bạn đã xem hết rồi 🎉",
   },
+  hashtag: {
+    posts: "bài viết",
+    empty: "Chưa có bài viết nào với hashtag này",
+    emptyDesc: "Hãy là người đầu tiên đăng bài với hashtag này!",
+    end: "Đã hết bài viết",
+  },
   post: {
     placeholder: "Có gì mới không?",
     publish: "Đăng",

@@ -58,7 +58,10 @@
       "Bash(npm run *)",
       "Bash(tasklist)",
       "PowerShell(npm install recharts --prefix \"c:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\threads-clone-admin\")",
-      "Bash(node --check src/modules/posts/repost.controller.js)"
+      "Bash(node --check src/modules/posts/repost.controller.js)",
+      "Bash(node --check src/modules/hashtags/hashtag.service.js)",
+      "Bash(node --check src/modules/hashtags/hashtag.controller.js)",
+      "Bash(node --check src/modules/hashtags/hashtag.routes.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",

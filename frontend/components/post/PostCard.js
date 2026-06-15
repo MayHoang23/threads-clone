@@ -6,6 +6,7 @@ import { fetchAPI } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import RepostButton from "./RepostButton";
 import QuotedPostCard from "./QuotedPostCard";
+import RichContent from "./RichContent";
 
 // Format thời gian kiểu Threads: "vừa xong", "5ph", "2g", "3ng"
 function timeAgo(dateStr, justNow = "vừa xong") {
@@ -18,29 +19,6 @@ function timeAgo(dateStr, justNow = "vừa xong") {
     const d = Math.floor(h / 24);
     if (d < 7) return `${d}ng`;
     return new Date(dateStr).toLocaleDateString("vi-VN");
-}
-
-// Tô màu xanh các hashtag trong nội dung
-function RichContent({ text }) {
-    if (!text) return null;
-    const parts = text.split(/(#\w+)/g);
-    return (
-        <>
-            {parts.map((part, i) =>
-                part.startsWith("#") ? (
-                    <Link
-                        key={i}
-                        href={`/hashtag/${part.slice(1)}`}
-                        className="text-blue-500 hover:underline"
-                    >
-                        {part}
-                    </Link>
-                ) : (
-                    <span key={i}>{part}</span>
-                ),
-            )}
-        </>
-    );
 }
 
 // Avatar với fallback chữ cái đầu username

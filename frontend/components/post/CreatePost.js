@@ -5,6 +5,7 @@ import { fetchAPI } from "@/lib/api";
 import MediaUpload from "./MediaUpload";
 import CaptionGenerator from "@/components/ai/CaptionGenerator";
 import HashtagSuggester from "@/components/ai/HashtagSuggester";
+import MentionTextarea from "@/components/ui/MentionTextarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 function Avatar({ user }) {
@@ -78,14 +79,10 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
     }
   }, [showModal]);
 
-  const handleContentChange = (e) => {
-    setContent(e.target.value);
+  // MentionTextarea tự co giãn chiều cao + xử lý @mention; chỉ cần cập nhật content
+  const handleContentChange = (value) => {
+    setContent(value);
     if (moderationWarning) setModerationWarning("");
-    const ta = textareaRef.current;
-    if (ta) {
-      ta.style.height = "auto";
-      ta.style.height = `${ta.scrollHeight}px`;
-    }
   };
 
   const handleMediaChange = (media, uploading) => {
@@ -96,12 +93,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
   const handleSelectCaption = (caption) => {
     setContent(caption);
     if (moderationWarning) setModerationWarning("");
-    const ta = textareaRef.current;
-    if (ta) {
-      ta.style.height = "auto";
-      ta.style.height = `${ta.scrollHeight}px`;
-      ta.focus();
-    }
+    textareaRef.current?.focus();
   };
 
   const handleAddHashtag = (hashtagText) => {
@@ -110,13 +102,6 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
       if (trimmed.includes(hashtagText)) return prev;
       return trimmed ? `${trimmed} ${hashtagText}` : hashtagText;
     });
-    const ta = textareaRef.current;
-    if (ta) {
-      setTimeout(() => {
-        ta.style.height = "auto";
-        ta.style.height = `${ta.scrollHeight}px`;
-      }, 0);
-    }
   };
 
   const closeModal = () => {
@@ -128,7 +113,6 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
     setShowHashtag(false);
     setFocused(false);
     setModerationWarning("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
   const handleSubmit = async () => {
@@ -155,7 +139,6 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
         setShowCaption(false);
         setShowHashtag(false);
         setFocused(false);
-        if (textareaRef.current) textareaRef.current.style.height = "auto";
         window.dispatchEvent(new CustomEvent("post-created", { detail: data.data }));
         onPostCreated?.(data.data);
         if (showModal) setShowModal(false);
@@ -206,7 +189,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
           {currentUser?.username ?? "..."}
         </p>
 
-        <textarea
+        <MentionTextarea
           ref={textareaRef}
           value={content}
           onChange={handleContentChange}

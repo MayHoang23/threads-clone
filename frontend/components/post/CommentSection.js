@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import MentionTextarea from "@/components/ui/MentionTextarea";
 
 function timeAgo(dateStr, justNow = "vừa xong") {
   const s = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -72,14 +73,22 @@ function CommentItem({ comment, postId, onReplyAdded, t }) {
           {/* Form reply */}
           {showReply && (
             <div className="flex gap-2 mt-2">
-              <input
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder={`Trả lời @${comment.user?.username}...`}
-                className="flex-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all min-w-0"
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleReply()}
-                autoFocus
-              />
+              <div className="flex-1 min-w-0">
+                <MentionTextarea
+                  value={replyText}
+                  onChange={setReplyText}
+                  placeholder={`Trả lời @${comment.user?.username}...`}
+                  rows={1}
+                  autoFocus
+                  className="w-full block text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-3 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all resize-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleReply();
+                    }
+                  }}
+                />
+              </div>
               <button
                 onClick={handleReply}
                 disabled={!replyText.trim() || posting}
@@ -186,13 +195,21 @@ export default function CommentSection({ postId, currentUser }) {
             )}
           </div>
           <div className="flex-1 flex items-center gap-2">
-            <input
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={t("comments.placeholder")}
-              className="flex-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all min-w-0"
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAddComment()}
-            />
+            <div className="flex-1 min-w-0">
+              <MentionTextarea
+                value={newComment}
+                onChange={setNewComment}
+                placeholder={t("comments.placeholder")}
+                rows={1}
+                className="w-full block text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-black/10 dark:focus:ring-white/10 transition-all resize-none"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAddComment();
+                  }
+                }}
+              />
+            </div>
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim() || posting}

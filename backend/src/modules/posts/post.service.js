@@ -14,6 +14,37 @@ function extractHashtags(text) {
   return [...new Set(matches.map((tag) => tag.slice(1).toLowerCase()))];
 }
 
+// Trích xuất username được nhắc đến: "@hoa @nam" → ["hoa", "nam"]
+function extractMentions(text) {
+  if (!text) return [];
+  const matches = text.match(/@(\w+)/g) || [];
+  return [...new Set(matches.map((m) => m.slice(1).toLowerCase()))];
+}
+
+// Tìm user được nhắc trong nội dung và tạo notification MENTION (fire-and-forget).
+// Khi update: truyền oldContent để chỉ thông báo cho user MỚI được nhắc.
+async function notifyMentions(content, authorId, postId, oldContent = null) {
+  const newMentions = extractMentions(content);
+  if (newMentions.length === 0) return;
+
+  const oldMentions = oldContent ? extractMentions(oldContent) : [];
+  const toNotify = newMentions.filter((u) => !oldMentions.includes(u));
+
+  for (const username of toNotify) {
+    // username so sánh không phân biệt hoa thường
+    const user = await prisma.user.findFirst({
+      where: { username: { equals: username, mode: "insensitive" } },
+      select: { id: true },
+    });
+    // createNotification tự bỏ qua nếu user === authorId (tự nhắc mình)
+    if (user) {
+      notificationService
+        .createNotification("MENTION", authorId, user.id, postId)
+        .catch(() => {});
+    }
+  }
+}
+
 // Các trường cần select cho author — dùng lại ở nhiều chỗ
 const AUTHOR_SELECT = {
   id: true,
@@ -139,6 +170,9 @@ const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [],
 
     return newPost;
   });
+
+  // Thông báo cho những user được nhắc đến trong bài (fire-and-forget)
+  notifyMentions(content, userId, post.id).catch(() => {});
 
   // Query lại để trả về đủ thông tin
   const fullPost = await prisma.post.findUnique({
@@ -278,6 +312,11 @@ const updatePost = async (postId, userId, { content, privacy }) => {
       include: getPostInclude(userId),
     });
   });
+
+  // Thông báo cho user MỚI được nhắc (so với nội dung cũ) — tránh spam khi sửa bài
+  if (content !== undefined) {
+    notifyMentions(content, userId, postId, post.content).catch(() => {});
+  }
 
   return formatPost(updated, userId);
 };

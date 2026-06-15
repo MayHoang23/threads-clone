@@ -17,6 +17,12 @@ export default {
     emptyDesc: "关注其他人或发布第一条帖子吧！",
     end: "已经看完了 🎉",
   },
+  hashtag: {
+    posts: "条帖子",
+    empty: "该话题还没有帖子",
+    emptyDesc: "成为第一个发布该话题的人吧！",
+    end: "没有更多帖子了",
+  },
   post: {
     placeholder: "有什么新鲜事？",
     publish: "发布",

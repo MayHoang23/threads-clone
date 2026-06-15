@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { fetchAPI } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import MentionTextarea from "@/components/ui/MentionTextarea";
 import QuotedPostCard from "./QuotedPostCard";
 
 function Avatar({ user }) {
@@ -38,14 +39,10 @@ export default function QuoteModal({ post, currentUser, onClose }) {
     };
   }, []);
 
-  const handleChange = (e) => {
-    setContent(e.target.value);
+  // MentionTextarea trả về chuỗi value mới + tự co giãn chiều cao
+  const handleChange = (value) => {
+    setContent(value);
     if (warning) setWarning("");
-    const ta = textareaRef.current;
-    if (ta) {
-      ta.style.height = "auto";
-      ta.style.height = `${ta.scrollHeight}px`;
-    }
   };
 
   const charsLeft = 500 - content.length;
@@ -106,7 +103,7 @@ export default function QuoteModal({ post, currentUser, onClose }) {
                 {currentUser?.username ?? "..."}
               </p>
 
-              <textarea
+              <MentionTextarea
                 ref={textareaRef}
                 value={content}
                 onChange={handleChange}

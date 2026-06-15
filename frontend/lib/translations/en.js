@@ -17,6 +17,12 @@ export default {
     emptyDesc: "Follow people or post something first!",
     end: "You're all caught up 🎉",
   },
+  hashtag: {
+    posts: "posts",
+    empty: "No posts with this hashtag yet",
+    emptyDesc: "Be the first to post with this hashtag!",
+    end: "No more posts",
+  },
   post: {
     placeholder: "What's new?",
     publish: "Post",
