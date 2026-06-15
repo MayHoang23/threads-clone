@@ -93,8 +93,11 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ===== DESKTOP: sidebar cố định bên trái ===== */}
-      <nav className="hidden lg:flex flex-col fixed left-0 top-0 h-screen w-64 border-r border-gray-100 dark:border-gray-800 bg-[#F9F9F9] dark:bg-gray-950 z-40 px-3 py-6 transition-colors duration-300">
+      {/* ===== DESKTOP: sidebar cố định bên trái, căn theo container 1320px ===== */}
+      {/* Rail full-viewport (pointer-events-none) → căn giữa giống mx-auto, không lệch scrollbar */}
+      <div className="hidden lg:block fixed inset-0 z-40 pointer-events-none">
+        <div className="h-full max-w-[1320px] mx-auto relative">
+          <nav className="pointer-events-auto absolute left-0 top-0 h-screen w-64 flex flex-col border-r border-gray-100 dark:border-gray-800 bg-[#F9F9F9] dark:bg-gray-950 px-3 py-6 transition-colors duration-300">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 px-3 py-2 mb-8 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
           <div className="w-8 h-8 bg-black dark:bg-white rounded-xl flex items-center justify-center flex-shrink-0">
@@ -196,7 +199,9 @@ export default function Navbar() {
             )}
           </div>
         )}
-      </nav>
+          </nav>
+        </div>
+      </div>
 
       {/* Global modal — listens for 'open-create-post' event, works on any page */}
       <CreatePost currentUser={currentUser} modal={true} />
