@@ -199,4 +199,23 @@ const markRead = async (conversationId, userId) => {
   return { updated: count };
 };
 
-module.exports = { getConversations, getOrCreateConversation, getMessages, sendMessage, markRead };
+// ========================
+// ĐẾM SỐ CONVERSATION CÓ TIN CHƯA ĐỌC
+// ========================
+// Đếm số cuộc trò chuyện mà user là member VÀ có ≥1 tin chưa đọc
+// (tin không phải do chính user gửi) — dùng cho badge unread DM trên Navbar
+const getUnreadConversationCount = async (userId) => {
+  return prisma.conversation.count({
+    where: {
+      members: { some: { userId } },
+      messages: {
+        some: {
+          senderId: { not: userId },
+          isRead: false,
+        },
+      },
+    },
+  });
+};
+
+module.exports = { getConversations, getOrCreateConversation, getMessages, sendMessage, markRead, getUnreadConversationCount };

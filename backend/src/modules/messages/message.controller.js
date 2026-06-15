@@ -112,4 +112,14 @@ const markRead = async (req, res, next) => {
   }
 };
 
-module.exports = { getConversations, getOrCreate, getMessages, sendMessage, markRead };
+// GET /api/v1/conversations/unread-count
+const getUnreadCount = async (req, res, next) => {
+  try {
+    const count = await messageService.getUnreadConversationCount(req.user.id);
+    res.json({ success: true, data: { count }, message: "Số cuộc trò chuyện chưa đọc" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getConversations, getOrCreate, getMessages, sendMessage, markRead, getUnreadCount };

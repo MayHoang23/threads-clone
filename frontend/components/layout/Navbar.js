@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getCurrentUser, logout } from "@/lib/auth";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import NotificationBell, { MobileNotificationBell } from "@/components/notifications/NotificationBell";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import CreatePost from "@/components/post/CreatePost";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSocket } from "@/contexts/SocketContext";
+import { fetchAPI } from "@/lib/api";
 
 // SVG icons cho từng mục nav (filled = active, outline = inactive)
 const HomeIcon = ({ active }) =>
@@ -60,11 +62,47 @@ const SettingsIcon = ({ active }) => (
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const socket = useSocket();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [unreadDM, setUnreadDM] = useState(0); // số cuộc trò chuyện có tin chưa đọc
   const currentUser = getCurrentUser();
   const { t } = useLanguage();
 
   const openCreatePost = () => window.dispatchEvent(new CustomEvent("open-create-post"));
+
+  // Lấy số cuộc trò chuyện chưa đọc từ API
+  const fetchUnreadDM = () => {
+    fetchAPI("/conversations/unread-count")
+      .then((res) => { if (res?.success) setUnreadDM(res.data.count); })
+      .catch(() => {});
+  };
+
+  // Load lần đầu khi mount
+  useEffect(() => { fetchUnreadDM(); }, []);
+
+  // Vào trang messages → coi như đã xem, reset badge về 0
+  useEffect(() => {
+    if (pathname.startsWith("/messages")) setUnreadDM(0);
+  }, [pathname]);
+
+  // DM mới đến → tăng badge (trừ khi đang ở trang messages)
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewDM = () => {
+      if (pathname.startsWith("/messages")) return;
+      // Refetch để badge = số NGƯỜI (conversation) chưa đọc, không cộng dồn theo từng tin
+      fetchUnreadDM();
+    };
+    socket.on("new_dm", handleNewDM);
+    return () => socket.off("new_dm", handleNewDM);
+  }, [socket, pathname]);
+
+  // ChatWindow đã đọc 1 conversation → refetch để badge chính xác
+  useEffect(() => {
+    const handler = () => fetchUnreadDM();
+    window.addEventListener("dm-read", handler);
+    return () => window.removeEventListener("dm-read", handler);
+  }, []);
 
   // NAV_ITEMS không có Thông báo — thay bằng NotificationBell component riêng
   const NAV_ITEMS = useMemo(() => [
@@ -132,7 +170,18 @@ export default function Navbar() {
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
                 }`}
               >
-                <Icon active={isActive} />
+                {href === "/messages" ? (
+                  <span className="relative">
+                    <Icon active={isActive} />
+                    {unreadDM > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {unreadDM > 9 ? "9+" : unreadDM}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <Icon active={isActive} />
+                )}
                 {label}
               </Link>
             );
@@ -235,7 +284,18 @@ export default function Navbar() {
                 }`}
                 aria-label={label}
               >
-                <Icon active={isActive} />
+                {href === "/messages" ? (
+                  <span className="relative">
+                    <Icon active={isActive} />
+                    {unreadDM > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                        {unreadDM > 9 ? "9+" : unreadDM}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <Icon active={isActive} />
+                )}
               </Link>
             );
           })}

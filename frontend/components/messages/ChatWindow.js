@@ -270,7 +270,14 @@ export default function ChatWindow({
 
         fetchAPI(`/conversations/${conversationId}/read`, {
             method: "PATCH",
-        }).catch(() => {});
+        })
+            .then(() => {
+                // Báo Navbar refetch badge unread DM cho chính xác
+                window.dispatchEvent(
+                    new CustomEvent("dm-read", { detail: { conversationId } }),
+                );
+            })
+            .catch(() => {});
 
         return () => {
             socket.emit("leave_conversation", { conversationId });
@@ -477,7 +484,7 @@ export default function ChatWindow({
                                 )}
 
                                 <div
-                                    className={`flex flex-col ${isMine ? "items-end" : "items-start"} max-w-[70%]`}
+                                    className={`flex flex-col min-w-0 ${isMine ? "items-end" : "items-start"} max-w-[70%]`}
                                 >
                                     {/* Ảnh đính kèm */}
                                     {item.mediaUrl && (
@@ -497,7 +504,7 @@ export default function ChatWindow({
                                     {/* Nội dung text */}
                                     {item.content && (
                                         <div
-                                            className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${
+                                            className={`max-w-full px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
                                                 isMine
                                                     ? "bg-black text-white rounded-br-none dark:bg-violet-600 dark:text-white"
                                                     : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
