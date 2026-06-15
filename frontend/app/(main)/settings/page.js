@@ -199,36 +199,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSavePrivacy = async () => {
-    setLoadingSection("privacy");
-    try {
-      await fetchAPI("/settings/privacy", {
-        method: "PATCH",
-        body: JSON.stringify(privacy),
-      });
-      showToast(t("settings.privacyUpdated"));
-    } catch (err) {
-      showToast(err.message || t("settings.updateFailed"), "error");
-    } finally {
-      setLoadingSection(null);
-    }
-  };
-
-  const handleSaveNotifs = async () => {
-    setLoadingSection("notifications");
-    try {
-      await fetchAPI("/settings/notifications", {
-        method: "PATCH",
-        body: JSON.stringify(notifs),
-      });
-      showToast(t("settings.notifsUpdated"));
-    } catch (err) {
-      showToast(err.message || t("settings.updateFailed"), "error");
-    } finally {
-      setLoadingSection(null);
-    }
-  };
-
   const renderSection = () => {
     switch (activeSection) {
       case "account":
@@ -280,8 +250,8 @@ export default function SettingsPage() {
                   setPrivacy(newPrivacy);
                   try {
                     await fetchAPI("/settings/privacy", { method: "PATCH", body: JSON.stringify(newPrivacy) });
-                    showToast("Đã lưu");
-                  } catch { showToast("Lưu thất bại", "error"); }
+                    showToast(t("settings.saveSuccess"));
+                  } catch { showToast(t("settings.updateFailed"), "error"); }
                 }}
                 label={t("settings.privateAccount")}
                 description={t("settings.privateDesc")}
@@ -328,8 +298,8 @@ export default function SettingsPage() {
                               setPrivacy(newPrivacy);
                               try {
                                 await fetchAPI("/settings/privacy", { method: "PATCH", body: JSON.stringify(newPrivacy) });
-                                showToast("Đã lưu");
-                              } catch { showToast("Lưu thất bại", "error"); }
+                                showToast(t("settings.saveSuccess"));
+                              } catch { showToast(t("settings.updateFailed"), "error"); }
                             }}
                             className={`w-full text-left px-4 py-3 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
                               privacy.allowMessagesFrom === option.value
@@ -361,8 +331,8 @@ export default function SettingsPage() {
                   setNotifs(newNotifs);
                   try {
                     await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
-                    showToast("Đã lưu");
-                  } catch { showToast("Lưu thất bại", "error"); }
+                    showToast(t("settings.saveSuccess"));
+                  } catch { showToast(t("settings.updateFailed"), "error"); }
                 }}
                 label={t("settings.likeNotif")}
                 description={t("settings.likeNotifDesc")}
@@ -374,8 +344,8 @@ export default function SettingsPage() {
                   setNotifs(newNotifs);
                   try {
                     await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
-                    showToast("Đã lưu");
-                  } catch { showToast("Lưu thất bại", "error"); }
+                    showToast(t("settings.saveSuccess"));
+                  } catch { showToast(t("settings.updateFailed"), "error"); }
                 }}
                 label={t("settings.commentNotif")}
                 description={t("settings.commentNotifDesc")}
@@ -387,8 +357,8 @@ export default function SettingsPage() {
                   setNotifs(newNotifs);
                   try {
                     await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
-                    showToast("Đã lưu");
-                  } catch { showToast("Lưu thất bại", "error"); }
+                    showToast(t("settings.saveSuccess"));
+                  } catch { showToast(t("settings.updateFailed"), "error"); }
                 }}
                 label={t("settings.followNotif")}
                 description={t("settings.followNotifDesc")}
@@ -400,8 +370,8 @@ export default function SettingsPage() {
                   setNotifs(newNotifs);
                   try {
                     await fetchAPI("/settings/notifications", { method: "PATCH", body: JSON.stringify(newNotifs) });
-                    showToast("Đã lưu");
-                  } catch { showToast("Lưu thất bại", "error"); }
+                    showToast(t("settings.saveSuccess"));
+                  } catch { showToast(t("settings.updateFailed"), "error"); }
                 }}
                 label={t("settings.emailNotif")}
                 description={t("settings.emailNotifDesc")}
