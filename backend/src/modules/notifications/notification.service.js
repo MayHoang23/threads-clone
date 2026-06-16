@@ -11,6 +11,13 @@ const SENDER_SELECT = {
   isVerified: true,
 };
 
+// Select cho post — kèm 1 media đầu tiên để hiện thumbnail ở Activity feed
+const POST_SELECT = {
+  id: true,
+  content: true,
+  media: { take: 1, select: { url: true, type: true } },
+};
+
 // Chuyển raw Prisma notification → object gọn gàng cho client
 function formatNotification(n) {
   return {
@@ -19,7 +26,13 @@ function formatNotification(n) {
     isRead: n.isRead,
     createdAt: n.createdAt,
     sender: n.triggered,
-    post: n.post ? { id: n.post.id, content: n.post.content } : null,
+    post: n.post
+      ? {
+          id: n.post.id,
+          content: n.post.content,
+          media: n.post.media || [],
+        }
+      : null,
   };
 }
 
@@ -35,7 +48,7 @@ const createNotification = async (type, triggeredId, receiverId, postId = null) 
     data: { type, triggeredId, receiverId, postId, isRead: false },
     include: {
       triggered: { select: SENDER_SELECT },
-      post: { select: { id: true, content: true } },
+      post: { select: POST_SELECT },
     },
   });
 
@@ -60,7 +73,7 @@ const createPostHiddenNotification = async (postId, receiverId) => {
       // triggeredId để null — hành động từ hệ thống, không phải user
     },
     include: {
-      post: { select: { id: true, content: true } },
+      post: { select: POST_SELECT },
     },
   });
 
@@ -81,7 +94,7 @@ const getNotifications = async (userId, cursor = null, limit = 20) => {
     ...(cursor && { cursor: { id: cursor }, skip: 1 }),
     include: {
       triggered: { select: SENDER_SELECT },
-      post: { select: { id: true, content: true } },
+      post: { select: POST_SELECT },
     },
   });
 
