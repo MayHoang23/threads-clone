@@ -1,18 +1,51 @@
 const postService = require("./post.service");
+const linkPreviewService = require("./linkPreview.service");
 const prisma = require("../../utils/prisma");
 
 // POST /api/v1/posts
 const createPost = async (req, res, next) => {
   try {
-    const { content, privacy, mediaUrls } = req.body;
+    const {
+      content,
+      privacy,
+      mediaUrls,
+      linkUrl,
+      linkTitle,
+      linkDescription,
+      linkImage,
+      linkSiteName,
+    } = req.body;
     const post = await postService.createPost(req.user.id, {
       content,
       privacy,
       mediaUrls: mediaUrls || [],
+      linkUrl,
+      linkTitle,
+      linkDescription,
+      linkImage,
+      linkSiteName,
     });
     res.status(201).json({ success: true, data: post, message: "Tạo bài viết thành công" });
   } catch (err) {
     next(err);
+  }
+};
+
+// GET /api/v1/posts/link-preview?url=https://...
+const getLinkPreview = async (req, res) => {
+  // Không dùng next(err): theo spec, mọi thất bại đều trả { success: false }
+  try {
+    const { url } = req.query;
+    if (!url || !/^https?:\/\//i.test(url)) {
+      return res.json({ success: false, data: null, message: "URL không hợp lệ" });
+    }
+    const preview = await linkPreviewService.getLinkPreview(url);
+    if (!preview) {
+      return res.json({ success: false, data: null, message: "Không lấy được thông tin link" });
+    }
+    return res.json({ success: true, data: preview, message: "" });
+  } catch (err) {
+    return res.json({ success: false, data: null, message: "Không lấy được thông tin link" });
   }
 };
 
@@ -135,6 +168,7 @@ const createReport = async (req, res, next) => {
 
 module.exports = {
   createPost,
+  getLinkPreview,
   getFeed,
   getTrendingHashtags,
   getPostById,

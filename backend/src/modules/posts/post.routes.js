@@ -21,6 +21,10 @@ router.get("/trending-hashtags", postController.getTrendingHashtags);
 // QUAN TRỌNG: phải đặt TRƯỚC /:id để không bị nhận nhầm là param :id
 router.get("/saved", authenticate, postController.getSavedPosts);
 
+// GET /api/v1/posts/link-preview — fetch Open Graph từ 1 URL (cho CreatePost)
+// QUAN TRỌNG: phải đặt TRƯỚC /:id để không bị nhận nhầm là param :id
+router.get("/link-preview", authenticate, postController.getLinkPreview);
+
 // GET /api/v1/posts/:id — xem chi tiết (không bắt buộc login, nhưng nếu có thì biết isLiked/isSaved)
 router.get("/:id", optionalAuthenticate, postController.getPostById);
 

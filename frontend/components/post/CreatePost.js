@@ -6,7 +6,11 @@ import MediaUpload from "./MediaUpload";
 import CaptionGenerator from "@/components/ai/CaptionGenerator";
 import HashtagSuggester from "@/components/ai/HashtagSuggester";
 import MentionTextarea from "@/components/ui/MentionTextarea";
+import LinkPreviewCard, { LinkPreviewSkeleton } from "./LinkPreviewCard";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Bắt URL đầu tiên trong nội dung
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 
 function Avatar({ user }) {
   return (
@@ -54,7 +58,12 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
   const [uploadedMedia, setUploadedMedia] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [moderationWarning, setModerationWarning] = useState("");
+  const [linkPreview, setLinkPreview] = useState(null);
+  const [linkLoading, setLinkLoading] = useState(false);
   const textareaRef = useRef(null);
+  const linkDebounceRef = useRef(null);
+  const dismissedUrlsRef = useRef(new Set()); // URL user đã chủ động bỏ preview
+  const triedUrlsRef = useRef(new Set()); // URL đã fetch (dù thành công hay thất bại) → không fetch lại
 
   // Only the modal-mode instance (in Navbar) listens for the event
   useEffect(() => {
@@ -78,6 +87,57 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
       return () => { document.body.style.overflow = ""; };
     }
   }, [showModal]);
+
+  // Detect URL trong content → debounce 800ms → fetch Open Graph preview
+  useEffect(() => {
+    const matches = content.match(URL_REGEX);
+    const url = matches?.[0];
+
+    // Không có URL → xóa preview, hủy debounce đang chờ
+    if (!url) {
+      if (linkDebounceRef.current) clearTimeout(linkDebounceRef.current);
+      setLinkLoading(false);
+      setLinkPreview(null);
+      return;
+    }
+
+    // Bỏ qua nếu: user đã dismiss, đã fetch URL này rồi, hoặc đang hiện preview của đúng URL
+    if (dismissedUrlsRef.current.has(url)) return;
+    if (triedUrlsRef.current.has(url)) return;
+    if (linkPreview?._sourceUrl === url) return;
+
+    if (linkDebounceRef.current) clearTimeout(linkDebounceRef.current);
+    linkDebounceRef.current = setTimeout(async () => {
+      triedUrlsRef.current.add(url); // đánh dấu đã fetch → không lặp lại
+      setLinkLoading(true);
+      try {
+        const res = await fetchAPI(
+          `/posts/link-preview?url=${encodeURIComponent(url)}`
+        );
+        // Chỉ áp dụng nếu URL vẫn còn trong nội dung và chưa bị dismiss
+        if (res?.success && res.data && !dismissedUrlsRef.current.has(url)) {
+          setLinkPreview({ ...res.data, _sourceUrl: url });
+        } else {
+          setLinkPreview(null);
+        }
+      } catch {
+        setLinkPreview(null);
+      } finally {
+        setLinkLoading(false);
+      }
+    }, 800);
+
+    return () => {
+      if (linkDebounceRef.current) clearTimeout(linkDebounceRef.current);
+    };
+  }, [content, linkPreview?._sourceUrl]);
+
+  const handleDismissPreview = () => {
+    if (linkPreview?._sourceUrl) dismissedUrlsRef.current.add(linkPreview._sourceUrl);
+    if (linkDebounceRef.current) clearTimeout(linkDebounceRef.current);
+    setLinkLoading(false);
+    setLinkPreview(null);
+  };
 
   // MentionTextarea tự co giãn chiều cao + xử lý @mention; chỉ cần cập nhật content
   const handleContentChange = (value) => {
@@ -113,6 +173,10 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
     setShowHashtag(false);
     setFocused(false);
     setModerationWarning("");
+    setLinkPreview(null);
+    setLinkLoading(false);
+    dismissedUrlsRef.current = new Set();
+    triedUrlsRef.current = new Set();
   };
 
   const handleSubmit = async () => {
@@ -123,13 +187,23 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
     setLoading(true);
     setModerationWarning("");
     try {
+      const body = {
+        content: content.trim() || null,
+        privacy,
+        mediaUrls: uploadedMedia.map(({ url, type }) => ({ url, type })),
+      };
+      // Kèm link preview nếu có
+      if (linkPreview) {
+        body.linkUrl = linkPreview._sourceUrl || linkPreview.url;
+        body.linkTitle = linkPreview.title || null;
+        body.linkDescription = linkPreview.description || null;
+        body.linkImage = linkPreview.image || null;
+        body.linkSiteName = linkPreview.siteName || null;
+      }
+
       const data = await fetchAPI("/posts", {
         method: "POST",
-        body: JSON.stringify({
-          content: content.trim() || null,
-          privacy,
-          mediaUrls: uploadedMedia.map(({ url, type }) => ({ url, type })),
-        }),
+        body: JSON.stringify(body),
       });
 
       if (data?.success) {
@@ -139,6 +213,10 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
         setShowCaption(false);
         setShowHashtag(false);
         setFocused(false);
+        setLinkPreview(null);
+        setLinkLoading(false);
+        dismissedUrlsRef.current = new Set();
+        triedUrlsRef.current = new Set();
         window.dispatchEvent(new CustomEvent("post-created", { detail: data.data }));
         onPostCreated?.(data.data);
         if (showModal) setShowModal(false);
@@ -207,6 +285,25 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
           <div className="mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
             <span className="text-red-500 text-sm mt-0.5">⚠️</span>
             <p className="text-xs text-red-600 leading-relaxed">{moderationWarning}</p>
+          </div>
+        )}
+
+        {/* Link preview (Open Graph) */}
+        {linkLoading && (
+          <div className="mt-2">
+            <LinkPreviewSkeleton />
+          </div>
+        )}
+        {!linkLoading && linkPreview && (
+          <div className="mt-2">
+            <LinkPreviewCard
+              url={linkPreview._sourceUrl || linkPreview.url}
+              title={linkPreview.title}
+              description={linkPreview.description}
+              image={linkPreview.image}
+              siteName={linkPreview.siteName}
+              onDismiss={handleDismissPreview}
+            />
           </div>
         )}
 

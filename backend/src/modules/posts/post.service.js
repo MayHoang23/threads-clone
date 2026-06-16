@@ -91,6 +91,12 @@ function formatPost(post, userId = null) {
     updatedAt: post.updatedAt,
     author: post.author,
     media: post.media,
+    // Link preview (Open Graph) — null nếu bài không kèm link
+    linkUrl: post.linkUrl ?? null,
+    linkTitle: post.linkTitle ?? null,
+    linkDescription: post.linkDescription ?? null,
+    linkImage: post.linkImage ?? null,
+    linkSiteName: post.linkSiteName ?? null,
     hashtags: post.hashtags?.map((ph) => ph.hashtag.name) ?? [],
     likeCount: post._count?.likes ?? 0,
     commentCount: post._count?.comments ?? 0,
@@ -108,7 +114,20 @@ function formatPost(post, userId = null) {
 // ========================
 // TẠO BÀI VIẾT
 // ========================
-const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [], quotedPostId = null }) => {
+const createPost = async (
+  userId,
+  {
+    content,
+    privacy = "PUBLIC",
+    mediaUrls = [],
+    quotedPostId = null,
+    linkUrl = null,
+    linkTitle = null,
+    linkDescription = null,
+    linkImage = null,
+    linkSiteName = null,
+  }
+) => {
   // Quote post được phép không có nội dung/ảnh (chỉ trích dẫn bài gốc)
   if (!content?.trim() && mediaUrls.length === 0 && !quotedPostId) {
     throw new AppError("Bài viết phải có nội dung hoặc ảnh/video", 400);
@@ -142,6 +161,14 @@ const createPost = async (userId, { content, privacy = "PUBLIC", mediaUrls = [],
         content: content?.trim() || null,
         privacy,
         ...(quotedPostId && { quotedPostId }),
+        // Link preview — chỉ lưu khi có linkUrl
+        ...(linkUrl && {
+          linkUrl,
+          linkTitle: linkTitle || null,
+          linkDescription: linkDescription || null,
+          linkImage: linkImage || null,
+          linkSiteName: linkSiteName || null,
+        }),
       },
     });
 

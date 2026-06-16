@@ -82,6 +82,13 @@ model Post {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
+  // Link preview (Open Graph) khi paste URL vào bài
+  linkUrl         String?
+  linkTitle       String?
+  linkDescription String?
+  linkImage       String?
+  linkSiteName    String?
+
   // Khoá ngoại
   authorId  String
   author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)

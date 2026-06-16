@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import RepostButton from "./RepostButton";
 import QuotedPostCard from "./QuotedPostCard";
 import RichContent from "./RichContent";
+import LinkPreviewCard from "./LinkPreviewCard";
 
 // Format thời gian kiểu Threads: "vừa xong", "5ph", "2g", "3ng"
 function timeAgo(dateStr, justNow = "vừa xong") {
@@ -283,6 +284,19 @@ export default function PostCard({
                             <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed mb-3 whitespace-pre-wrap break-words">
                                 <RichContent text={post.content} />
                             </p>
+                        )}
+
+                        {/* Link preview (Open Graph) — không hiện nếu là quote post */}
+                        {post.linkUrl && !post.quotedPost && (
+                            <div className="mb-3">
+                                <LinkPreviewCard
+                                    url={post.linkUrl}
+                                    title={post.linkTitle}
+                                    description={post.linkDescription}
+                                    image={post.linkImage}
+                                    siteName={post.linkSiteName}
+                                />
+                            </div>
                         )}
 
                         {/* ===== MEDIA GRID =====
