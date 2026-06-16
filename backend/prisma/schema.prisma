@@ -234,7 +234,8 @@ model ConversationMember {
 model Message {
   id             String       @id @default(cuid())
   content        String
-  mediaUrl       String?      // URL ảnh đính kèm (tuỳ chọn)
+  mediaUrl       String?      // URL ảnh/video/âm thanh đính kèm (tuỳ chọn)
+  mediaType      String?      // "image" | "video" | "audio" — loại media đính kèm
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
   senderId       String

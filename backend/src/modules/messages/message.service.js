@@ -146,7 +146,7 @@ const getMessages = async (conversationId, userId, cursor = null, limit = 30) =>
 // ========================
 // GỬI TIN NHẮN
 // ========================
-const sendMessage = async (conversationId, senderId, content, mediaUrl = null) => {
+const sendMessage = async (conversationId, senderId, content, mediaUrl = null, mediaType = null) => {
   // Kiểm tra sender có phải member không
   const member = await prisma.conversationMember.findUnique({
     where: { conversationId_userId: { conversationId, userId: senderId } },
@@ -161,6 +161,7 @@ const sendMessage = async (conversationId, senderId, content, mediaUrl = null) =
       data: {
         content,
         mediaUrl,
+        mediaType,
         senderId,
         conversationId,
       },

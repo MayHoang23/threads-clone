@@ -296,13 +296,14 @@ export default function ChatWindow({
     // ========================
     // GỬI TIN NHẮN (với optimistic update)
     // ========================
-    const handleSend = async (content, mediaUrl) => {
+    const handleSend = async (content, mediaUrl, mediaType = null) => {
         // Tạo optimistic message — hiển thị ngay trước khi API response
         const tempId = `temp_${Date.now()}`;
         const optimistic = {
             id: tempId,
             content,
             mediaUrl,
+            mediaType,
             senderId: currentUser.id,
             conversationId,
             createdAt: new Date().toISOString(),
@@ -318,7 +319,7 @@ export default function ChatWindow({
             `/conversations/${conversationId}/messages`,
             {
                 method: "POST",
-                body: JSON.stringify({ content, mediaUrl }),
+                body: JSON.stringify({ content, mediaUrl, mediaType }),
             },
         );
 
@@ -486,20 +487,47 @@ export default function ChatWindow({
                                 <div
                                     className={`flex flex-col min-w-0 ${isMine ? "items-end" : "items-start"} max-w-[70%]`}
                                 >
-                                    {/* Ảnh đính kèm */}
-                                    {item.mediaUrl && (
-                                        <img
-                                            src={item.mediaUrl}
-                                            alt="attachment"
-                                            className="rounded-2xl max-w-[240px] mb-1 cursor-pointer hover:opacity-95"
-                                            onClick={() =>
-                                                window.open(
-                                                    item.mediaUrl,
-                                                    "_blank",
-                                                )
-                                            }
-                                        />
-                                    )}
+                                    {/* Media đính kèm: ảnh, video hoặc tin nhắn thoại */}
+                                    {item.mediaUrl &&
+                                        (item.mediaType === "audio" ? (
+                                            <audio
+                                                src={item.mediaUrl}
+                                                controls
+                                                className={`mb-1 h-10 max-w-[240px] rounded-full ${
+                                                    item.pending
+                                                        ? "opacity-60"
+                                                        : ""
+                                                }`}
+                                            />
+                                        ) : item.mediaType === "video" ? (
+                                            <video
+                                                src={item.mediaUrl}
+                                                controls
+                                                playsInline
+                                                className={`rounded-2xl max-w-[240px] mb-1 ${
+                                                    item.pending
+                                                        ? "opacity-60"
+                                                        : ""
+                                                }`}
+                                            />
+                                        ) : (
+                                            // "image" hoặc fallback khi không có mediaType
+                                            <img
+                                                src={item.mediaUrl}
+                                                alt="attachment"
+                                                className={`rounded-2xl max-w-[240px] mb-1 cursor-pointer hover:opacity-95 ${
+                                                    item.pending
+                                                        ? "opacity-60"
+                                                        : ""
+                                                }`}
+                                                onClick={() =>
+                                                    window.open(
+                                                        item.mediaUrl,
+                                                        "_blank",
+                                                    )
+                                                }
+                                            />
+                                        ))}
 
                                     {/* Nội dung text */}
                                     {item.content && (

@@ -66,7 +66,8 @@
       "Bash(node -e \"console.log\\('emoji-picker-react', require\\('./package.json'\\).dependencies['emoji-picker-react']\\)\")",
       "Bash(node -e \"const m=require\\('emoji-picker-react'\\); console.log\\('default:', typeof m.default\\); console.log\\('keys:', Object.keys\\(m\\).slice\\(0,12\\).join\\(', '\\)\\)\")",
       "Bash(npx eslint *)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(node -e \"console.log\\('emoji-picker-react', require\\('./package.json'\\).dependencies['emoji-picker-react'] || 'NOT INSTALLED'\\)\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",

@@ -52,7 +52,7 @@ const getMessages = async (req, res, next) => {
 const sendMessage = async (req, res, next) => {
   try {
     const { id: conversationId } = req.params;
-    const { content, mediaUrl } = req.body;
+    const { content, mediaUrl, mediaType } = req.body;
 
     if (!content?.trim() && !mediaUrl) {
       throw new AppError("Tin nhắn không được trống", 400);
@@ -62,7 +62,8 @@ const sendMessage = async (req, res, next) => {
       conversationId,
       req.user.id,
       content?.trim() || "",
-      mediaUrl || null
+      mediaUrl || null,
+      mediaType || null
     );
 
     // Emit real-time tới tất cả người trong room conversation (kể cả sender)

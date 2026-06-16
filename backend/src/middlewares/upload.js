@@ -22,7 +22,8 @@ const videoStorage = new CloudinaryStorage({
   params: {
     folder: "threads-clone/videos",
     resource_type: "video",
-    allowed_formats: ["mp4", "mov", "avi", "webm"],
+    // webm/weba/ogg/mp3/m4a: hỗ trợ thêm tin nhắn thoại (audio) ngoài video
+    allowed_formats: ["mp4", "mov", "avi", "webm", "weba", "ogg", "mp3", "m4a"],
     // Giới hạn chất lượng video để tiết kiệm dung lượng
     transformation: [{ quality: "auto" }],
   },
@@ -41,8 +42,10 @@ const imageFilter = (req, file, cb) => {
 };
 
 const videoFilter = (req, file, cb) => {
-  if (!file.mimetype.startsWith("video/")) {
-    return cb(new AppError("Chỉ chấp nhận file video (MP4, MOV, AVI, WEBM)", 400));
+  // Chấp nhận cả video và audio (tin nhắn thoại audio/webm).
+  // Cloudinary lưu audio dưới resource_type "video" nên dùng chung endpoint/storage này.
+  if (!file.mimetype.startsWith("video/") && !file.mimetype.startsWith("audio/")) {
+    return cb(new AppError("Chỉ chấp nhận file video hoặc âm thanh", 400));
   }
   cb(null, true);
 };
