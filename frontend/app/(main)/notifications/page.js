@@ -22,6 +22,7 @@ function getNotificationText(type, t) {
   switch (type) {
     case "LIKE": return t("notifications.liked");
     case "COMMENT": return t("notifications.commented");
+    case "COMMENT_LIKE": return t("notifications.commentLiked");
     case "FOLLOW": return t("notifications.followed");
     case "FRIEND_REQUEST": return t("notifications.friendRequest");
     case "MENTION": return t("notifications.mentioned");
@@ -41,7 +42,7 @@ function NotificationIcon({ type }) {
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   );
-  if (type === "LIKE") return (
+  if (type === "LIKE" || type === "COMMENT_LIKE") return (
     <svg className={`${base} text-red-500`} viewBox="0 0 24 24" fill="currentColor">
       <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
     </svg>

@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const authRoutes = require("./modules/auth/auth.routes");
 const postRoutes = require("./modules/posts/post.routes");
+const commentRoutes = require("./modules/posts/comment.routes");
 const hashtagRoutes = require("./modules/hashtags/hashtag.routes");
 const userRoutes = require("./modules/users/user.routes");
 const notificationRoutes = require("./modules/notifications/notification.routes");
@@ -57,6 +58,7 @@ app.get('/api/v1/health', (req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/posts", postRoutes);
+app.use("/api/v1/comments", commentRoutes);
 app.use("/api/v1/hashtags", hashtagRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/notifications", notificationRoutes);

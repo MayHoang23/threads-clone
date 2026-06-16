@@ -23,6 +23,7 @@ function getNotificationText(type, t) {
   switch (type) {
     case "LIKE": return t("notifications.liked");
     case "COMMENT": return t("notifications.commented");
+    case "COMMENT_LIKE": return t("notifications.commentLiked");
     case "FOLLOW": return t("notifications.followed");
     case "FRIEND_REQUEST": return t("notifications.friendRequest");
     case "MENTION": return t("notifications.mentioned");

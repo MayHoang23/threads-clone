@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const postController = require("./post.controller");
+const commentController = require("./comment.controller");
 const repostController = require("./repost.controller");
 const { authenticate, optionalAuthenticate } = require("../../middlewares/auth.middleware");
 
@@ -32,11 +33,11 @@ router.delete("/:id", authenticate, postController.deletePost);
 // POST /api/v1/posts/:id/like — like / unlike
 router.post("/:id/like", authenticate, postController.toggleLike);
 
-// POST /api/v1/posts/:id/comments — thêm comment
-router.post("/:id/comments", authenticate, postController.createComment);
+// POST /api/v1/posts/:id/comments — thêm comment (hoặc reply nếu có parentId)
+router.post("/:id/comments", authenticate, commentController.createComment);
 
-// GET /api/v1/posts/:id/comments — lấy danh sách comment
-router.get("/:id/comments", postController.getComments);
+// GET /api/v1/posts/:id/comments — lấy danh sách comment (optionalAuth để biết isLikedByMe)
+router.get("/:id/comments", optionalAuthenticate, commentController.getComments);
 
 // POST /api/v1/posts/:id/save — lưu / bỏ lưu bài
 router.post("/:id/save", authenticate, postController.toggleSave);

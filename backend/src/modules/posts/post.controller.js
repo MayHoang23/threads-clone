@@ -87,33 +87,6 @@ const toggleLike = async (req, res, next) => {
   }
 };
 
-// POST /api/v1/posts/:id/comments
-const createComment = async (req, res, next) => {
-  try {
-    const { content, parentId, mediaUrl } = req.body;
-    const comment = await postService.createComment(
-      req.user.id,
-      req.params.id,
-      content,
-      parentId || null,
-      mediaUrl || null
-    );
-    res.status(201).json({ success: true, data: comment, message: "Đã thêm bình luận" });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// GET /api/v1/posts/:id/comments
-const getComments = async (req, res, next) => {
-  try {
-    const comments = await postService.getComments(req.params.id);
-    res.json({ success: true, data: comments, message: "" });
-  } catch (err) {
-    next(err);
-  }
-};
-
 // POST /api/v1/posts/:id/save
 const toggleSave = async (req, res, next) => {
   try {
@@ -168,8 +141,6 @@ module.exports = {
   updatePost,
   deletePost,
   toggleLike,
-  createComment,
-  getComments,
   toggleSave,
   getSavedPosts,
   createReport,

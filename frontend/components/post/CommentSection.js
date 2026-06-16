@@ -22,7 +22,7 @@ function timeAgo(dateStr, justNow = "vừa xong") {
 }
 
 function UserAvatar({ user, size = "md" }) {
-  const cls = size === "sm" ? "w-7 h-7 text-xs" : "w-8 h-8 text-sm";
+  const cls = size === "sm" ? "w-6 h-6 text-[10px]" : "w-8 h-8 text-sm";
   return (
     <div className={`${cls} rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0`}>
       {user?.avatar ? (
@@ -43,17 +43,80 @@ function CommentImage({ url }) {
       <img
         src={url}
         alt=""
-        className="rounded-xl max-w-[240px] max-h-[300px] object-cover border border-gray-100 dark:border-gray-700"
+        className="rounded-xl max-w-[200px] max-h-[260px] object-cover border border-gray-100 dark:border-gray-700"
       />
     </a>
   );
 }
 
+// Nút thích bình luận — optimistic + animation scale
+function CommentLikeButton({ comment, t }) {
+  const [liked, setLiked] = useState(!!comment.isLikedByMe);
+  const [count, setCount] = useState(comment.likeCount ?? 0);
+  const [bump, setBump] = useState(false);
+
+  const toggle = async () => {
+    const next = !liked;
+    // Optimistic
+    setLiked(next);
+    setCount((c) => Math.max(0, c + (next ? 1 : -1)));
+    if (next) {
+      setBump(true);
+      setTimeout(() => setBump(false), 200);
+    }
+    try {
+      const res = await fetchAPI(`/comments/${comment.id}/like`, { method: "POST" });
+      if (res?.success) {
+        setLiked(res.data.liked);
+        setCount(res.data.likeCount);
+      }
+    } catch {
+      // Lỗi → revert
+      setLiked(!next);
+      setCount((c) => Math.max(0, c + (next ? -1 : 1)));
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      className={`flex items-center gap-1 text-xs font-medium transition-colors ${
+        liked ? "text-red-500" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+      }`}
+      title={t("comments.like")}
+    >
+      <svg
+        className={`w-3.5 h-3.5 transition-transform duration-200 ${bump ? "scale-125" : "scale-100"}`}
+        viewBox="0 0 24 24"
+        fill={liked ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+      </svg>
+      {count > 0 && <span>{count}</span>}
+    </button>
+  );
+}
+
+// Nút xóa — chỉ hiện cho tác giả hoặc admin
+function DeleteCommentButton({ onDelete, t }) {
+  return (
+    <button
+      onClick={onDelete}
+      className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 font-medium transition-colors"
+      title={t("comments.delete")}
+    >
+      {t("comments.delete")}
+    </button>
+  );
+}
+
 // Ô soạn comment/reply dùng chung: @mention + emoji picker + đính kèm ảnh.
 // Tự quản lý text + ảnh; gọi onSubmit(content, mediaUrl) → trả về true nếu thành công để reset.
-function CommentComposer({ placeholder, sendLabel, onSubmit, autoFocus = false, compact = false }) {
+function CommentComposer({ placeholder, sendLabel, onSubmit, autoFocus = false, compact = false, initialValue = "" }) {
   const { isDark } = useTheme();
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialValue);
   const [mediaUrl, setMediaUrl] = useState(null); // URL Cloudinary sau khi upload xong
   const [preview, setPreview] = useState(null); // object URL để xem trước tức thì
   const [uploading, setUploading] = useState(false);
@@ -80,6 +143,22 @@ function CommentComposer({ placeholder, sendLabel, onSubmit, autoFocus = false, 
     };
   }, [preview]);
 
+  // Khi mở form có sẵn nội dung (vd reply "@username ") → đặt con trỏ ở CUỐI chuỗi,
+  // không để ở đầu. setTimeout 0 để chạy sau khi MentionTextarea autoFocus + render xong.
+  useEffect(() => {
+    if (!initialValue) return;
+    const id = setTimeout(() => {
+      const ta = taRef.current;
+      if (!ta) return;
+      ta.focus();
+      const end = ta.value.length;
+      ta.setSelectionRange(end, end);
+    }, 0);
+    return () => clearTimeout(id);
+    // Chỉ chạy 1 lần khi mount (composer được remount qua key={replyTo} mỗi lần mở reply)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const canSubmit = (text.trim() || mediaUrl) && !posting && !uploading;
 
   // Chèn emoji vào đúng vị trí con trỏ trong textarea
@@ -92,7 +171,6 @@ function CommentComposer({ placeholder, sendLabel, onSubmit, autoFocus = false, 
     const start = ta.selectionStart ?? text.length;
     const end = ta.selectionEnd ?? text.length;
     setText(text.slice(0, start) + emoji + text.slice(end));
-    // Khôi phục con trỏ ngay sau emoji vừa chèn (sau khi React re-render)
     setTimeout(() => {
       ta.focus();
       const pos = start + emoji.length;
@@ -111,7 +189,6 @@ function CommentComposer({ placeholder, sendLabel, onSubmit, autoFocus = false, 
     e.target.value = ""; // reset để chọn lại cùng 1 file được
     if (!file || !file.type.startsWith("image/")) return;
 
-    // Xem trước ngay bằng object URL trong khi đang upload
     if (preview) URL.revokeObjectURL(preview);
     setPreview(URL.createObjectURL(file));
     setMediaUrl(null);
@@ -260,32 +337,95 @@ function CommentComposer({ placeholder, sendLabel, onSubmit, autoFocus = false, 
   );
 }
 
-// Component hiển thị 1 comment + form reply
-function CommentItem({ comment, postId, onReplyAdded, t }) {
-  const [showReply, setShowReply] = useState(false);
+// 1 reply (cấp 2)
+function ReplyItem({ reply, currentUser, onReplyTo, onDeleted, t }) {
+  const canDelete = currentUser && (currentUser.id === reply.user?.id || currentUser.role === "ADMIN");
 
-  const handleReply = async (content, mediaUrl) => {
+  const handleDelete = async () => {
+    if (!window.confirm(t("comments.confirmDelete"))) return;
+    onDeleted(reply.id); // optimistic
+    fetchAPI(`/comments/${reply.id}`, { method: "DELETE" }).catch(() => {});
+  };
+
+  return (
+    <div className="flex gap-2 pt-3">
+      <UserAvatar user={reply.user} size="sm" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span className="font-semibold text-xs text-gray-900 dark:text-white">{reply.user?.username}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">{timeAgo(reply.createdAt, t("common.justNow"))}</span>
+        </div>
+        {reply.content && (
+          <p className="text-sm text-gray-800 dark:text-gray-200 mt-0.5 leading-relaxed break-words">{reply.content}</p>
+        )}
+        {reply.mediaUrl && <CommentImage url={reply.mediaUrl} />}
+        <div className="flex items-center gap-4 mt-1.5">
+          <CommentLikeButton comment={reply} t={t} />
+          {currentUser && (
+            <button
+              onClick={() => onReplyTo(reply.user?.username)}
+              className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium transition-colors"
+            >
+              {t("comments.reply")}
+            </button>
+          )}
+          {canDelete && <DeleteCommentButton onDelete={handleDelete} t={t} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 1 comment gốc + replies + form reply
+function CommentItem({ comment, postId, currentUser, onDeleted, t }) {
+  const [replies, setReplies] = useState(comment.replies || []);
+  const [showAll, setShowAll] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState("");
+
+  const canDelete = currentUser && (currentUser.id === comment.user?.id || currentUser.role === "ADMIN");
+
+  const openReply = (username) => {
+    setReplyTo(username || comment.user?.username || "");
+    setReplyOpen(true);
+  };
+
+  const handleReplySubmit = async (content, mediaUrl) => {
     try {
       const data = await fetchAPI(`/posts/${postId}/comments`, {
         method: "POST",
         body: JSON.stringify({ content, mediaUrl, parentId: comment.id }),
       });
       if (data?.success) {
-        onReplyAdded(comment.id, data.data); // Thêm reply vào danh sách
-        setShowReply(false);
+        setReplies((prev) => [...prev, data.data]);
+        setShowAll(true); // hiện reply vừa thêm
+        setReplyOpen(false);
         return true;
       }
     } catch {
-      // Lỗi gửi reply — giữ nguyên nội dung để user thử lại
+      // giữ nội dung để thử lại
     }
     return false;
   };
+
+  const handleReplyDeleted = (replyId) => {
+    setReplies((prev) => prev.filter((r) => r.id !== replyId));
+  };
+
+  const handleDeleteRoot = async () => {
+    if (!window.confirm(t("comments.confirmDelete"))) return;
+    onDeleted(comment.id); // optimistic — xoá cả cây
+    fetchAPI(`/comments/${comment.id}`, { method: "DELETE" }).catch(() => {});
+  };
+
+  const visibleReplies = showAll ? replies : replies.slice(0, 2);
+  const hiddenCount = replies.length - visibleReplies.length;
 
   return (
     <div className="py-3">
       {/* Comment gốc */}
       <div className="flex gap-3">
-        <UserAvatar user={comment.user} />
+        <UserAvatar user={comment.user} size="md" />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-semibold text-sm text-gray-900 dark:text-white">{comment.user?.username}</span>
@@ -295,46 +435,60 @@ function CommentItem({ comment, postId, onReplyAdded, t }) {
             <p className="text-sm text-gray-800 dark:text-gray-200 mt-0.5 leading-relaxed break-words">{comment.content}</p>
           )}
           {comment.mediaUrl && <CommentImage url={comment.mediaUrl} />}
-          <button
-            onClick={() => setShowReply((v) => !v)}
-            className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mt-1.5 font-medium transition-colors"
-          >
-            {t("comments.reply")}
-          </button>
 
-          {/* Form reply */}
-          {showReply && (
-            <div className="mt-2">
-              <CommentComposer
-                compact
-                autoFocus
-                placeholder={`Trả lời @${comment.user?.username}...`}
-                sendLabel={t("comments.send")}
-                onSubmit={handleReply}
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-4 mt-1.5">
+            <CommentLikeButton comment={comment} t={t} />
+            {currentUser && (
+              <button
+                onClick={() => openReply(comment.user?.username)}
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium transition-colors"
+              >
+                {t("comments.reply")}
+              </button>
+            )}
+            {canDelete && <DeleteCommentButton onDelete={handleDeleteRoot} t={t} />}
+          </div>
         </div>
       </div>
 
-      {/* Replies nested — thụt vào bên phải với đường viền */}
-      {comment.replies?.length > 0 && (
-        <div className="ml-11 mt-1 pl-3 border-l-2 border-gray-100 dark:border-gray-700 space-y-2">
-          {comment.replies.map((reply) => (
-            <div key={reply.id} className="flex gap-2.5 pt-2">
-              <UserAvatar user={reply.user} size="sm" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-semibold text-xs text-gray-900 dark:text-white">{reply.user?.username}</span>
-                  <span className="text-xs text-gray-400">{timeAgo(reply.createdAt)}</span>
-                </div>
-                {reply.content && (
-                  <p className="text-sm text-gray-800 dark:text-gray-200 mt-0.5 leading-relaxed break-words">{reply.content}</p>
-                )}
-                {reply.mediaUrl && <CommentImage url={reply.mediaUrl} />}
-              </div>
-            </div>
+      {/* Replies — thụt 32px, có đường kẻ dọc nối với comment cha */}
+      {(visibleReplies.length > 0 || replyOpen) && (
+        <div className="ml-8 mt-1 pl-3 border-l-2 border-gray-100 dark:border-gray-800">
+          {visibleReplies.map((reply) => (
+            <ReplyItem
+              key={reply.id}
+              reply={reply}
+              currentUser={currentUser}
+              onReplyTo={openReply}
+              onDeleted={handleReplyDeleted}
+              t={t}
+            />
           ))}
+
+          {/* Xem thêm X trả lời */}
+          {hiddenCount > 0 && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-semibold mt-2 transition-colors"
+            >
+              {t("comments.viewMoreReplies").replace("{count}", hiddenCount)}
+            </button>
+          )}
+
+          {/* Form reply inline */}
+          {replyOpen && (
+            <div className="pt-3">
+              <CommentComposer
+                key={replyTo}
+                compact
+                autoFocus
+                initialValue={replyTo ? `@${replyTo} ` : ""}
+                placeholder={t("comments.replyPlaceholder")}
+                sendLabel={t("comments.send")}
+                onSubmit={handleReplySubmit}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -344,6 +498,9 @@ function CommentItem({ comment, postId, onReplyAdded, t }) {
 export default function CommentSection({ postId, currentUser }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { t } = useLanguage();
 
   // Load comments khi component mount
@@ -351,12 +508,31 @@ export default function CommentSection({ postId, currentUser }) {
     (async () => {
       try {
         const data = await fetchAPI(`/posts/${postId}/comments`);
-        if (data?.success) setComments(data.data);
+        if (data?.success) {
+          setComments(data.data.comments);
+          setNextCursor(data.data.nextCursor);
+          setHasMore(data.data.hasMore);
+        }
       } finally {
         setLoading(false);
       }
     })();
   }, [postId]);
+
+  const loadMore = async () => {
+    if (!hasMore || loadingMore || !nextCursor) return;
+    setLoadingMore(true);
+    try {
+      const data = await fetchAPI(`/posts/${postId}/comments?cursor=${nextCursor}`);
+      if (data?.success) {
+        setComments((prev) => [...prev, ...data.data.comments]);
+        setNextCursor(data.data.nextCursor);
+        setHasMore(data.data.hasMore);
+      }
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleAddComment = async (content, mediaUrl) => {
     try {
@@ -365,23 +541,17 @@ export default function CommentSection({ postId, currentUser }) {
         body: JSON.stringify({ content, mediaUrl }),
       });
       if (data?.success) {
-        // Thêm comment mới vào cuối danh sách kèm replies rỗng
-        setComments((prev) => [...prev, { ...data.data, replies: [] }]);
+        setComments((prev) => [...prev, data.data]);
         return true;
       }
     } catch {
-      // Lỗi gửi comment — giữ nguyên nội dung để user thử lại
+      // giữ nội dung để thử lại
     }
     return false;
   };
 
-  // Thêm reply vào đúng comment cha
-  const handleReplyAdded = (parentId, reply) => {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.id === parentId ? { ...c, replies: [...(c.replies ?? []), reply] } : c
-      )
-    );
+  const handleCommentDeleted = (commentId) => {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
   };
 
   return (
@@ -428,17 +598,33 @@ export default function CommentSection({ postId, currentUser }) {
             <p className="text-xs mt-1 text-gray-400 dark:text-gray-500">{t("comments.emptyDesc")}</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {comments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                postId={postId}
-                onReplyAdded={handleReplyAdded}
-                t={t}
-              />
-            ))}
-          </div>
+          <>
+            <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {comments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  postId={postId}
+                  currentUser={currentUser}
+                  onDeleted={handleCommentDeleted}
+                  t={t}
+                />
+              ))}
+            </div>
+
+            {/* Xem thêm bình luận */}
+            {hasMore && (
+              <div className="py-3 flex justify-center">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
+                >
+                  {loadingMore ? t("common.loading") : t("comments.viewMore")}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

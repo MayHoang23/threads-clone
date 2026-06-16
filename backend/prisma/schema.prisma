@@ -41,6 +41,7 @@ model User {
   posts         Post[]
   likes         Like[]
   comments      Comment[]
+  commentLikes  CommentLike[]
   followers     Follow[]       @relation("following")
   following     Follow[]       @relation("follower")
   sentRequests  Friendship[]   @relation("requester")
@@ -144,8 +145,24 @@ model Comment {
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parent    Comment?  @relation("replies", fields: [parentId], references: [id])
+  // onDelete Cascade: xoá comment gốc → tự xoá các reply con
+  parent    Comment?  @relation("replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("replies")
+  likes     CommentLike[]
+}
+
+// ========================
+// COMMENT LIKE (thích bình luận)
+// ========================
+model CommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  commentId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId]) // 1 user chỉ thích 1 comment 1 lần
 }
 
 // ========================
@@ -298,6 +315,7 @@ enum FriendshipStatus {
 enum NotificationType {
   LIKE
   COMMENT
+  COMMENT_LIKE
   MENTION
   FOLLOW
   FRIEND_REQUEST

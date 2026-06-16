@@ -362,63 +362,6 @@ const toggleLike = async (userId, postId) => {
 };
 
 // ========================
-// TẠO COMMENT (comment gốc hoặc reply)
-// ========================
-const createComment = async (userId, postId, content, parentId = null, mediaUrl = null) => {
-  // Cho phép comment chỉ có ảnh (không bắt buộc text khi có mediaUrl)
-  if (!content?.trim() && !mediaUrl) {
-    throw new AppError("Bình luận phải có nội dung hoặc ảnh", 400);
-  }
-
-  const post = await prisma.post.findUnique({ where: { id: postId } });
-  if (!post) throw new AppError("Bài viết không tồn tại", 404);
-
-  if (parentId) {
-    const parent = await prisma.comment.findUnique({ where: { id: parentId } });
-    if (!parent) throw new AppError("Comment gốc không tồn tại", 404);
-    if (parent.postId !== postId) throw new AppError("Comment không thuộc bài viết này", 400);
-    // Chỉ cho phép reply 1 cấp: parent phải là comment gốc
-    if (parent.parentId !== null) throw new AppError("Chỉ được phép reply 1 cấp", 400);
-  }
-
-  const comment = await prisma.comment.create({
-    data: { userId, postId, content: content?.trim() || "", parentId, mediaUrl: mediaUrl || null },
-    include: {
-      user: { select: AUTHOR_SELECT },
-      replies: { include: { user: { select: AUTHOR_SELECT } } },
-    },
-  });
-
-  // Tạo notification COMMENT — không tạo khi comment bài của chính mình
-  notificationService
-    .createNotification("COMMENT", userId, post.authorId, postId)
-    .catch(() => {});
-
-  return comment;
-};
-
-// ========================
-// LẤY COMMENTS CỦA BÀI VIẾT
-// ========================
-const getComments = async (postId) => {
-  const post = await prisma.post.findUnique({ where: { id: postId } });
-  if (!post) throw new AppError("Bài viết không tồn tại", 404);
-
-  // Chỉ lấy comment gốc (parentId null), kèm replies lồng bên trong
-  return prisma.comment.findMany({
-    where: { postId, parentId: null },
-    include: {
-      user: { select: AUTHOR_SELECT },
-      replies: {
-        include: { user: { select: AUTHOR_SELECT } },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-    orderBy: { createdAt: "asc" },
-  });
-};
-
-// ========================
 // TOGGLE SAVE (lưu / bỏ lưu)
 // ========================
 const toggleSave = async (userId, postId) => {
@@ -488,11 +431,9 @@ module.exports = {
   updatePost,
   deletePost,
   toggleLike,
-  createComment,
-  getComments,
   toggleSave,
   getSavedPosts,
-  // Helper dùng lại trong repost.controller
+  // Helper dùng lại trong repost.controller + comment.controller
   formatPost,
   getPostInclude,
   AUTHOR_SELECT,
