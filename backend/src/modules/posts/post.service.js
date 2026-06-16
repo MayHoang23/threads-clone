@@ -364,8 +364,11 @@ const toggleLike = async (userId, postId) => {
 // ========================
 // TẠO COMMENT (comment gốc hoặc reply)
 // ========================
-const createComment = async (userId, postId, content, parentId = null) => {
-  if (!content?.trim()) throw new AppError("Nội dung comment không được trống", 400);
+const createComment = async (userId, postId, content, parentId = null, mediaUrl = null) => {
+  // Cho phép comment chỉ có ảnh (không bắt buộc text khi có mediaUrl)
+  if (!content?.trim() && !mediaUrl) {
+    throw new AppError("Bình luận phải có nội dung hoặc ảnh", 400);
+  }
 
   const post = await prisma.post.findUnique({ where: { id: postId } });
   if (!post) throw new AppError("Bài viết không tồn tại", 404);
@@ -379,7 +382,7 @@ const createComment = async (userId, postId, content, parentId = null) => {
   }
 
   const comment = await prisma.comment.create({
-    data: { userId, postId, content: content.trim(), parentId },
+    data: { userId, postId, content: content?.trim() || "", parentId, mediaUrl: mediaUrl || null },
     include: {
       user: { select: AUTHOR_SELECT },
       replies: { include: { user: { select: AUTHOR_SELECT } } },

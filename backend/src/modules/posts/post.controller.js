@@ -90,12 +90,13 @@ const toggleLike = async (req, res, next) => {
 // POST /api/v1/posts/:id/comments
 const createComment = async (req, res, next) => {
   try {
-    const { content, parentId } = req.body;
+    const { content, parentId, mediaUrl } = req.body;
     const comment = await postService.createComment(
       req.user.id,
       req.params.id,
       content,
-      parentId || null
+      parentId || null,
+      mediaUrl || null
     );
     res.status(201).json({ success: true, data: comment, message: "Đã thêm bình luận" });
   } catch (err) {

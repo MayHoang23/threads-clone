@@ -61,7 +61,12 @@
       "Bash(node --check src/modules/posts/repost.controller.js)",
       "Bash(node --check src/modules/hashtags/hashtag.service.js)",
       "Bash(node --check src/modules/hashtags/hashtag.controller.js)",
-      "Bash(node --check src/modules/hashtags/hashtag.routes.js)"
+      "Bash(node --check src/modules/hashtags/hashtag.routes.js)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next', p.dependencies.next\\); console.log\\('emoji-picker-react', p.dependencies['emoji-picker-react'] || 'NOT INSTALLED'\\)\")",
+      "Bash(node -e \"console.log\\('emoji-picker-react', require\\('./package.json'\\).dependencies['emoji-picker-react']\\)\")",
+      "Bash(node -e \"const m=require\\('emoji-picker-react'\\); console.log\\('default:', typeof m.default\\); console.log\\('keys:', Object.keys\\(m\\).slice\\(0,12\\).join\\(', '\\)\\)\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"exit: $?\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",
