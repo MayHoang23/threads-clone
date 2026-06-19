@@ -24,6 +24,8 @@ model User {
   avatar      String?
   coverImage  String?
   bio         String?
+  website     String?  // Link cá nhân hiển thị trong bio
+  pinnedPostId String? // Bài viết được ghim lên đầu profile
   isPrivate   Boolean  @default(false)
   isVerified  Boolean  @default(false)
   isBanned    Boolean  @default(false)

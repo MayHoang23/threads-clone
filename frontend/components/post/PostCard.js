@@ -49,6 +49,7 @@ export default function PostCard({
     currentUser,
     onDelete,
     onUnsave,
+    pinnedPostId,
 }) {
     // Nếu đây là một repost → bài hiển thị là bài gốc (repostOf), header báo người repost
     const isRepost = !!initialPost.repostOf;
@@ -86,6 +87,8 @@ export default function PostCard({
     }, [post.id]);
 
     const isOwner = currentUser?.id === post.author?.id;
+    // Bài đang được ghim trên profile (chỉ áp dụng cho bài thường, không phải repost)
+    const isPinned = !isRepost && !!pinnedPostId && post.id === pinnedPostId;
 
     // Optimistic like: cập nhật UI ngay, gọi API sau
     const handleLike = async () => {
@@ -135,6 +138,24 @@ export default function PostCard({
         setShowMenu(false);
         await fetchAPI(`/posts/${post.id}`, { method: "DELETE" });
         onDelete?.(post.id);
+    };
+
+    // Ghim / bỏ ghim bài — phát event để ProfilePage cập nhật pinnedPostId
+    const handlePin = async () => {
+        setShowMenu(false);
+        const willPin = !isPinned;
+        try {
+            await fetchAPI(`/posts/${post.id}/pin`, {
+                method: willPin ? "POST" : "DELETE",
+            });
+            window.dispatchEvent(
+                new CustomEvent("post-pin-changed", {
+                    detail: { postId: post.id, isPinned: willPin },
+                }),
+            );
+        } catch {
+            alert(t("common.error") || "Lỗi kết nối");
+        }
     };
 
     const handleReport = async () => {
@@ -256,6 +277,26 @@ export default function PostCard({
                                     <div className="absolute right-0 top-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden min-w-[160px] text-sm">
                                         {isOwner ? (
                                             <>
+                                                {!isRepost && (
+                                                    <button
+                                                        onClick={handlePin}
+                                                        className="w-full text-left px-4 py-3 font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2"
+                                                    >
+                                                        <svg
+                                                            className="w-4 h-4"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        >
+                                                            <line x1="12" y1="17" x2="12" y2="22" />
+                                                            <path d="M5 17h14l-1.5-4.5a2 2 0 01-.1-.6V5a1 1 0 011-1h-12a1 1 0 011 1v6.9a2 2 0 01-.1.6L5 17z" />
+                                                        </svg>
+                                                        {isPinned ? t("post.unpin") : t("post.pin")}
+                                                    </button>
+                                                )}
                                                 <button className="w-full text-left px-4 py-3 font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                                     {t("post.edit")}
                                                 </button>

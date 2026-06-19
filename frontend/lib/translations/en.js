@@ -33,6 +33,8 @@ export default {
     delete: "Delete post",
     edit: "Edit",
     report: "Report",
+    pin: "Pin to profile",
+    unpin: "Unpin",
     confirmDelete: "Delete this post?",
     likes: "likes",
     comments: "comments",
@@ -49,6 +51,7 @@ export default {
   },
   profile: {
     posts: "Posts",
+    replies: "Replies",
     saved: "Saved",
     followers: "followers",
     following: "following",
@@ -58,6 +61,8 @@ export default {
     message: "Message",
     postsCount: "posts",
     changeCover: "Change cover",
+    pinned: "Pinned",
+    noReplies: "No replies yet",
     end: "No more posts",
   },
   editProfile: {
@@ -67,6 +72,7 @@ export default {
     bioPlaceholder: "Tell people about yourself...",
     avatarUrl: "Avatar URL",
     coverUrl: "Cover image URL",
+    website: "Website",
     privateAccount: "Private account",
     privateDesc: "Only approved followers can see your posts",
     save: "Save changes",

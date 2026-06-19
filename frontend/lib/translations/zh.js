@@ -33,6 +33,8 @@ export default {
     delete: "删除帖子",
     edit: "编辑",
     report: "举报",
+    pin: "置顶帖子",
+    unpin: "取消置顶",
     confirmDelete: "确定删除这条帖子？",
     likes: "点赞",
     comments: "评论",
@@ -49,6 +51,7 @@ export default {
   },
   profile: {
     posts: "帖子",
+    replies: "回复",
     saved: "收藏",
     followers: "粉丝",
     following: "关注",
@@ -58,6 +61,8 @@ export default {
     message: "发消息",
     postsCount: "帖子",
     changeCover: "更换封面",
+    pinned: "已置顶",
+    noReplies: "暂无回复",
     end: "没有更多帖子了",
   },
   editProfile: {
@@ -67,6 +72,7 @@ export default {
     bioPlaceholder: "介绍一下自己...",
     avatarUrl: "头像链接",
     coverUrl: "封面图片链接",
+    website: "网站",
     privateAccount: "私密账号",
     privateDesc: "只有通过审核的粉丝才能看到你的帖子",
     save: "保存更改",

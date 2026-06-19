@@ -16,6 +16,7 @@ export default function EditProfilePage() {
     bio: "",
     avatar: "",
     coverImage: "",
+    website: "",
     isPrivate: false,
   });
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,7 @@ export default function EditProfilePage() {
           bio: p.bio ?? "",
           avatar: p.avatar ?? "",
           coverImage: p.coverImage ?? "",
+          website: p.website ?? "",
           isPrivate: p.isPrivate ?? false,
         });
       }
@@ -234,6 +236,19 @@ export default function EditProfilePage() {
               className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-white transition-colors resize-none"
             />
             <p className="text-xs text-gray-400 dark:text-gray-500 text-right mt-1">{form.bio.length}/160</p>
+          </div>
+
+          {/* Website */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t("editProfile.website")}</label>
+            <input
+              type="url"
+              name="website"
+              value={form.website}
+              onChange={handleChange}
+              placeholder="https://..."
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
+            />
           </div>
 
           {/* Avatar URL */}

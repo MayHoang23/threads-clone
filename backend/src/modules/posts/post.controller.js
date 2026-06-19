@@ -149,6 +149,26 @@ const getSavedPosts = async (req, res, next) => {
   }
 };
 
+// POST /api/v1/posts/:id/pin — ghim bài (chỉ tác giả)
+const pinPost = async (req, res, next) => {
+  try {
+    const result = await postService.pinPost(req.user.id, req.params.id);
+    res.json({ success: true, data: result, message: "Đã ghim bài viết" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/v1/posts/:id/pin — bỏ ghim (chỉ tác giả)
+const unpinPost = async (req, res, next) => {
+  try {
+    const result = await postService.unpinPost(req.user.id, req.params.id);
+    res.json({ success: true, data: result, message: "Đã bỏ ghim bài viết" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // POST /api/v1/posts/:id/report
 const createReport = async (req, res, next) => {
   try {
@@ -177,5 +197,7 @@ module.exports = {
   toggleLike,
   toggleSave,
   getSavedPosts,
+  pinPost,
+  unpinPost,
   createReport,
 };

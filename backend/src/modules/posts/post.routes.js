@@ -46,6 +46,12 @@ router.get("/:id/comments", optionalAuthenticate, commentController.getComments)
 // POST /api/v1/posts/:id/save — lưu / bỏ lưu bài
 router.post("/:id/save", authenticate, postController.toggleSave);
 
+// POST /api/v1/posts/:id/pin — ghim bài (chỉ tác giả)
+router.post("/:id/pin", authenticate, postController.pinPost);
+
+// DELETE /api/v1/posts/:id/pin — bỏ ghim bài (chỉ tác giả)
+router.delete("/:id/pin", authenticate, postController.unpinPost);
+
 // POST /api/v1/posts/:id/report — báo cáo bài viết
 router.post("/:id/report", authenticate, postController.createReport);
 

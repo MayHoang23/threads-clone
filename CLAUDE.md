@@ -270,6 +270,7 @@ Route /compose không tồn tại và không cần tạo
 | post-unsaved     | post object               | Sync saved posts khi unsave       |
 | follow-changed   | { username, isFollowing } | Sync follow state cross-page      |
 | repost-changed   | { postId, isReposted }    | Sync trạng thái repost cross-card |
+| post-pin-changed | { postId, isPinned }      | Sync bài ghim trên profile        |
 
 ## Còn lại
 

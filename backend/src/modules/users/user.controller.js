@@ -41,6 +41,24 @@ const getUserPosts = async (req, res, next) => {
   }
 };
 
+// GET /api/v1/users/:username/replies
+const getUserReplies = async (req, res, next) => {
+  try {
+    const { username } = req.params;
+    const currentUserId = req.user?.id ?? null;
+    const { cursor, limit } = req.query;
+    const result = await userService.getUserReplies(
+      username,
+      currentUserId,
+      cursor || null,
+      limit ? parseInt(limit) : 10
+    );
+    res.json({ success: true, data: result, message: "Lấy trả lời thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // POST /api/v1/users/:username/follow
 const toggleFollow = async (req, res, next) => {
   try {
@@ -168,6 +186,7 @@ module.exports = {
   getProfile,
   updateProfile,
   getUserPosts,
+  getUserReplies,
   toggleFollow,
   getFollowers,
   getFollowing,

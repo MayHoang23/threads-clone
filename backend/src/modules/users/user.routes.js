@@ -28,8 +28,9 @@ router.put("/friend-request/:requestId", authenticate, controller.respondFriendR
 // ========================
 // PROFILE — đặt TRƯỚC /:username để tránh bị match nhầm
 // ========================
-// Cập nhật profile của chính mình
+// Cập nhật profile của chính mình (hỗ trợ cả PUT và PATCH)
 router.put("/profile", authenticate, controller.updateProfile);
+router.patch("/profile", authenticate, controller.updateProfile);
 
 // ========================
 // USER PROFILE & QUAN HỆ
@@ -39,6 +40,9 @@ router.get("/:username", optionalAuthenticate, controller.getProfile);
 
 // Bài viết của user
 router.get("/:username/posts", optionalAuthenticate, controller.getUserPosts);
+
+// Các trả lời (comment) của user
+router.get("/:username/replies", optionalAuthenticate, controller.getUserReplies);
 
 // Follow / unfollow
 router.post("/:username/follow", authenticate, controller.toggleFollow);

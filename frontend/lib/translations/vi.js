@@ -33,6 +33,8 @@ export default {
     delete: "Xóa bài viết",
     edit: "Chỉnh sửa",
     report: "Báo cáo",
+    pin: "Ghim bài",
+    unpin: "Bỏ ghim",
     confirmDelete: "Xóa bài viết này?",
     likes: "lượt thích",
     comments: "bình luận",
@@ -49,6 +51,7 @@ export default {
   },
   profile: {
     posts: "Bài viết",
+    replies: "Trả lời",
     saved: "Đã lưu",
     followers: "followers",
     following: "following",
@@ -58,6 +61,8 @@ export default {
     message: "Nhắn tin",
     postsCount: "bài viết",
     changeCover: "Đổi ảnh bìa",
+    pinned: "Đã ghim",
+    noReplies: "Chưa có trả lời nào",
     end: "Đã hết bài viết",
   },
   editProfile: {
@@ -67,6 +72,7 @@ export default {
     bioPlaceholder: "Giới thiệu bản thân...",
     avatarUrl: "URL Avatar",
     coverUrl: "URL Ảnh bìa",
+    website: "Website",
     privateAccount: "Tài khoản riêng tư",
     privateDesc: "Chỉ người được chấp nhận mới thấy bài viết",
     save: "Lưu thay đổi",

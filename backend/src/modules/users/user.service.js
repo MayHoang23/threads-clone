@@ -27,6 +27,8 @@ const getUserProfile = async (username, currentUserId = null) => {
       avatar: true,
       coverImage: true,
       bio: true,
+      website: true,
+      pinnedPostId: true,
       isVerified: true,
       isPrivate: true,
       role: true,
@@ -79,6 +81,8 @@ const getUserProfile = async (username, currentUserId = null) => {
     avatar: user.avatar,
     coverImage: user.coverImage,
     bio: user.bio,
+    website: user.website,
+    pinnedPostId: user.pinnedPostId,
     isVerified: user.isVerified,
     isPrivate: user.isPrivate,
     role: user.role,
@@ -94,13 +98,18 @@ const getUserProfile = async (username, currentUserId = null) => {
 // ========================
 // CẬP NHẬT PROFILE
 // ========================
-const updateProfile = async (userId, { displayName, bio, avatar, coverImage, isPrivate }) => {
+const updateProfile = async (userId, { displayName, bio, avatar, coverImage, website, isPrivate }) => {
   // Chỉ cập nhật các trường được truyền vào (không ghi đè trường không có)
   const data = {};
   if (displayName !== undefined) data.displayName = displayName.trim() || null;
   if (bio !== undefined) data.bio = bio.trim() || null;
   if (avatar !== undefined) data.avatar = avatar;
   if (coverImage !== undefined) data.coverImage = coverImage;
+  if (website !== undefined) {
+    // Chuẩn hoá website: rỗng → null; thiếu protocol → thêm https://
+    const w = website.trim();
+    data.website = w ? (/^https?:\/\//i.test(w) ? w : `https://${w}`) : null;
+  }
   if (isPrivate !== undefined) data.isPrivate = Boolean(isPrivate);
 
   const updated = await prisma.user.update({
@@ -113,6 +122,7 @@ const updateProfile = async (userId, { displayName, bio, avatar, coverImage, isP
       avatar: true,
       coverImage: true,
       bio: true,
+      website: true,
       isPrivate: true,
       isVerified: true,
       role: true,
@@ -194,6 +204,78 @@ const getUserPosts = async (username, currentUserId = null, cursor = null, limit
   return {
     posts: formatted,
     nextCursor: hasMore ? posts[posts.length - 1]?.id : null,
+    hasMore,
+  };
+};
+
+// ========================
+// LẤY CÁC TRẢ LỜI (comment) CỦA USER (cursor pagination)
+// ========================
+// Trả về dạng { comment, post } để render bài gốc kèm bình luận của user
+const getUserReplies = async (username, currentUserId = null, cursor = null, limit = 10) => {
+  const user = await prisma.user.findUnique({ where: { username }, select: { id: true } });
+  if (!user) throw new AppError("Người dùng không tồn tại", 404);
+
+  // require ở đây (lazy) để tránh vòng lặp import giữa user.service và post.service
+  const { formatPost, getPostInclude } = require("../posts/post.service");
+
+  // Lấy danh sách bạn bè của người xem để lọc bài FRIENDS hiển thị đúng
+  let friendIds = [];
+  if (currentUserId) {
+    const friendships = await prisma.friendship.findMany({
+      where: {
+        status: "ACCEPTED",
+        OR: [{ requesterId: currentUserId }, { receiverId: currentUserId }],
+      },
+      select: { requesterId: true, receiverId: true },
+    });
+    friendIds = friendships.map((f) =>
+      f.requesterId === currentUserId ? f.receiverId : f.requesterId
+    );
+  }
+
+  // Chỉ lấy comment trên bài người xem được phép thấy
+  const postVisibility = {
+    isHidden: false,
+    OR: [
+      { privacy: "PUBLIC" },
+      ...(currentUserId ? [{ authorId: currentUserId }] : []),
+      ...(friendIds.length ? [{ privacy: "FRIENDS", authorId: { in: friendIds } }] : []),
+    ],
+  };
+
+  const comments = await prisma.comment.findMany({
+    where: {
+      userId: user.id,
+      post: postVisibility,
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
+    ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    include: {
+      post: { include: getPostInclude(currentUserId) },
+    },
+  });
+
+  const hasMore = comments.length > limit;
+  if (hasMore) comments.pop();
+
+  const replies = comments
+    .filter((c) => c.post) // an toàn: bỏ comment mất bài gốc
+    .map((c) => ({
+      comment: {
+        id: c.id,
+        content: c.content,
+        mediaUrl: c.mediaUrl,
+        parentId: c.parentId,
+        createdAt: c.createdAt,
+      },
+      post: formatPost(c.post, currentUserId),
+    }));
+
+  return {
+    replies,
+    nextCursor: hasMore ? comments[comments.length - 1]?.id : null,
     hasMore,
   };
 };
@@ -499,6 +581,7 @@ module.exports = {
   getUserProfile,
   updateProfile,
   getUserPosts,
+  getUserReplies,
   toggleFollow,
   getFollowers,
   getFollowing,

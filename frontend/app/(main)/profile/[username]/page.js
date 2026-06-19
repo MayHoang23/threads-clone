@@ -8,6 +8,19 @@ import { getCurrentUser, getAccessToken } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// Format thời gian ngắn gọn cho comment trong tab Trả lời
+function timeAgo(dateStr) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (seconds < 60) return "vừa xong";
+  const m = Math.floor(seconds / 60);
+  if (m < 60) return `${m}ph`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}g`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}ng`;
+  return new Date(dateStr).toLocaleDateString("vi-VN");
+}
+
 // Skeleton cho header profile
 function ProfileHeaderSkeleton() {
   return (
@@ -39,9 +52,13 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [savedPosts, setSavedPosts] = useState([]);
-  const [activeTab, setActiveTab] = useState("posts"); // "posts" | "saved"
+  const [replies, setReplies] = useState([]);
+  const [pinnedPost, setPinnedPost] = useState(null);
+  const [activeTab, setActiveTab] = useState("posts"); // "posts" | "replies" | "saved"
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
+  const [repliesCursor, setRepliesCursor] = useState(null);
+  const [repliesHasMore, setRepliesHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -99,8 +116,13 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     setLoading(true);
     setPosts([]);
+    setReplies([]);
+    setPinnedPost(null);
     setCursor(null);
     setHasMore(true);
+    setRepliesCursor(null);
+    setRepliesHasMore(true);
+    setActiveTab("posts");
 
     try {
       const res = await fetchAPI(`/users/${username}`);
@@ -108,11 +130,35 @@ export default function ProfilePage() {
         setProfile(res.data);
         // Load bài viết ngay sau khi có profile
         await loadPosts(null, res.data);
+        // Load bài ghim (nếu có) để hiển thị đầu tab Bài viết
+        if (res.data.pinnedPostId) loadPinnedPost(res.data.pinnedPostId);
       } else {
         router.replace("/");
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Lấy bài đang ghim qua API chi tiết — đảm bảo luôn hiện đầu tiên dù bài cũ
+  const loadPinnedPost = async (postId) => {
+    try {
+      const res = await fetchAPI(`/posts/${postId}`);
+      if (res?.success) setPinnedPost(res.data);
+    } catch {
+      setPinnedPost(null); // bài ghim riêng tư / không xem được → bỏ qua
+    }
+  };
+
+  // Load các trả lời (comment) của user, hỗ trợ cursor cho infinite scroll
+  const loadReplies = async (cursorParam = null) => {
+    const qs = cursorParam ? `?cursor=${cursorParam}` : "";
+    const res = await fetchAPI(`/users/${username}/replies${qs}`);
+    if (res?.success) {
+      const { replies: newReplies, nextCursor, hasMore: more } = res.data;
+      setReplies((prev) => (cursorParam ? [...prev, ...newReplies] : newReplies));
+      setRepliesCursor(nextCursor);
+      setRepliesHasMore(more);
     }
   };
 
@@ -128,25 +174,29 @@ export default function ProfilePage() {
     }
   };
 
-  // Infinite scroll cho tab bài viết
+  // Infinite scroll cho tab Bài viết và tab Trả lời
   useEffect(() => {
     const el = bottomRef.current;
-    if (!el || activeTab !== "posts") return;
+    if (!el || (activeTab !== "posts" && activeTab !== "replies")) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
+        if (!entry.isIntersecting || loadingMore || loading) return;
+        if (activeTab === "posts" && hasMore) {
           setLoadingMore(true);
           loadPosts(cursor).finally(() => setLoadingMore(false));
+        } else if (activeTab === "replies" && repliesHasMore) {
+          setLoadingMore(true);
+          loadReplies(repliesCursor).finally(() => setLoadingMore(false));
         }
       },
       { threshold: 0.1, rootMargin: "80px" }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loading, cursor, activeTab]);
+  }, [hasMore, repliesHasMore, loadingMore, loading, cursor, repliesCursor, activeTab]);
 
-  // Khi chuyển sang tab "Đã lưu" mới load (lazy)
+  // Khi chuyển tab mới load dữ liệu (lazy)
   const handleTabChange = async (tab) => {
     setActiveTab(tab);
     if (tab === "saved" && savedPosts.length === 0) {
@@ -156,6 +206,13 @@ export default function ProfilePage() {
         else setSavedPosts([]);
       } catch {
         setSavedPosts([]);
+      }
+    }
+    if (tab === "replies" && replies.length === 0) {
+      try {
+        await loadReplies(null);
+      } catch {
+        setReplies([]);
       }
     }
   };
@@ -210,7 +267,17 @@ export default function ProfilePage() {
   const handlePostDeleted = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setSavedPosts((prev) => prev.filter((p) => p.id !== postId));
-    setProfile((p) => p ? { ...p, postCount: Math.max(0, p.postCount - 1) } : p);
+    setReplies((prev) => prev.filter((r) => r.post?.id !== postId));
+    setPinnedPost((prev) => (prev?.id === postId ? null : prev));
+    setProfile((p) =>
+      p
+        ? {
+            ...p,
+            postCount: Math.max(0, p.postCount - 1),
+            pinnedPostId: p.pinnedPostId === postId ? null : p.pinnedPostId,
+          }
+        : p
+    );
   };
 
   // Sync follow state cross-page
@@ -223,6 +290,32 @@ export default function ProfilePage() {
     };
     window.addEventListener("follow-changed", handler);
     return () => window.removeEventListener("follow-changed", handler);
+  }, [username]);
+
+  // Sync trạng thái ghim bài real-time khi pin/unpin từ menu PostCard
+  useEffect(() => {
+    const handler = (e) => {
+      const { postId, isPinned } = e.detail;
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              pinnedPostId: isPinned
+                ? postId
+                : prev.pinnedPostId === postId
+                  ? null
+                  : prev.pinnedPostId,
+            }
+          : prev
+      );
+      if (isPinned) {
+        loadPinnedPost(postId); // lấy lại bài đầy đủ để hiện đầu tab
+      } else {
+        setPinnedPost((prev) => (prev?.id === postId ? null : prev));
+      }
+    };
+    window.addEventListener("post-pin-changed", handler);
+    return () => window.removeEventListener("post-pin-changed", handler);
   }, [username]);
 
   // Sync tab Đã lưu real-time khi save/unsave từ bất kỳ đâu
@@ -262,7 +355,8 @@ export default function ProfilePage() {
 
   if (!profile) return null;
 
-  const displayPosts = activeTab === "posts" ? posts : savedPosts;
+  // Bài thường trong tab Bài viết — loại bài ghim (đã hiện riêng ở đầu)
+  const postsWithoutPinned = posts.filter((p) => p.id !== profile.pinnedPostId);
 
   return (
     <div>
@@ -416,6 +510,22 @@ export default function ProfilePage() {
           {profile.bio && (
             <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
           )}
+          {/* Website link (nếu có) */}
+          {profile.website && (
+            <a
+              href={profile.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 mt-1.5 text-sm text-blue-500 hover:underline break-all"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              <span>{profile.website.replace(/^https?:\/\//, "")}</span>
+            </a>
+          )}
         </div>
 
         {/* Thống kê: bài viết / followers / following */}
@@ -447,6 +557,16 @@ export default function ProfilePage() {
         >
           {t("profile.posts")}
         </button>
+        <button
+          onClick={() => handleTabChange("replies")}
+          className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
+            activeTab === "replies"
+              ? "border-b-2 border-black dark:border-white text-black dark:text-white"
+              : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+          }`}
+        >
+          {t("profile.replies")}
+        </button>
         {/* Tab Đã lưu chỉ hiện khi xem profile của chính mình */}
         {isOwnProfile && (
           <button
@@ -462,37 +582,142 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* ===== DANH SÁCH BÀI VIẾT ===== */}
-      {displayPosts.length === 0 ? (
-        <div className="py-20 text-center px-4">
-          <p className="text-gray-400 text-sm">
-            {activeTab === "saved" ? t("post.noSaved") : t("post.noPost")}
-          </p>
-        </div>
-      ) : (
+      {/* ===== TAB BÀI VIẾT ===== */}
+      {activeTab === "posts" && (
         <>
-          {displayPosts.map((post) => (
+          {/* Bài ghim — hiện đầu tiên với badge "Đã ghim" */}
+          {pinnedPost && (
+            <div>
+              <div className="flex items-center gap-1.5 px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="17" x2="12" y2="22" />
+                  <path d="M5 17h14l-1.5-4.5a2 2 0 01-.1-.6V5a1 1 0 011-1h-12a1 1 0 011 1v6.9a2 2 0 01-.1.6L5 17z" />
+                </svg>
+                <span>{t("profile.pinned")}</span>
+              </div>
+              <PostCard
+                key={`pinned-${pinnedPost.id}`}
+                post={pinnedPost}
+                currentUser={currentUser}
+                onDelete={handlePostDeleted}
+                pinnedPostId={profile.pinnedPostId}
+              />
+            </div>
+          )}
+
+          {postsWithoutPinned.length === 0 && !pinnedPost ? (
+            <div className="py-20 text-center px-4">
+              <p className="text-gray-400 text-sm">{t("post.noPost")}</p>
+            </div>
+          ) : (
+            postsWithoutPinned.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUser={currentUser}
+                onDelete={handlePostDeleted}
+                pinnedPostId={profile.pinnedPostId}
+              />
+            ))
+          )}
+
+          <div ref={bottomRef} className="py-6 flex justify-center">
+            {loadingMore && (
+              <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+            )}
+            {!hasMore && posts.length > 0 && (
+              <p className="text-xs text-gray-400">{t("profile.end")}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ===== TAB TRẢ LỜI ===== */}
+      {activeTab === "replies" && (
+        <>
+          {replies.length === 0 ? (
+            <div className="py-20 text-center px-4">
+              <p className="text-gray-400 text-sm">{t("profile.noReplies")}</p>
+            </div>
+          ) : (
+            replies.map(({ comment, post }) => (
+              <div key={comment.id} className="border-b border-gray-100 dark:border-gray-800">
+                {/* Bài gốc */}
+                <PostCard
+                  post={post}
+                  currentUser={currentUser}
+                  onDelete={handlePostDeleted}
+                  pinnedPostId={profile.pinnedPostId}
+                />
+                {/* Trả lời của user dưới bài gốc */}
+                <div className="flex gap-2.5 px-4 pb-4 -mt-1">
+                  <div className="w-9 flex-shrink-0 flex justify-end pt-0.5">
+                    <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                      {profile.avatar ? (
+                        <img src={profile.avatar} alt={profile.username} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white font-bold text-xs">
+                          {profile.username?.[0]?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                        {profile.displayName || profile.username}
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        {timeAgo(comment.createdAt)}
+                      </span>
+                    </div>
+                    {comment.content && (
+                      <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">
+                        {comment.content}
+                      </p>
+                    )}
+                    {comment.mediaUrl && (
+                      <img
+                        src={comment.mediaUrl}
+                        alt=""
+                        className="mt-2 rounded-xl max-h-72 object-cover border border-gray-100 dark:border-gray-800"
+                        loading="lazy"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+
+          <div ref={bottomRef} className="py-6 flex justify-center">
+            {loadingMore && (
+              <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+            )}
+            {!repliesHasMore && replies.length > 0 && (
+              <p className="text-xs text-gray-400">{t("profile.end")}</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ===== TAB ĐÃ LƯU ===== */}
+      {activeTab === "saved" && (
+        savedPosts.length === 0 ? (
+          <div className="py-20 text-center px-4">
+            <p className="text-gray-400 text-sm">{t("post.noSaved")}</p>
+          </div>
+        ) : (
+          savedPosts.map((post) => (
             <PostCard
               key={post.id}
               post={post}
               currentUser={currentUser}
               onDelete={handlePostDeleted}
-              onUnsave={activeTab === "saved" ? () => setSavedPosts((prev) => prev.filter((p) => p.id !== post.id)) : undefined}
+              onUnsave={() => setSavedPosts((prev) => prev.filter((p) => p.id !== post.id))}
             />
-          ))}
-
-          {/* Trigger cho infinite scroll (chỉ tab bài viết) */}
-          {activeTab === "posts" && (
-            <div ref={bottomRef} className="py-6 flex justify-center">
-              {loadingMore && (
-                <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
-              )}
-              {!hasMore && posts.length > 0 && (
-                <p className="text-xs text-gray-400">{t("profile.end")}</p>
-              )}
-            </div>
-          )}
-        </>
+          ))
+        )
       )}
     </div>
   );

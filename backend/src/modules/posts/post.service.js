@@ -434,6 +434,50 @@ const getSavedPosts = async (userId, { cursor, limit = 10 }) => {
 };
 
 // ========================
+// GHIM BÀI VIẾT (chỉ tác giả)
+// ========================
+// Ghim = lưu postId vào User.pinnedPostId. Mỗi user chỉ ghim được 1 bài.
+const pinPost = async (userId, postId) => {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { id: true, authorId: true },
+  });
+  if (!post) throw new AppError("Bài viết không tồn tại", 404);
+  if (post.authorId !== userId) {
+    throw new AppError("Bạn chỉ có thể ghim bài viết của mình", 403);
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { pinnedPostId: postId },
+  });
+
+  return { pinned: true, pinnedPostId: postId };
+};
+
+// ========================
+// BỎ GHIM BÀI VIẾT (chỉ tác giả)
+// ========================
+const unpinPost = async (userId, postId) => {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { id: true, authorId: true },
+  });
+  if (!post) throw new AppError("Bài viết không tồn tại", 404);
+  if (post.authorId !== userId) {
+    throw new AppError("Bạn chỉ có thể bỏ ghim bài viết của mình", 403);
+  }
+
+  // Chỉ xoá ghim nếu bài này đang được ghim (tránh xoá nhầm bài khác đang ghim)
+  await prisma.user.updateMany({
+    where: { id: userId, pinnedPostId: postId },
+    data: { pinnedPostId: null },
+  });
+
+  return { pinned: false, pinnedPostId: null };
+};
+
+// ========================
 // TOP HASHTAG ĐANG HOT
 // ========================
 // Lấy top 5 hashtag có nhiều bài viết nhất
@@ -460,6 +504,8 @@ module.exports = {
   toggleLike,
   toggleSave,
   getSavedPosts,
+  pinPost,
+  unpinPost,
   // Helper dùng lại trong repost.controller + comment.controller
   formatPost,
   getPostInclude,

@@ -69,7 +69,9 @@
       "Bash(echo \"exit: $?\")",
       "Bash(node -e \"console.log\\('emoji-picker-react', require\\('./package.json'\\).dependencies['emoji-picker-react'] || 'NOT INSTALLED'\\)\")",
       "Bash(node -e \"console.log\\(require\\('open-graph-scraper/package.json'\\).version\\)\")",
-      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $p = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue; \"Backend listening on :5000 \\(PID $\\($conn.OwningProcess\\), $\\($p.ProcessName\\)\\)\" } else { \"No process listening on :5000\" })"
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $p = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue; \"Backend listening on :5000 \\(PID $\\($conn.OwningProcess\\), $\\($p.ProcessName\\)\\)\" } else { \"No process listening on :5000\" })",
+      "Bash(cd /c/Users/PC/OneDrive/Desktop/threads-clone/frontend && ls lib/translations/)",
+      "Read(//c/c/Users/PC/OneDrive/Desktop/threads-clone/frontend/lib/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",
