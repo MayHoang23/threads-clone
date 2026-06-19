@@ -36,6 +36,35 @@ function formatNotification(n) {
   };
 }
 
+// Map loại notification → field UserSettings điều khiển bật/tắt nó.
+// Type không có trong map (vd POST_HIDDEN) → luôn tạo, không bị tắt.
+//   - LIKE / COMMENT_LIKE → likeNotif
+//   - COMMENT / MENTION   → commentNotif
+//   - FOLLOW / FRIEND_REQUEST → followNotif
+//   - REPOST → likeNotif (repost là tương tác kiểu "thích" theo Threads thật)
+const NOTIF_SETTING_FIELD = {
+  LIKE: "likeNotif",
+  COMMENT_LIKE: "likeNotif",
+  REPOST: "likeNotif",
+  COMMENT: "commentNotif",
+  MENTION: "commentNotif",
+  FOLLOW: "followNotif",
+  FRIEND_REQUEST: "followNotif",
+};
+
+// Kiểm tra receiver có bật loại notification này không (default true nếu chưa có UserSettings)
+const isNotifEnabled = async (type, receiverId) => {
+  const field = NOTIF_SETTING_FIELD[type];
+  if (!field) return true; // loại không nằm trong map (vd POST_HIDDEN) → luôn bật
+
+  const settings = await prisma.userSettings.findUnique({
+    where: { userId: receiverId },
+    select: { [field]: true },
+  });
+  // Chưa có UserSettings hoặc field null → coi như bật (default true)
+  return settings?.[field] ?? true;
+};
+
 // ========================
 // TẠO NOTIFICATION + EMIT SOCKET
 // Được gọi từ post.service và user.service sau các hành động
@@ -43,6 +72,11 @@ function formatNotification(n) {
 const createNotification = async (type, triggeredId, receiverId, postId = null) => {
   // Không tạo notification khi tự thực hiện hành động với nội dung của mình
   if (triggeredId === receiverId) return null;
+
+  // Tôn trọng cài đặt Thông báo của receiver — nếu đã tắt loại này thì bỏ qua hoàn toàn
+  // (không ghi DB, không emit socket, không tăng badge unread)
+  const enabled = await isNotifEnabled(type, receiverId);
+  if (!enabled) return null;
 
   const notification = await prisma.notification.create({
     data: { type, triggeredId, receiverId, postId, isRead: false },
