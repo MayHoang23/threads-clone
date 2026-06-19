@@ -114,6 +114,7 @@ export default {
     you: "你：",
     photo: "📷 图片",
     startConversation: "开始对话吧",
+    restricted: "该用户限制了谁可以给他发消息",
   },
   notifications: {
     title: "通知",

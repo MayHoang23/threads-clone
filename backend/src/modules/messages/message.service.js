@@ -11,6 +11,38 @@ const USER_SELECT = {
 };
 
 // ========================
+// KIỂM TRA QUYỀN NHẮN TIN (UserSettings.allowMessagesFrom)
+// ========================
+// Trả về true nếu senderId được phép nhắn tin cho receiverId, dựa theo cài đặt
+// "Ai có thể nhắn tin cho bạn" của RECEIVER:
+//   - EVERYONE (mặc định khi chưa có UserSettings): ai cũng nhắn được
+//   - NONE: không ai nhắn được (trừ tự nhắn cho chính mình)
+//   - FOLLOWING: chỉ người mà RECEIVER đang follow mới nhắn được
+//     (giống Threads/Instagram — receiver tin tưởng những người họ chủ động follow)
+const canMessage = async (senderId, receiverId) => {
+  if (senderId === receiverId) return true;
+
+  const settings = await prisma.userSettings.findUnique({
+    where: { userId: receiverId },
+    select: { allowMessagesFrom: true },
+  });
+  const mode = settings?.allowMessagesFrom ?? "EVERYONE";
+
+  if (mode === "EVERYONE") return true;
+  if (mode === "NONE") return false;
+  if (mode === "FOLLOWING") {
+    // receiver đang follow sender? → Follow { followerId: receiverId, followingId: senderId }
+    const follow = await prisma.follow.findUnique({
+      where: {
+        followerId_followingId: { followerId: receiverId, followingId: senderId },
+      },
+    });
+    return !!follow;
+  }
+  return true;
+};
+
+// ========================
 // LẤY DANH SÁCH CONVERSATIONS
 // ========================
 // Trả về conversations của user, sort theo lastMessageAt (mới nhất trên đầu)
@@ -98,6 +130,12 @@ const getOrCreateConversation = async (userId, otherUserId) => {
 
   if (shared) return { conversation: shared.conversation, created: false };
 
+  // Tạo conversation mới lần đầu → kiểm tra cài đặt "ai có thể nhắn tin" của người nhận
+  const allowed = await canMessage(userId, otherUserId);
+  if (!allowed) {
+    throw new AppError("Người dùng này giới hạn ai có thể nhắn tin cho họ", 403);
+  }
+
   // Chưa có → tạo conversation mới với 2 member
   const conversation = await prisma.conversation.create({
     data: {
@@ -152,6 +190,28 @@ const sendMessage = async (conversationId, senderId, content, mediaUrl = null, m
     where: { conversationId_userId: { conversationId, userId: senderId } },
   });
   if (!member) throw new AppError("Bạn không phải thành viên cuộc trò chuyện này", 403);
+
+  // Enforce "ai có thể nhắn tin" — đề phòng receiver đổi setting sau khi conversation đã tạo.
+  // Ngoại lệ: nếu receiver đã từng nhắn lại trong conversation này (đã trao đổi 2 chiều)
+  // thì luôn cho phép tiếp tục, dù setting hiện tại có chặn.
+  const members = await prisma.conversationMember.findMany({
+    where: { conversationId },
+    select: { userId: true },
+  });
+  const receiverId = members.map((m) => m.userId).find((id) => id !== senderId);
+
+  if (receiverId) {
+    const receiverReplied = await prisma.message.findFirst({
+      where: { conversationId, senderId: receiverId },
+      select: { id: true },
+    });
+    if (!receiverReplied) {
+      const allowed = await canMessage(senderId, receiverId);
+      if (!allowed) {
+        throw new AppError("Người dùng này giới hạn ai có thể nhắn tin cho họ", 403);
+      }
+    }
+  }
 
   const now = new Date();
 
@@ -219,4 +279,4 @@ const getUnreadConversationCount = async (userId) => {
   });
 };
 
-module.exports = { getConversations, getOrCreateConversation, getMessages, sendMessage, markRead, getUnreadConversationCount };
+module.exports = { getConversations, getOrCreateConversation, getMessages, sendMessage, markRead, getUnreadConversationCount, canMessage };

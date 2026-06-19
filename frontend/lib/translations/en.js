@@ -114,6 +114,7 @@ export default {
     you: "You: ",
     photo: "📷 Photo",
     startConversation: "Start the conversation",
+    restricted: "This user limits who can message them",
   },
   notifications: {
     title: "Notifications",

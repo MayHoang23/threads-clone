@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { getSocket } from "@/lib/socket";
 import { getAccessToken } from "@/lib/auth";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -41,6 +42,7 @@ export default function MessageInput({
     const [attachType, setAttachType] = useState(null); // "image" | "video"
     const [uploadingAttach, setUploadingAttach] = useState(false);
     const [attachError, setAttachError] = useState("");
+    const [sendError, setSendError] = useState(""); // lỗi khi gửi (vd 403 giới hạn nhắn tin)
 
     // Ghi âm
     const [recording, setRecording] = useState(false);
@@ -49,6 +51,7 @@ export default function MessageInput({
     const [willCancel, setWillCancel] = useState(false); // trượt tới nút hủy
 
     const { isDark } = useTheme();
+    const { t } = useLanguage();
 
     const textareaRef = useRef(null);
     const fileRef = useRef(null);
@@ -103,6 +106,7 @@ export default function MessageInput({
 
     const handleChange = (e) => {
         setContent(e.target.value);
+        if (sendError) setSendError(""); // gõ lại → xóa thông báo lỗi cũ
         if (e.target.value.trim()) emitTyping();
     };
 
@@ -254,12 +258,13 @@ export default function MessageInput({
         setContent(""); // Reset ngay (optimistic)
         clearAttach();
         setAttachError("");
+        setSendError("");
         setShowEmoji(false);
         if (textareaRef.current) textareaRef.current.style.height = "auto";
 
         try {
             await onSend(sentContent, sentMediaUrl, sentMediaType);
-        } catch {
+        } catch (err) {
             // Nếu lỗi → khôi phục nội dung + media (dùng URL cloud đã upload)
             setContent(sentContent);
             if (sentMediaUrl) {
@@ -267,6 +272,11 @@ export default function MessageInput({
                 setAttachPreview(sentMediaUrl);
                 setAttachType(sentMediaType);
             }
+            // Hiện thông báo: 403 (giới hạn nhắn tin) dùng message từ server,
+            // lỗi mạng/khác dùng thông báo chung — không mất nội dung đã gõ
+            setSendError(
+                err?.status ? err.message || t("messages.failed") : t("messages.failed")
+            );
         } finally {
             setSending(false);
             textareaRef.current?.focus();
@@ -532,6 +542,11 @@ export default function MessageInput({
             {/* Lỗi đính kèm */}
             {attachError && (
                 <p className="text-xs text-red-500 mb-2">{attachError}</p>
+            )}
+
+            {/* Lỗi gửi tin (vd: người nhận giới hạn ai có thể nhắn tin) */}
+            {sendError && (
+                <p className="text-xs text-red-500 mb-2">{sendError}</p>
             )}
 
             <div className="flex items-end gap-2">

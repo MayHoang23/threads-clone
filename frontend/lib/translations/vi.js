@@ -114,6 +114,7 @@ export default {
     you: "Bạn: ",
     photo: "📷 Ảnh",
     startConversation: "Hãy bắt đầu cuộc trò chuyện",
+    restricted: "Người dùng này giới hạn ai có thể nhắn tin cho họ",
   },
   notifications: {
     title: "Thông báo",

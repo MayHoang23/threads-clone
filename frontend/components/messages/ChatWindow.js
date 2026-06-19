@@ -315,30 +315,37 @@ export default function ChatWindow({
         setMessages((prev) => [...prev, optimistic]);
         setTimeout(() => scrollToBottom(true), 50);
 
-        const data = await fetchAPI(
-            `/conversations/${conversationId}/messages`,
-            {
-                method: "POST",
-                body: JSON.stringify({ content, mediaUrl, mediaType }),
-            },
-        );
+        try {
+            const data = await fetchAPI(
+                `/conversations/${conversationId}/messages`,
+                {
+                    method: "POST",
+                    body: JSON.stringify({ content, mediaUrl, mediaType }),
+                },
+            );
 
-        // Thay thế optimistic message bằng real message từ server
-        if (data?.success) {
-            setMessages((prev) =>
-                prev.map((m) =>
-                    m.id === tempId ? { ...data.data, pending: false } : m,
-                ),
-            );
-        } else {
-            // Lỗi → đánh dấu failed
-            setMessages((prev) =>
-                prev.map((m) =>
-                    m.id === tempId
-                        ? { ...m, failed: true, pending: false }
-                        : m,
-                ),
-            );
+            // Thay thế optimistic message bằng real message từ server
+            if (data?.success) {
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === tempId ? { ...data.data, pending: false } : m,
+                    ),
+                );
+            } else {
+                // Lỗi → đánh dấu failed
+                setMessages((prev) =>
+                    prev.map((m) =>
+                        m.id === tempId
+                            ? { ...m, failed: true, pending: false }
+                            : m,
+                    ),
+                );
+            }
+        } catch (err) {
+            // Lỗi (vd 403 giới hạn nhắn tin): bỏ optimistic message và ném lại
+            // để MessageInput khôi phục nội dung đã gõ + hiện thông báo
+            setMessages((prev) => prev.filter((m) => m.id !== tempId));
+            throw err;
         }
     };
 

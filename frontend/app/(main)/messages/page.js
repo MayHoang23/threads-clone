@@ -84,6 +84,9 @@ export default function MessagesPage() {
         await loadConversations();
         handleSelect(res.data.id);
       }
+    } catch (err) {
+      // 403: người dùng giới hạn ai có thể nhắn tin cho họ → báo rõ thay vì im lặng
+      alert(err?.message || t("messages.restricted"));
     } finally {
       setStartingChat(false);
     }
