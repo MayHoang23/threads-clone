@@ -1,12 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("./auth.controller");
+const {
+  loginLimiter,
+  registerLimiter,
+  forgotPasswordLimiter,
+} = require("../../middlewares/authRateLimit.middleware");
 
 // POST /api/v1/auth/register — Đăng ký tài khoản mới
-router.post("/register", authController.register);
+router.post("/register", registerLimiter, authController.register);
 
 // POST /api/v1/auth/login — Đăng nhập
-router.post("/login", authController.login);
+router.post("/login", loginLimiter, authController.login);
 
 // POST /api/v1/auth/refresh-token — Lấy access token mới bằng refresh token
 router.post("/refresh-token", authController.refreshToken);
@@ -18,7 +23,7 @@ router.post("/logout", authController.logout);
 router.get("/verify-email", authController.verifyEmail);
 
 // POST /api/v1/auth/forgot-password — Gửi email đặt lại mật khẩu
-router.post("/forgot-password", authController.forgotPassword);
+router.post("/forgot-password", forgotPasswordLimiter, authController.forgotPassword);
 
 // POST /api/v1/auth/reset-password — Đặt lại mật khẩu bằng token từ email
 router.post("/reset-password", authController.resetPassword);

@@ -36,6 +36,7 @@ export default {
     pin: "Pin to profile",
     unpin: "Unpin",
     confirmDelete: "Delete this post?",
+    deleted: "Post deleted",
     likes: "likes",
     comments: "comments",
     noPost: "No posts yet",

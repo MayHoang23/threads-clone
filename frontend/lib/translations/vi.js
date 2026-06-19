@@ -36,6 +36,7 @@ export default {
     pin: "Ghim bài",
     unpin: "Bỏ ghim",
     confirmDelete: "Xóa bài viết này?",
+    deleted: "Đã xóa bài viết",
     likes: "lượt thích",
     comments: "bình luận",
     noPost: "Chưa có bài viết nào",

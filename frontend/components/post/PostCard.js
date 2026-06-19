@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { fetchAPI } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import RepostButton from "./RepostButton";
@@ -136,8 +137,13 @@ export default function PostCard({
     const handleDelete = async () => {
         if (!window.confirm(t("post.confirmDelete"))) return;
         setShowMenu(false);
-        await fetchAPI(`/posts/${post.id}`, { method: "DELETE" });
-        onDelete?.(post.id);
+        try {
+            await fetchAPI(`/posts/${post.id}`, { method: "DELETE" });
+            onDelete?.(post.id);
+            toast.success(t("post.deleted") || "Đã xóa bài viết");
+        } catch {
+            toast.error(t("common.error") || "Xóa bài thất bại");
+        }
     };
 
     // Ghim / bỏ ghim bài — phát event để ProfilePage cập nhật pinnedPostId
@@ -154,7 +160,7 @@ export default function PostCard({
                 }),
             );
         } catch {
-            alert(t("common.error") || "Lỗi kết nối");
+            toast.error(t("common.error") || "Lỗi kết nối");
         }
     };
 
@@ -170,10 +176,10 @@ export default function PostCard({
                 }),
             });
             if (res?.success)
-                alert("Đã gửi báo cáo. Chúng tôi sẽ xem xét sớm.");
-            else alert(res?.message || "Báo cáo thất bại");
+                toast.success("Đã gửi báo cáo. Chúng tôi sẽ xem xét sớm.");
+            else toast.error(res?.message || "Báo cáo thất bại");
         } catch {
-            alert("Lỗi kết nối");
+            toast.error("Lỗi kết nối");
         }
     };
 

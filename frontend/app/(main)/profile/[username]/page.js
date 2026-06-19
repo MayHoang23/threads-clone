@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { fetchAPI } from "@/lib/api";
 import { getCurrentUser, getAccessToken } from "@/lib/auth";
 import PostCard from "@/components/post/PostCard";
@@ -284,7 +285,7 @@ export default function ProfilePage() {
       if (res?.success) router.push("/messages");
     } catch (err) {
       // 403: người dùng giới hạn ai có thể nhắn tin cho họ → báo rõ thay vì im lặng
-      alert(err?.message || t("messages.restricted"));
+      toast.error(err?.message || t("messages.restricted"));
     } finally {
       setChatLoading(false);
     }

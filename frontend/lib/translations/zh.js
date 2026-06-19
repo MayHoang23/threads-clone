@@ -36,6 +36,7 @@ export default {
     pin: "置顶帖子",
     unpin: "取消置顶",
     confirmDelete: "确定删除这条帖子？",
+    deleted: "帖子已删除",
     likes: "点赞",
     comments: "评论",
     noPost: "暂无帖子",

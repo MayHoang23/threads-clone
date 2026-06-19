@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { fetchAPI } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { useSocket } from "@/contexts/SocketContext";
@@ -86,7 +87,7 @@ export default function MessagesPage() {
       }
     } catch (err) {
       // 403: người dùng giới hạn ai có thể nhắn tin cho họ → báo rõ thay vì im lặng
-      alert(err?.message || t("messages.restricted"));
+      toast.error(err?.message || t("messages.restricted"));
     } finally {
       setStartingChat(false);
     }

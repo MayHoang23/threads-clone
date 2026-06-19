@@ -1,6 +1,7 @@
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 require("dotenv").config();
 
 const authRoutes = require("./modules/auth/auth.routes");
@@ -19,6 +20,20 @@ const { initSocket } = require("./socket/socketManager");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// ========================
+// SECURITY HEADERS (helmet)
+// Đặt sớm nhất, trước mọi middleware khác.
+// - contentSecurityPolicy: false → API trả JSON, không cần CSP; tránh chặn nhầm.
+// - crossOriginResourcePolicy: cross-origin → cho phép frontend (origin khác)
+//   và ảnh Cloudinary load bình thường, không xung đột với CORS hiện có.
+// ========================
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 // ========================
 // MIDDLEWARE CƠ BẢN

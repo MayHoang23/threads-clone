@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
+import toast from "react-hot-toast";
 import { getSocket } from "@/lib/socket";
 import { getAccessToken } from "@/lib/auth";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -371,7 +372,7 @@ export default function MessageInput({
                 stopRecording(cancel);
             }
         } catch {
-            alert("Không thể truy cập micro. Vui lòng cấp quyền và thử lại.");
+            toast.error("Không thể truy cập micro. Vui lòng cấp quyền và thử lại.");
         }
     };
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import toast from "react-hot-toast";
 import { fetchAPI } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -344,7 +345,9 @@ function ReplyItem({ reply, currentUser, onReplyTo, onDeleted, t }) {
   const handleDelete = async () => {
     if (!window.confirm(t("comments.confirmDelete"))) return;
     onDeleted(reply.id); // optimistic
-    fetchAPI(`/comments/${reply.id}`, { method: "DELETE" }).catch(() => {});
+    fetchAPI(`/comments/${reply.id}`, { method: "DELETE" }).catch(() =>
+      toast.error(t("common.error") || "Không thể xóa bình luận"),
+    );
   };
 
   return (
@@ -415,7 +418,9 @@ function CommentItem({ comment, postId, currentUser, onDeleted, t }) {
   const handleDeleteRoot = async () => {
     if (!window.confirm(t("comments.confirmDelete"))) return;
     onDeleted(comment.id); // optimistic — xoá cả cây
-    fetchAPI(`/comments/${comment.id}`, { method: "DELETE" }).catch(() => {});
+    fetchAPI(`/comments/${comment.id}`, { method: "DELETE" }).catch(() =>
+      toast.error(t("common.error") || "Không thể xóa bình luận"),
+    );
   };
 
   const visibleReplies = showAll ? replies : replies.slice(0, 2);

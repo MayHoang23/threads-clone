@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Toaster } from "react-hot-toast";
 import { isAuthenticated } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -36,6 +37,19 @@ export default function MainLayout({ children }) {
             <SocketProvider>
                 {/* Wrapper ngoài cùng: full width, nền trắng/đen */}
                 <div className="min-h-screen w-full bg-white dark:bg-gray-950 transition-colors duration-300">
+                    {/* Toast toàn cục — render qua portal dưới <html>, nên class dark: tự áp dụng.
+                        Dùng prefix ! (important) để override inline style mặc định của react-hot-toast. */}
+                    <Toaster
+                        position="top-center"
+                        toastOptions={{
+                            duration: 3000,
+                            className:
+                                "!bg-white dark:!bg-gray-800 !text-gray-900 dark:!text-white !text-sm !border !border-gray-200 dark:!border-gray-700 !shadow-lg",
+                            success: { iconTheme: { primary: "#22c55e", secondary: "#fff" } },
+                            error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
+                        }}
+                    />
+
                     {/* Navbar: sidebar cố định trái (desktop) hoặc bottom bar (mobile) */}
                     <Navbar />
 

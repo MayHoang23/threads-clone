@@ -71,7 +71,14 @@
       "Bash(node -e \"console.log\\(require\\('open-graph-scraper/package.json'\\).version\\)\")",
       "PowerShell($conn = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $p = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue; \"Backend listening on :5000 \\(PID $\\($conn.OwningProcess\\), $\\($p.ProcessName\\)\\)\" } else { \"No process listening on :5000\" })",
       "Bash(cd /c/Users/PC/OneDrive/Desktop/threads-clone/frontend && ls lib/translations/)",
-      "Read(//c/c/Users/PC/OneDrive/Desktop/threads-clone/frontend/lib/**)"
+      "Read(//c/c/Users/PC/OneDrive/Desktop/threads-clone/frontend/lib/**)",
+      "Bash(node -e \"console.log\\(require\\('./frontend/node_modules/react-hot-toast/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./backend/node_modules/helmet/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./backend/node_modules/express-rate-limit/package.json'\\).version\\)\")",
+      "Bash(node -c src/index.js)",
+      "Bash(node -c src/modules/auth/auth.routes.js)",
+      "Bash(node -c src/middlewares/authRateLimit.middleware.js)",
+      "Bash(npx next *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",
