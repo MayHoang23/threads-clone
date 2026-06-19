@@ -139,6 +139,21 @@ const getUserPosts = async (username, currentUserId = null, cursor = null, limit
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) throw new AppError("Người dùng không tồn tại", 404);
 
+  // Tài khoản riêng tư: nếu không phải chính chủ và chưa follow → chặn xem bài.
+  // Trả mảng rỗng + cờ isPrivateBlocked để frontend hiện thông báo "khóa".
+  if (user.isPrivate && currentUserId !== user.id) {
+    const isFollowing = currentUserId
+      ? !!(await prisma.follow.findUnique({
+          where: {
+            followerId_followingId: { followerId: currentUserId, followingId: user.id },
+          },
+        }))
+      : false;
+    if (!isFollowing) {
+      return { posts: [], nextCursor: null, hasMore: false, isPrivateBlocked: true };
+    }
+  }
+
   // Xác định bộ lọc privacy dựa theo mối quan hệ
   let privacyFilter;
   if (currentUserId === user.id) {
@@ -213,8 +228,25 @@ const getUserPosts = async (username, currentUserId = null, cursor = null, limit
 // ========================
 // Trả về dạng { comment, post } để render bài gốc kèm bình luận của user
 const getUserReplies = async (username, currentUserId = null, cursor = null, limit = 10) => {
-  const user = await prisma.user.findUnique({ where: { username }, select: { id: true } });
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true, isPrivate: true },
+  });
   if (!user) throw new AppError("Người dùng không tồn tại", 404);
+
+  // Tài khoản riêng tư: chặn xem tab Trả lời nếu không phải chính chủ và chưa follow
+  if (user.isPrivate && currentUserId !== user.id) {
+    const isFollowing = currentUserId
+      ? !!(await prisma.follow.findUnique({
+          where: {
+            followerId_followingId: { followerId: currentUserId, followingId: user.id },
+          },
+        }))
+      : false;
+    if (!isFollowing) {
+      return { replies: [], nextCursor: null, hasMore: false, isPrivateBlocked: true };
+    }
+  }
 
   // require ở đây (lazy) để tránh vòng lặp import giữa user.service và post.service
   const { formatPost, getPostInclude } = require("../posts/post.service");
@@ -527,12 +559,23 @@ const search = async (query, currentUserId = null) => {
     isFollowing: followingIds.has(u.id),
   }));
 
+  // Tài khoản riêng tư: chỉ cho phép bài của tác giả công khai, HOẶC của chính
+  // mình, HOẶC của tài khoản riêng tư mà mình đang follow.
+  const authorPrivacyOR = currentUserId
+    ? [
+        { author: { isPrivate: false } },
+        { authorId: currentUserId },
+        { author: { isPrivate: true, followers: { some: { followerId: currentUserId } } } },
+      ]
+    : [{ author: { isPrivate: false } }];
+
   // Tìm bài viết có nội dung chứa từ khóa (chỉ PUBLIC)
   const posts = await prisma.post.findMany({
     where: {
       content: { contains: q, mode: "insensitive" },
       privacy: "PUBLIC",
       isHidden: false, // Không trả về bài đã bị admin ẩn trong kết quả tìm kiếm
+      OR: authorPrivacyOR, // Loại bài của tài khoản riêng tư mà mình không follow
     },
     include: {
       author: { select: USER_SELECT },

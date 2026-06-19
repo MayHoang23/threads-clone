@@ -64,6 +64,8 @@ export default {
     pinned: "已置顶",
     noReplies: "暂无回复",
     end: "没有更多帖子了",
+    privateTitle: "此账户为私密账户",
+    privateDesc: "关注后即可查看帖子。",
   },
   editProfile: {
     title: "编辑个人资料",

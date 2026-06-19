@@ -52,6 +52,24 @@ const AUTHOR_SELECT = {
   displayName: true,
   avatar: true,
   isVerified: true,
+  isPrivate: true, // Cần để enforce tài khoản riêng tư khi đọc bài
+};
+
+// ========================
+// TÀI KHOẢN RIÊNG TƯ (isPrivate)
+// ========================
+// Phương án dùng: KHÔNG thêm trạng thái PENDING/ACCEPTED vào bảng Follow.
+// Tận dụng bảng Follow 1 chiều có sẵn — người xem chỉ thấy nội dung của
+// tài khoản riêng tư nếu họ ĐÃ follow tác giả (hoặc chính là tác giả).
+// Trả về true nếu viewer được phép xem nội dung của author.
+const canViewPrivateContent = async (authorId, authorIsPrivate, viewerId) => {
+  if (!authorIsPrivate) return true; // tài khoản công khai → ai cũng xem được
+  if (viewerId && viewerId === authorId) return true; // chính chủ
+  if (!viewerId) return false; // chưa đăng nhập → không xem được tài khoản riêng tư
+  const follow = await prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId: viewerId, followingId: authorId } },
+  });
+  return !!follow;
 };
 
 // Include cho bài NHÚNG (repostOf / quotedPost) — không lồng tiếp repost/quote
@@ -261,8 +279,17 @@ const getFeed = async (userId, cursor = null, limit = 10) => {
   const hasMore = posts.length > limit;
   if (hasMore) posts.pop(); // Bỏ bài thứ limit+1, chỉ dùng để check hasMore
 
+  // Tài khoản riêng tư: loại bài của author private mà mình không follow.
+  // Về cấu trúc, feed đã chỉ gồm bài của chính mình + người mình follow nên
+  // bộ lọc này gần như không loại gì — giữ lại như lớp phòng vệ (defensive),
+  // phòng khi nguồn author của feed thay đổi sau này.
+  const followingSet = new Set(followingIds);
+  const visiblePosts = posts.filter(
+    (p) => !p.author.isPrivate || p.authorId === userId || followingSet.has(p.authorId)
+  );
+
   return {
-    posts: posts.map((p) => formatPost(p, userId)),
+    posts: visiblePosts.map((p) => formatPost(p, userId)),
     nextCursor: hasMore ? posts[posts.length - 1]?.id : null,
     hasMore,
   };
@@ -279,6 +306,12 @@ const getPostById = async (postId, userId = null) => {
   });
 
   if (!post) throw new AppError("Bài viết không tồn tại", 404);
+
+  // Tài khoản riêng tư: viewer phải đang follow tác giả (hoặc là chính chủ)
+  const canView = await canViewPrivateContent(post.authorId, post.author.isPrivate, userId);
+  if (!canView) {
+    throw new AppError("Tài khoản này ở chế độ riêng tư", 403);
+  }
 
   // Kiểm tra quyền xem theo privacy
   if (post.privacy === "PRIVATE" && post.authorId !== userId) {
@@ -510,4 +543,5 @@ module.exports = {
   formatPost,
   getPostInclude,
   AUTHOR_SELECT,
+  canViewPrivateContent,
 };

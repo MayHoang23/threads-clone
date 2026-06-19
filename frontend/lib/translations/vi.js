@@ -64,6 +64,8 @@ export default {
     pinned: "Đã ghim",
     noReplies: "Chưa có trả lời nào",
     end: "Đã hết bài viết",
+    privateTitle: "Tài khoản này riêng tư",
+    privateDesc: "Theo dõi để xem bài viết.",
   },
   editProfile: {
     title: "Chỉnh sửa profile",

@@ -73,6 +73,8 @@ export default function ProfilePage() {
   // So sánh bằng id để chắc chắn là profile của chính mình
   // (tránh lệch hoa/thường ở username trên URL hoặc currentUser thiếu username)
   const isOwnProfile = !!currentUser?.id && currentUser.id === profile?.id;
+  // Tài khoản riêng tư mà mình chưa follow → ẩn toàn bộ tab/nội dung
+  const isPrivateBlocked = !!profile?.isPrivate && !isOwnProfile && !profile?.isFollowing;
 
   const handleUploadMedia = async (file, field) => {
     const setUploading = field === "avatar" ? setUploadingAvatar : setUploadingCover;
@@ -128,10 +130,15 @@ export default function ProfilePage() {
       const res = await fetchAPI(`/users/${username}`);
       if (res?.success) {
         setProfile(res.data);
-        // Load bài viết ngay sau khi có profile
-        await loadPosts(null, res.data);
-        // Load bài ghim (nếu có) để hiển thị đầu tab Bài viết
-        if (res.data.pinnedPostId) loadPinnedPost(res.data.pinnedPostId);
+        // Tài khoản riêng tư mà mình chưa follow → không tải bài/bài ghim (sẽ bị chặn)
+        const blocked =
+          res.data.isPrivate && currentUser?.id !== res.data.id && !res.data.isFollowing;
+        if (!blocked) {
+          // Load bài viết ngay sau khi có profile
+          await loadPosts(null, res.data);
+          // Load bài ghim (nếu có) để hiển thị đầu tab Bài viết
+          if (res.data.pinnedPostId) loadPinnedPost(res.data.pinnedPostId);
+        }
       } else {
         router.replace("/");
       }
@@ -238,6 +245,22 @@ export default function ProfilePage() {
           isFollowing: wasFollowing,
           followerCount: wasFollowing ? p.followerCount + 1 : p.followerCount - 1,
         }));
+      } else if (profile.isPrivate && !isOwnProfile) {
+        // Tài khoản riêng tư: cập nhật nội dung theo trạng thái follow mới
+        if (!wasFollowing) {
+          // Vừa follow → giờ được phép xem → tải bài + reset cursor
+          setCursor(null);
+          setHasMore(true);
+          loadPosts(null);
+        } else {
+          // Vừa unfollow → ẩn lại nội dung, reset để lần sau follow tải mới
+          setPosts([]);
+          setCursor(null);
+          setHasMore(true);
+          setReplies([]);
+          setRepliesCursor(null);
+          setRepliesHasMore(true);
+        }
       }
     } catch {
       setProfile((p) => ({
@@ -545,6 +568,20 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* ===== TÀI KHOẢN RIÊNG TƯ — chặn xem nội dung khi chưa follow ===== */}
+      {isPrivateBlocked ? (
+        <div className="py-20 text-center px-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <svg className="w-7 h-7 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+          </div>
+          <p className="font-semibold text-gray-700 dark:text-gray-200 mb-1">{t("profile.privateTitle")}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t("profile.privateDesc")}</p>
+        </div>
+      ) : (
+        <>
       {/* ===== TABS ===== */}
       <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
@@ -718,6 +755,8 @@ export default function ProfilePage() {
             />
           ))
         )
+      )}
+        </>
       )}
     </div>
   );

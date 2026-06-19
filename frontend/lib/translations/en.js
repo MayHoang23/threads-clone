@@ -64,6 +64,8 @@ export default {
     pinned: "Pinned",
     noReplies: "No replies yet",
     end: "No more posts",
+    privateTitle: "This account is private",
+    privateDesc: "Follow to see their posts.",
   },
   editProfile: {
     title: "Edit profile",
