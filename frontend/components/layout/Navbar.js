@@ -115,12 +115,14 @@ export default function Navbar() {
   ], [currentUser?.username, t]);
 
   // NAV_ITEMS mobile có đầy đủ để build bottom bar
+  // Bao gồm Cài đặt — mobile không có sidebar desktop nên đây là lối vào Settings (và Đăng xuất)
   const MOBILE_NAV_ITEMS = useMemo(() => [
     { href: "/", label: t("nav.home"), Icon: HomeIcon },
     { href: "/search", label: t("nav.search"), Icon: SearchIcon },
     { href: null, label: t("nav.create"), Icon: ComposeIcon, isCompose: true },
     { href: "/messages", label: t("nav.messages"), Icon: MessagesIcon },
     { href: "/notifications", label: t("nav.notifications"), isNotification: true },
+    { href: "/settings", label: t("nav.settings"), Icon: SettingsIcon },
     { href: `/profile/${currentUser?.username}`, label: t("nav.profile"), Icon: ProfileIcon },
   ], [currentUser?.username, t]);
 
@@ -131,17 +133,18 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ===== DESKTOP: sidebar cố định bên trái, căn theo container 1320px ===== */}
+      {/* ===== TABLET (md) + DESKTOP (lg): sidebar cố định bên trái, căn theo container 1320px =====
+          md (768–1023px): thu gọn w-16, chỉ icon · lg+ (≥1024px): đầy đủ w-64 có chữ */}
       {/* Rail full-viewport (pointer-events-none) → căn giữa giống mx-auto, không lệch scrollbar */}
-      <div className="hidden lg:block fixed inset-0 z-40 pointer-events-none">
+      <div className="hidden md:block fixed inset-0 z-40 pointer-events-none">
         <div className="h-full max-w-[1320px] mx-auto relative">
-          <nav className="pointer-events-auto absolute left-0 top-0 h-screen w-64 flex flex-col border-r border-gray-100 dark:border-gray-800 bg-[#F9F9F9] dark:bg-gray-950 px-3 py-6 transition-colors duration-300">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 px-3 py-2 mb-8 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+          <nav className="pointer-events-auto absolute left-0 top-0 h-screen w-16 lg:w-64 flex flex-col border-r border-gray-100 dark:border-gray-800 bg-[#F9F9F9] dark:bg-gray-950 px-2 lg:px-3 py-6 transition-colors duration-300">
+        {/* Logo — md: chỉ icon "T" căn giữa · lg: icon + chữ "Threads" */}
+        <Link href="/" className="flex items-center justify-center lg:justify-start gap-2.5 px-0 lg:px-3 py-2 mb-8 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
           <div className="w-8 h-8 bg-black dark:bg-white rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-white dark:text-black font-bold text-base">T</span>
           </div>
-          <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-gray-100">Threads</span>
+          <span className="hidden lg:inline font-bold text-xl tracking-tight text-gray-900 dark:text-gray-100">Threads</span>
         </Link>
 
         {/* Nav links */}
@@ -152,10 +155,11 @@ export default function Navbar() {
                 <button
                   key="compose"
                   onClick={openCreatePost}
-                  className="flex items-center gap-3.5 px-3 py-2.5 rounded-2xl transition-colors font-medium text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
+                  title={label}
+                  className="flex items-center justify-center lg:justify-start gap-3.5 px-3 py-2.5 rounded-2xl transition-colors font-medium text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
                 >
                   <Icon active={false} />
-                  {label}
+                  <span className="hidden lg:inline">{label}</span>
                 </button>
               );
             }
@@ -164,7 +168,8 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3.5 px-3 py-2.5 rounded-2xl transition-colors font-medium text-sm ${
+                title={label}
+                className={`flex items-center justify-center lg:justify-start gap-3.5 px-3 py-2.5 rounded-2xl transition-colors font-medium text-sm ${
                   isActive
                     ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white font-semibold"
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
@@ -182,7 +187,7 @@ export default function Navbar() {
                 ) : (
                   <Icon active={isActive} />
                 )}
-                {label}
+                <span className="hidden lg:inline">{label}</span>
               </Link>
             );
           })}
@@ -193,15 +198,16 @@ export default function Navbar() {
         {/* User section dưới cùng */}
         {currentUser && (
           <div className="relative">
-            {/* Theme toggle */}
-            <div className="flex items-center justify-between px-3 py-2 mb-1">
-              <span className="text-xs text-gray-400 dark:text-gray-500">{t("nav.theme")}</span>
+            {/* Theme toggle — md: chỉ nút căn giữa · lg: có nhãn */}
+            <div className="flex items-center justify-center lg:justify-between px-0 lg:px-3 py-2 mb-1">
+              <span className="hidden lg:inline text-xs text-gray-400 dark:text-gray-500">{t("nav.theme")}</span>
               <ThemeToggle />
             </div>
 
             <button
               onClick={() => setShowUserMenu((v) => !v)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+              title={currentUser.username}
+              className="w-full flex items-center justify-center lg:justify-start gap-3 px-3 py-2.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
             >
               <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                 {currentUser.avatar ? (
@@ -212,7 +218,7 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              <div className="flex-1 text-left min-w-0">
+              <div className="hidden lg:block flex-1 text-left min-w-0">
                 <p className="text-sm font-semibold truncate text-gray-900 dark:text-gray-100">{currentUser.username}</p>
                 <p className="text-xs text-gray-400 truncate">{currentUser.displayName}</p>
               </div>
@@ -221,7 +227,8 @@ export default function Navbar() {
             {showUserMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
-                <div className="absolute bottom-14 left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-20">
+                {/* md: flyout w-56 (sidebar thu gọn quá hẹp) · lg: trải đầy bề ngang sidebar */}
+                <div className="absolute bottom-14 left-0 w-56 lg:w-auto lg:right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-20">
                   <Link
                     href={`/profile/${currentUser?.username}`}
                     className="flex items-center px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
@@ -255,8 +262,8 @@ export default function Navbar() {
       {/* Global modal — listens for 'open-create-post' event, works on any page */}
       <CreatePost currentUser={currentUser} modal={true} />
 
-      {/* ===== MOBILE: navbar cố định phía dưới ===== */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#F9F9F9] dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 z-40 safe-area-pb transition-colors duration-200">
+      {/* ===== MOBILE (<md): navbar cố định phía dưới — md+ đã có sidebar nên ẩn ===== */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#F9F9F9] dark:bg-gray-950 border-t border-gray-100 dark:border-gray-800 z-40 safe-area-pb transition-colors duration-200">
         <div className="flex items-center justify-around max-w-md mx-auto px-2 py-2">
           {MOBILE_NAV_ITEMS.map(({ href, label, Icon, isCompose, isNotification }) => {
             if (isCompose) {

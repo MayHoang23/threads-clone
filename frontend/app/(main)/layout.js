@@ -55,8 +55,9 @@ export default function MainLayout({ children }) {
 
                     {/* Toàn bộ nội dung căn giữa, tối đa 1320px — không vùng trống 2 bên */}
                     <div className="max-w-[1320px] mx-auto flex">
-                        {/* Cột trái — placeholder giữ chỗ cho Navbar cố định (chỉ desktop) */}
-                        <div className="hidden lg:block shrink-0 w-64" />
+                        {/* Cột trái — placeholder giữ chỗ cho Navbar cố định.
+                            Tablet (md): sidebar thu gọn w-16 · Desktop (lg+): sidebar đầy đủ w-64 */}
+                        <div className="hidden md:block shrink-0 w-16 lg:w-64" />
 
                         {/* Cột giữa (main) — feed/content chính, giãn full giữa navbar và sidebar */}
                         <main className="flex-1 min-w-0 min-h-screen border-x border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 transition-colors duration-300">
@@ -71,8 +72,8 @@ export default function MainLayout({ children }) {
                         </aside>
                     </div>
 
-                    {/* Padding dưới cho mobile (tránh bị bottom navbar che) */}
-                    <div className="h-16 lg:hidden" />
+                    {/* Padding dưới cho mobile (tránh bị bottom navbar che) — chỉ <md vì md+ có sidebar */}
+                    <div className="h-16 md:hidden" />
                 </div>
             </SocketProvider>
         </LanguageProvider>

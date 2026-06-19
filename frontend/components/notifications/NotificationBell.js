@@ -201,10 +201,11 @@ export default function NotificationBell({ isActive }) {
 
   return (
     <div ref={dropdownRef} className="relative">
-      {/* Nút bell — có hình dạng như nav item */}
+      {/* Nút bell — có hình dạng như nav item (md: chỉ icon · lg: icon + chữ) */}
       <button
         onClick={handleToggle}
-        className={`flex items-center gap-3.5 px-3 py-2.5 rounded-2xl transition-colors w-full font-medium text-sm ${
+        title={t("nav.notifications")}
+        className={`flex items-center justify-center lg:justify-start gap-3.5 px-3 py-2.5 rounded-2xl transition-colors w-full font-medium text-sm ${
           isOpen || isActive
             ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white font-semibold"
             : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/60 hover:text-black dark:hover:text-white"
@@ -230,7 +231,7 @@ export default function NotificationBell({ isActive }) {
             </span>
           )}
         </div>
-        {t("nav.notifications")}
+        <span className="hidden lg:inline">{t("nav.notifications")}</span>
       </button>
 
       {/* ===== DROPDOWN ===== */}
@@ -262,7 +263,7 @@ export default function NotificationBell({ isActive }) {
           <div className="max-h-[420px] overflow-y-auto">
             {loading ? (
               <div className="py-8 flex justify-center">
-                <div className="w-5 h-5 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-gray-200 dark:border-gray-700 border-t-black dark:border-t-white rounded-full animate-spin" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-12 text-center px-4">
@@ -270,7 +271,7 @@ export default function NotificationBell({ isActive }) {
                 <p className="text-sm text-gray-400 dark:text-gray-500">{t("notifications.empty")}</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-gray-50 dark:divide-gray-800">
                 {notifications.map((n) => (
                   <NotificationItem
                     key={n.id}
@@ -326,7 +327,7 @@ export function MobileNotificationBell({ isActive }) {
       href="/notifications"
       onClick={handleClick}
       className={`relative flex flex-col items-center p-2 rounded-2xl transition-colors ${
-        isActive ? "text-black" : "text-gray-400"
+        isActive ? "text-black dark:text-white" : "text-gray-400 dark:text-gray-600"
       }`}
     >
       <div className="relative">

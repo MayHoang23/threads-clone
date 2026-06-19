@@ -27,6 +27,17 @@ body {
   }
 }
 
+/* Chống auto-zoom khi focus input trên mobile.
+   iOS Safari/Chrome tự zoom khi font-size của input < 16px (vd Tailwind text-sm/text-xs).
+   Ép tối thiểu 16px ở màn hình <768px. !important để thắng class Tailwind (specificity thấp hơn). */
+@media screen and (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* Dark mode scrollbar */
 .dark ::-webkit-scrollbar {
   width: 6px;

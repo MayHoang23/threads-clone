@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import { getCurrentUser, logout } from "@/lib/auth";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -113,6 +115,13 @@ function PasswordInput({ label, value, onChange, placeholder }) {
 export default function SettingsPage() {
   const { isDark } = useTheme();
   const { t, locale, changeLanguage } = useLanguage();
+  const router = useRouter();
+  const currentUser = getCurrentUser();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   const SECTIONS = [
     { key: "account", label: t("settings.account"), icon: "👤" },
@@ -203,38 +212,73 @@ export default function SettingsPage() {
     switch (activeSection) {
       case "account":
         return (
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.changePassword")}</h2>
-            <form onSubmit={handleChangePassword} className="space-y-4 max-w-sm">
-              <PasswordInput
-                label={t("settings.currentPassword")}
-                value={pwForm.currentPassword}
-                onChange={(v) => setPwForm((f) => ({ ...f, currentPassword: v }))}
-                placeholder={t("settings.currentPasswordPlaceholder")}
-              />
-              <PasswordInput
-                label={t("settings.newPassword")}
-                value={pwForm.newPassword}
-                onChange={(v) => setPwForm((f) => ({ ...f, newPassword: v }))}
-                placeholder={t("settings.newPasswordPlaceholder")}
-              />
-              <PasswordInput
-                label={t("settings.confirmPassword")}
-                value={pwForm.confirmPassword}
-                onChange={(v) => setPwForm((f) => ({ ...f, confirmPassword: v }))}
-                placeholder={t("settings.confirmPasswordPlaceholder")}
-              />
-              {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
-                <p className="text-xs text-red-500">{t("settings.passwordNoMatch")}</p>
-              )}
+          <div className="space-y-8">
+            {/* Thông tin tài khoản — hiện trên MỌI kích thước (mobile không có sidebar desktop) */}
+            <div className="w-full md:max-w-sm mt-2 flex items-center gap-3 p-5 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                {currentUser?.avatar ? (
+                  <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-violet-400 to-fuchsia-400 flex items-center justify-center text-white text-lg font-bold">
+                    {currentUser?.username?.[0]?.toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{currentUser?.username}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{currentUser?.email}</p>
+              </div>
+            </div>
+
+            {/* Đổi mật khẩu */}
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.changePassword")}</h2>
+              <form onSubmit={handleChangePassword} className="space-y-4 w-full md:max-w-sm">
+                <PasswordInput
+                  label={t("settings.currentPassword")}
+                  value={pwForm.currentPassword}
+                  onChange={(v) => setPwForm((f) => ({ ...f, currentPassword: v }))}
+                  placeholder={t("settings.currentPasswordPlaceholder")}
+                />
+                <PasswordInput
+                  label={t("settings.newPassword")}
+                  value={pwForm.newPassword}
+                  onChange={(v) => setPwForm((f) => ({ ...f, newPassword: v }))}
+                  placeholder={t("settings.newPasswordPlaceholder")}
+                />
+                <PasswordInput
+                  label={t("settings.confirmPassword")}
+                  value={pwForm.confirmPassword}
+                  onChange={(v) => setPwForm((f) => ({ ...f, confirmPassword: v }))}
+                  placeholder={t("settings.confirmPasswordPlaceholder")}
+                />
+                {pwForm.confirmPassword && pwForm.newPassword !== pwForm.confirmPassword && (
+                  <p className="text-xs text-red-500">{t("settings.passwordNoMatch")}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loadingSection === "account" || !pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword}
+                  className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                  {loadingSection === "account" ? t("settings.saving") : t("settings.changePasswordBtn")}
+                </button>
+              </form>
+            </div>
+
+            {/* Đăng xuất — lối thoát rõ ràng, đặc biệt cho mobile */}
+            <div className="w-full md:max-w-sm mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
               <button
-                type="submit"
-                disabled={loadingSection === "account" || !pwForm.currentPassword || !pwForm.newPassword || !pwForm.confirmPassword}
-                className="w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold rounded-xl hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 text-red-500 text-sm font-semibold hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors"
               >
-                {loadingSection === "account" ? t("settings.saving") : t("settings.changePasswordBtn")}
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                {t("nav.logout")}
               </button>
-            </form>
+            </div>
           </div>
         );
 
@@ -242,7 +286,7 @@ export default function SettingsPage() {
         return (
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.privacy")}</h2>
-            <div className="max-w-sm space-y-1 divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="w-full md:max-w-sm space-y-1 divide-y divide-gray-100 dark:divide-gray-800">
               <Toggle
                 checked={privacy.isPrivate}
                 onChange={async (v) => {
@@ -323,7 +367,7 @@ export default function SettingsPage() {
         return (
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.notificationsTab")}</h2>
-            <div className="max-w-sm divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="w-full md:max-w-sm divide-y divide-gray-100 dark:divide-gray-800">
               <Toggle
                 checked={notifs.likeNotif}
                 onChange={async (v) => {
@@ -384,7 +428,7 @@ export default function SettingsPage() {
         return (
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">{t("settings.appearance")}</h2>
-            <div className="max-w-sm">
+            <div className="w-full md:max-w-sm">
               <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/60 rounded-2xl">
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("settings.darkMode")}</p>
@@ -406,7 +450,7 @@ export default function SettingsPage() {
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{t("settings.selectLanguage")}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t("settings.languageDesc")}</p>
-            <div className="max-w-sm space-y-3">
+            <div className="w-full md:max-w-sm space-y-3">
               {LANGUAGES.map((lang) => (
                 <button
                   key={lang.code}
@@ -457,8 +501,8 @@ export default function SettingsPage() {
           ))}
         </nav>
 
-        {/* ===== TABS — mobile ===== */}
-        <div className="md:hidden w-full">
+        {/* ===== MOBILE: tabs + content xếp DỌC trong cùng 1 cột ===== */}
+        <div className="flex flex-col md:hidden w-full min-w-0">
           <div className="flex overflow-x-auto border-b border-gray-100 dark:border-gray-800 px-4 gap-1 no-scrollbar">
             {SECTIONS.map(({ key, label, icon }) => (
               <button
@@ -474,11 +518,16 @@ export default function SettingsPage() {
                 {label}
               </button>
             ))}
+            {/* Spacer cuối — để tab cuối ("Ngôn ngữ") không sát mép phải khi scroll hết */}
+            <div className="w-2 flex-shrink-0" aria-hidden="true" />
+          </div>
+          <div className="px-6 py-6 w-full max-w-full overflow-x-hidden flex flex-col items-center">
+            <div className="w-full max-w-md">{renderSection()}</div>
           </div>
         </div>
 
-        {/* ===== CONTENT ===== */}
-        <div className="flex-1 px-6 py-6 md:py-8 max-w-2xl">{renderSection()}</div>
+        {/* ===== CONTENT — desktop only ===== */}
+        <div className="hidden md:block flex-1 px-6 py-6 md:py-8 max-w-2xl">{renderSection()}</div>
       </div>
 
       {/* Toast notification */}
