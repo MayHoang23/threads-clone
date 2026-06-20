@@ -7,6 +7,7 @@ import CaptionGenerator from "@/components/ai/CaptionGenerator";
 import HashtagSuggester from "@/components/ai/HashtagSuggester";
 import MentionTextarea from "@/components/ui/MentionTextarea";
 import LinkPreviewCard, { LinkPreviewSkeleton } from "./LinkPreviewCard";
+import GifPicker from "@/components/ui/GifPicker";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // Bắt URL đầu tiên trong nội dung
@@ -55,6 +56,8 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
   const [showMedia, setShowMedia] = useState(false);
   const [showCaption, setShowCaption] = useState(false);
   const [showHashtag, setShowHashtag] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [selectedGif, setSelectedGif] = useState(null); // URL GIF Tenor (media type GIF)
   const [uploadedMedia, setUploadedMedia] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [moderationWarning, setModerationWarning] = useState("");
@@ -168,6 +171,8 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
     setShowModal(false);
     setContent("");
     setUploadedMedia([]);
+    setSelectedGif(null);
+    setShowGifPicker(false);
     setShowMedia(false);
     setShowCaption(false);
     setShowHashtag(false);
@@ -181,7 +186,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
 
   const handleSubmit = async () => {
     const hasContent = content.trim();
-    const hasMedia = uploadedMedia.length > 0;
+    const hasMedia = uploadedMedia.length > 0 || selectedGif;
     if ((!hasContent && !hasMedia) || loading || isUploading || moderationWarning) return;
 
     setLoading(true);
@@ -190,7 +195,11 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
       const body = {
         content: content.trim() || null,
         privacy,
-        mediaUrls: uploadedMedia.map(({ url, type }) => ({ url, type })),
+        mediaUrls: [
+          ...uploadedMedia.map(({ url, type }) => ({ url, type })),
+          // GIF Tenor: URL ngoài (không upload Cloudinary), đánh dấu type GIF
+          ...(selectedGif ? [{ url: selectedGif, type: "GIF" }] : []),
+        ],
       };
       // Kèm link preview nếu có
       if (linkPreview) {
@@ -209,6 +218,8 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
       if (data?.success) {
         setContent("");
         setUploadedMedia([]);
+        setSelectedGif(null);
+        setShowGifPicker(false);
         setShowMedia(false);
         setShowCaption(false);
         setShowHashtag(false);
@@ -242,7 +253,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
   };
 
   const charsLeft = 500 - content.length;
-  const hasMedia = uploadedMedia.length > 0 || isUploading;
+  const hasMedia = uploadedMedia.length > 0 || isUploading || !!selectedGif;
   const canPost =
     (content.trim() || hasMedia) &&
     charsLeft >= 0 &&
@@ -251,7 +262,7 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
     !moderationWarning;
 
   // Always expanded inside modal
-  const isExpanded = focused || showMedia || showCaption || showHashtag || showModal;
+  const isExpanded = focused || showMedia || showCaption || showHashtag || showGifPicker || !!selectedGif || showModal;
 
   const formInner = (
     <div className="flex gap-3">
@@ -322,6 +333,26 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
           />
         )}
 
+        {/* Preview GIF đã chọn (Tenor) — render như ảnh, có badge GIF + nút bỏ */}
+        {selectedGif && (
+          <div className="mt-2 relative inline-block rounded-2xl overflow-hidden">
+            <img src={selectedGif} alt="GIF" className="max-h-60 max-w-full object-cover" />
+            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-bold rounded">
+              GIF
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedGif(null)}
+              className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center transition-colors"
+              aria-label="Bỏ GIF"
+            >
+              <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         {isExpanded && (
           <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-1 -ml-1">
@@ -367,6 +398,29 @@ export default function CreatePost({ currentUser, onPostCreated, modal = false }
               >
                 # Tag
               </button>
+
+              {/* Nút GIF + popup GifPicker (mở lên trên để tránh tràn màn hình) */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowGifPicker((v) => !v)}
+                  title="Thêm GIF"
+                  className={`px-2 py-1 rounded-full text-xs font-bold border transition-colors ${
+                    showGifPicker || selectedGif
+                      ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
+                      : "text-gray-400 border-gray-300 dark:border-gray-700 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  GIF
+                </button>
+                {showGifPicker && (
+                  <GifPicker
+                    className="left-0 bottom-full mb-2"
+                    onSelect={(url) => setSelectedGif(url)}
+                    onClose={() => setShowGifPicker(false)}
+                  />
+                )}
+              </div>
 
               {isUploading && (
                 <span className="text-xs text-gray-400 ml-1 flex items-center gap-1">

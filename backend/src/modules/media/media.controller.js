@@ -78,4 +78,75 @@ const deleteMedia = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadImage, uploadMultiple, uploadVideo, deleteMedia };
+// ========================
+// GIF SEARCH — proxy GIPHY API (giấu API key khỏi frontend)
+// ========================
+// Cache kết quả trending (query rỗng) 10 phút để giảm số lần gọi GIPHY.
+const TRENDING_TTL = 10 * 60 * 1000; // 10 phút
+const trendingCache = new Map(); // key: limit → { data, expiresAt }
+
+// Chuẩn hóa 1 kết quả GIPHY → { id, url, previewUrl, description }
+const mapGiphyResult = (g) => {
+  const imgs = g.images || {};
+  const url = imgs.original?.url || imgs.fixed_height?.url || null; // GIF full để hiển thị/lưu
+  // preview nhẹ cho lưới: ưu tiên fixed_height_small, fallback preview_gif rồi original
+  const previewUrl =
+    imgs.fixed_height_small?.url || imgs.preview_gif?.url || url || null;
+  return { id: g.id, url, previewUrl, description: g.title || "" };
+};
+
+const gifSearch = async (req, res) => {
+  const q = (req.query.q || "").trim();
+  // limit: clamp 1..50, mặc định 20
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
+
+  const apiKey = process.env.GIPHY_API_KEY;
+  if (!apiKey) {
+    // Chưa cấu hình key → trả mảng rỗng, không làm vỡ UI
+    return res.json({ success: false, data: [], message: "Chưa cấu hình GIPHY_API_KEY" });
+  }
+
+  const isTrending = q === "";
+
+  // Hit cache trending nếu còn hạn
+  if (isTrending) {
+    const cached = trendingCache.get(limit);
+    if (cached && cached.expiresAt > Date.now()) {
+      return res.json({ success: true, data: cached.data });
+    }
+  }
+
+  // Timeout 5s bằng AbortController
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const base = isTrending
+      ? "https://api.giphy.com/v1/gifs/trending"
+      : "https://api.giphy.com/v1/gifs/search";
+    const params = new URLSearchParams({
+      api_key: apiKey,
+      limit: String(limit),
+      ...(isTrending ? {} : { q, lang: "vi" }),
+    });
+
+    const resp = await fetch(`${base}?${params}`, { signal: controller.signal });
+    if (!resp.ok) throw new Error(`GIPHY trả về ${resp.status}`);
+
+    const json = await resp.json();
+    const data = (json.data || []).map(mapGiphyResult).filter((g) => g.url);
+
+    if (isTrending) {
+      trendingCache.set(limit, { data, expiresAt: Date.now() + TRENDING_TTL });
+    }
+
+    res.json({ success: true, data });
+  } catch (err) {
+    // Lỗi (timeout/mạng/GIPHY) → trả mảng rỗng kèm success: false
+    res.json({ success: false, data: [], message: "Không tải được GIF, vui lòng thử lại" });
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+module.exports = { uploadImage, uploadMultiple, uploadVideo, deleteMedia, gifSearch };

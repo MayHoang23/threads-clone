@@ -313,6 +313,7 @@ enum Privacy {
 enum MediaType {
   IMAGE
   VIDEO
+  GIF
 }
 
 enum FriendshipStatus {

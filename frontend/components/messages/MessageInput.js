@@ -7,6 +7,7 @@ import { getSocket } from "@/lib/socket";
 import { getAccessToken } from "@/lib/auth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import GifPicker from "@/components/ui/GifPicker";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -36,6 +37,7 @@ export default function MessageInput({
     const [content, setContent] = useState("");
     const [sending, setSending] = useState(false);
     const [showEmoji, setShowEmoji] = useState(false);
+    const [showGifPicker, setShowGifPicker] = useState(false);
 
     // Media đính kèm (ảnh hoặc video)
     const [attachPreview, setAttachPreview] = useState(null); // blob: (đang upload) hoặc URL cloud
@@ -289,6 +291,36 @@ export default function MessageInput({
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+        }
+    };
+
+    // ========================
+    // GỬI GIF (gửi ngay khi chọn, không cần soạn — giống gửi ảnh)
+    // ========================
+    const handleSendGif = async (gifUrl) => {
+        setShowGifPicker(false);
+        if (sending || disabled || !gifUrl) return;
+
+        // Dừng typing indicator
+        clearTimeout(stopTypingTimerRef.current);
+        const socket = getSocket();
+        if (socket && isTypingRef.current) {
+            socket.emit("stop_typing", { conversationId });
+            isTypingRef.current = false;
+        }
+
+        setSending(true);
+        setSendError("");
+        try {
+            // GIF Tenor là URL ngoài → gửi như media, mediaType = "gif"
+            await onSend("", gifUrl, "gif");
+        } catch (err) {
+            setSendError(
+                err?.status ? err.message || t("messages.failed") : t("messages.failed")
+            );
+        } finally {
+            setSending(false);
+            textareaRef.current?.focus();
         }
     };
 
@@ -596,6 +628,30 @@ export default function MessageInput({
                         <polyline points="21 15 16 10 5 21" />
                     </svg>
                 </button>
+
+                {/* Nút GIF + popup (gửi ngay khi chọn) */}
+                <div className="relative flex-shrink-0">
+                    <button
+                        type="button"
+                        onClick={() => setShowGifPicker((v) => !v)}
+                        disabled={disabled}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-colors disabled:opacity-40 ${
+                            showGifPicker
+                                ? "bg-gray-100 dark:bg-gray-800 text-black dark:text-white"
+                                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                        title="Gửi GIF"
+                    >
+                        GIF
+                    </button>
+                    {showGifPicker && (
+                        <GifPicker
+                            className="left-0 bottom-14"
+                            onSelect={handleSendGif}
+                            onClose={() => setShowGifPicker(false)}
+                        />
+                    )}
+                </div>
 
                 {/* Khung nhập */}
                 <div className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-2.5 flex items-end gap-2 min-h-[40px]">

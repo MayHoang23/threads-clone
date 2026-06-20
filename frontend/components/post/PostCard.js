@@ -402,6 +402,12 @@ export default function PostCard({
                                                             loading="lazy"
                                                             decoding="async"
                                                         />
+                                                        {/* Badge GIF — phân biệt với ảnh thường (GIF tự animate) */}
+                                                        {m.type === "GIF" && (
+                                                            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/70 text-white text-[10px] font-bold rounded">
+                                                                GIF
+                                                            </span>
+                                                        )}
                                                         {/* Overlay "+N" trên ảnh thứ 4 nếu có nhiều hơn 4 */}
                                                         {idx === 3 &&
                                                             post.media.length >
