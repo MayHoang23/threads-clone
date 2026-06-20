@@ -77,6 +77,14 @@ const login = async ({ email, password }) => {
   // Kiểm tra tài khoản bị ban trước khi làm gì thêm
   if (user.isBanned) throw new AppError("Tài khoản của bạn đã bị khóa", 403);
 
+  // Tài khoản tạo qua Google chưa từng đặt mật khẩu → không thể login bằng password
+  if (!user.password) {
+    throw new AppError(
+      "Tài khoản này đăng nhập bằng Google, vui lòng dùng nút Đăng nhập Google",
+      400
+    );
+  }
+
   // So sánh password người dùng nhập với password đã hash trong DB
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) throw new AppError("Email hoặc mật khẩu không đúng", 401);
@@ -84,6 +92,86 @@ const login = async ({ email, password }) => {
   // Chưa xác thực email → chặn đăng nhập (bỏ qua khi bật SKIP_EMAIL_VERIFY)
   if (!user.emailVerified && process.env.SKIP_EMAIL_VERIFY !== "true") {
     throw new AppError("Vui lòng xác thực email trước khi đăng nhập", 403);
+  }
+
+  const accessToken = generateAccessToken(user.id, user.role);
+  const refreshToken = generateRefreshToken(user.id);
+
+  // Loại bỏ password khỏi object trả về
+  const { password: _removed, ...userWithoutPassword } = user;
+
+  return { user: userWithoutPassword, accessToken, refreshToken };
+};
+
+// ========================
+// ĐĂNG NHẬP BẰNG GOOGLE
+// ========================
+// Sinh username duy nhất từ email: lấy phần trước @, bỏ ký tự không hợp lệ,
+// đảm bảo tối thiểu 3 ký tự, thêm số đuôi nếu trùng (vd "an", "an1", "an2"...)
+const generateUniqueUsername = async (email) => {
+  let base = email
+    .split("@")[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9._]/g, ""); // giữ chữ thường, số, dấu chấm, gạch dưới
+  if (base.length < 3) base = `user${base}`; // đảm bảo đủ dài (username >= 3 ký tự)
+
+  let username = base;
+  let suffix = 0;
+  // Lặp tới khi tìm được username chưa ai dùng
+  while (await prisma.user.findUnique({ where: { username } })) {
+    suffix += 1;
+    username = `${base}${suffix}`;
+  }
+  return username;
+};
+
+const googleLogin = async ({ googleAccessToken }) => {
+  if (!googleAccessToken) throw new AppError("Thiếu Google access token", 400);
+
+  // Frontend dùng useGoogleLogin (implicit flow) → trả về access_token, KHÔNG phải ID token.
+  // Lấy hồ sơ từ Google bằng access token: chính việc gọi được userinfo đã xác thực token
+  // (token sai/hết hạn → Google trả 401, ta báo lỗi). Không cần client secret.
+  let payload;
+  try {
+    const resp = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${googleAccessToken}` },
+    });
+    if (!resp.ok) throw new Error(`userinfo trả về ${resp.status}`);
+    payload = await resp.json();
+  } catch (err) {
+    throw new AppError("Google access token không hợp lệ", 401);
+  }
+
+  const { email, name, picture } = payload || {};
+  if (!email) throw new AppError("Không lấy được email từ tài khoản Google", 400);
+
+  // Tìm user theo email
+  let user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    // Email đã tồn tại (có thể đăng ký bằng password trước đó) → đăng nhập, liên kết ngầm
+    if (user.isBanned) throw new AppError("Tài khoản của bạn đã bị khóa", 403);
+
+    // Google đã xác minh email → đánh dấu emailVerified nếu chưa
+    if (!user.emailVerified) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
+    }
+  } else {
+    // Email chưa tồn tại → tạo tài khoản mới (không có mật khẩu)
+    const username = await generateUniqueUsername(email);
+    user = await prisma.user.create({
+      data: {
+        email,
+        username,
+        displayName: name || username,
+        avatar: picture || null,
+        password: null, // user OAuth: không cho login bằng password
+        emailVerified: true, // Google đã xác minh email
+      },
+    });
   }
 
   const accessToken = generateAccessToken(user.id, user.role);
@@ -176,4 +264,4 @@ const resetPassword = async (token, newPassword) => {
   return { message: "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập ngay." };
 };
 
-module.exports = { register, login, refreshToken, verifyEmail, forgotPassword, resetPassword };
+module.exports = { register, login, googleLogin, refreshToken, verifyEmail, forgotPassword, resetPassword };

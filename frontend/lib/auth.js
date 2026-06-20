@@ -1,6 +1,21 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 // ========================
+// LƯU TOKEN SAU KHI ĐĂNG NHẬP
+// ========================
+// Dùng chung cho mọi flow đăng nhập (email/password lẫn Google) — nhận data.data
+// từ response { user, accessToken, refreshToken } và lưu vào localStorage + cookie.
+function saveToken({ accessToken, refreshToken, user }) {
+  localStorage.setItem("accessToken", accessToken);
+  localStorage.setItem("refreshToken", refreshToken);
+  localStorage.setItem("user", JSON.stringify(user));
+
+  // Set cookie để Next.js middleware đọc được (middleware không dùng localStorage được)
+  // max-age=900 = 15 phút, khớp với access token expiry
+  document.cookie = `accessToken=${accessToken}; path=/; max-age=900`;
+}
+
+// ========================
 // ĐĂNG NHẬP
 // ========================
 export async function login(email, password) {
@@ -12,14 +27,26 @@ export async function login(email, password) {
   const data = await res.json();
 
   if (data.success) {
-    // Lưu tokens vào localStorage để dùng trong các request API sau này
-    localStorage.setItem("accessToken", data.data.accessToken);
-    localStorage.setItem("refreshToken", data.data.refreshToken);
-    localStorage.setItem("user", JSON.stringify(data.data.user));
+    saveToken(data.data);
+  }
 
-    // Set cookie để Next.js middleware đọc được (middleware không dùng localStorage được)
-    // max-age=900 = 15 phút, khớp với access token expiry
-    document.cookie = `accessToken=${data.data.accessToken}; path=/; max-age=900`;
+  return data;
+}
+
+// ========================
+// ĐĂNG NHẬP BẰNG GOOGLE
+// ========================
+// accessToken = Google OAuth access token lấy từ hook useGoogleLogin onSuccess
+export async function googleLogin(accessToken) {
+  const res = await fetch(`${BASE_URL}/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ access_token: accessToken }),
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    saveToken(data.data);
   }
 
   return data;

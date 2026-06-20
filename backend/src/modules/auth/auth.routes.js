@@ -13,6 +13,9 @@ router.post("/register", registerLimiter, authController.register);
 // POST /api/v1/auth/login — Đăng nhập
 router.post("/login", loginLimiter, authController.login);
 
+// POST /api/v1/auth/google — Đăng nhập bằng Google (verify ID token, tạo/link tài khoản)
+router.post("/google", loginLimiter, authController.googleAuth);
+
 // POST /api/v1/auth/refresh-token — Lấy access token mới bằng refresh token
 router.post("/refresh-token", authController.refreshToken);
 

@@ -78,7 +78,14 @@
       "Bash(node -c src/index.js)",
       "Bash(node -c src/modules/auth/auth.routes.js)",
       "Bash(node -c src/middlewares/authRateLimit.middleware.js)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(node -e \"const p=require\\('./backend/package.json'\\); console.log\\('google-auth-library:', p.dependencies['google-auth-library']||'NOT INSTALLED'\\)\")",
+      "Bash(node -e \"const p=require\\('./frontend/package.json'\\); console.log\\('@react-oauth/google:', p.dependencies['@react-oauth/google']||'NOT INSTALLED'\\)\")",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Select-Object ProcessId, @{N='Cmd';E={$_.CommandLine}} | Format-Table -AutoSize -Wrap)",
+      "PowerShell(foreach \\($id in 17660,11204,9524\\) { try { Stop-Process -Id $id -Force -ErrorAction Stop; \"Stopped ${id}\" } catch { \"Could not stop ${id}\" } })",
+      "Bash(node -e \"require\\('./src/modules/auth/auth.service.js'\\); require\\('./src/modules/auth/auth.controller.js'\\); require\\('./src/modules/auth/auth.routes.js'\\); require\\('./src/config/google.js'\\); console.log\\('backend auth modules load OK'\\)\")",
+      "Bash(node -e \"const s=require\\('./package.json'\\).scripts; console.log\\(JSON.stringify\\(s,null,2\\)\\)\")",
+      "Bash(node --env-file=.env _test_google.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\PC\\.claude\\projects\\c--Users-PC-OneDrive-Desktop-threads-clone\\memory",

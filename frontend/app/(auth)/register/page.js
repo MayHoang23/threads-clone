@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { register } from "@/lib/auth";
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -205,8 +206,11 @@ export default function RegisterPage() {
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
+      {/* Đăng ký / đăng nhập bằng Google */}
+      <GoogleAuthButton />
+
       {/* Link đăng nhập */}
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-sm text-gray-500 mt-6">
         Đã có tài khoản?{" "}
         <Link
           href="/login"

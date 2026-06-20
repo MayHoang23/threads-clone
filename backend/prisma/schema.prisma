@@ -19,7 +19,7 @@ model User {
   id          String   @id @default(cuid())
   username    String   @unique
   email       String   @unique
-  password    String
+  password    String?  // Nullable: tài khoản đăng nhập bằng Google không có mật khẩu
   displayName String?
   avatar      String?
   coverImage  String?

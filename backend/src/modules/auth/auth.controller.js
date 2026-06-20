@@ -57,6 +57,33 @@ const login = async (req, res, next) => {
 };
 
 // ========================
+// ĐĂNG NHẬP BẰNG GOOGLE
+// ========================
+const googleAuth = async (req, res, next) => {
+  try {
+    const { access_token: accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        message: "Thiếu Google access token",
+      });
+    }
+
+    const result = await authService.googleLogin({ googleAccessToken: accessToken });
+
+    res.json({
+      success: true,
+      data: result,
+      message: "Đăng nhập thành công",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ========================
 // LÀM MỚI ACCESS TOKEN
 // ========================
 const refreshToken = async (req, res, next) => {
@@ -146,4 +173,4 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, refreshToken, logout, verifyEmail, forgotPassword, resetPassword };
+module.exports = { register, login, googleAuth, refreshToken, logout, verifyEmail, forgotPassword, resetPassword };

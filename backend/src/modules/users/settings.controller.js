@@ -56,6 +56,14 @@ const changePassword = async (req, res, next) => {
       select: { password: true },
     });
 
+    // Tài khoản đăng nhập bằng Google chưa có mật khẩu → không có gì để so sánh
+    if (!user.password) {
+      throw new AppError(
+        "Tài khoản này đăng nhập bằng Google nên chưa có mật khẩu để đổi",
+        400
+      );
+    }
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) throw new AppError("Mật khẩu hiện tại không đúng", 400);
 

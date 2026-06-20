@@ -4,94 +4,112 @@
 
 /* Light mode mặc định */
 :root {
-  --background: #F9F9F9;
-  --foreground: #171717;
+    --background: #f9f9f9;
+    --foreground: #171717;
 }
 
 /* Dark mode qua class .dark — được ThemeContext kiểm soát */
 /* Không dùng prefers-color-scheme nữa để tránh xung đột với toggle thủ công */
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+    --background: #0a0a0a;
+    --foreground: #ededed;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+    color: var(--foreground);
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+    .text-balance {
+        text-wrap: balance;
+    }
 }
 
 /* Chống auto-zoom khi focus input trên mobile.
    iOS Safari/Chrome tự zoom khi font-size của input < 16px (vd Tailwind text-sm/text-xs).
    Ép tối thiểu 16px ở màn hình <768px. !important để thắng class Tailwind (specificity thấp hơn). */
 @media screen and (max-width: 767px) {
-  input,
-  textarea,
-  select {
-    font-size: 16px !important;
-  }
+    input,
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
 }
 
 /* Dark mode scrollbar */
 .dark ::-webkit-scrollbar {
-  width: 6px;
+    width: 6px;
 }
 .dark ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 3px;
+    background: #374151;
+    border-radius: 3px;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #4B5563;
+    background: #4b5563;
 }
 
 /* Ẩn scrollbar khi không hover */
 .dark .scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
+    width: 4px;
 }
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: transparent;
+    background: transparent;
 }
 .dark .scrollbar-thin:hover::-webkit-scrollbar-thumb {
-  background: #374151;
+    background: #374151;
 }
-
 
 /* Dark mode transition */
-*, *::before, *::after {
-  transition: background-color 0.3s ease, border-color 0.3s ease !important;
+*,
+*::before,
+*::after {
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease !important;
 }
 
-img, video, svg, canvas,
-.animate-spin, .animate-bounce, .animate-pulse {
-  transition: none !important;
+img,
+video,
+svg,
+canvas,
+.animate-spin,
+.animate-bounce,
+.animate-pulse {
+    transition: none !important;
 }
 
 /* Scrollbar đồng nhất sáng/tối */
 ::-webkit-scrollbar {
-  width: 6px;
+    width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
+    background: #d1d5db;
+    border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+    background: #9ca3af;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #374151;
+    background: #374151;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+    background: #4b5563;
+}
+
+/* Ép iframe nút Google Login phủ kín toàn bộ vùng cha để click luôn ăn */
+.google-login-wrapper iframe {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    border: none !important;
 }
