@@ -184,6 +184,17 @@ const getReports = async ({ page = 1, limit = 20, status = "" }) => {
       include: {
         // Quan hệ trong model Report tên là `user` (người báo cáo), không phải `reporter`
         user: { select: { id: true, username: true, avatar: true } },
+        // Bài viết bị báo cáo (nullable — report có thể không gắn với post nào).
+        // Kèm nội dung + media + tác giả để admin có đủ ngữ cảnh quyết định Vi phạm/Bỏ qua.
+        post: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            author: { select: { id: true, username: true, avatar: true, displayName: true } },
+            media: { select: { url: true, type: true } },
+          },
+        },
       },
     }),
     prisma.report.count({ where }),

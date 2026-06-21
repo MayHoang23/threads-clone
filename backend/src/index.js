@@ -38,22 +38,24 @@ app.use(
 // ========================
 // MIDDLEWARE CƠ BẢN
 // ========================
+// Danh sách origin được phép:
+// - Production: lấy domain cụ thể từ ENV (FRONTEND_URL = web chính, ADMIN_URL = admin panel).
+//   Mỗi biến hỗ trợ nhiều domain, cách nhau bằng dấu phẩy.
+// - Dev: giữ localhost:3000 (frontend) và localhost:3001 (admin).
+// KHÔNG dùng regex /\.vercel\.app$/ nữa vì nó match mọi subdomain vercel.app (quá lỏng).
+const allowedOrigins = [
+  ...(process.env.FRONTEND_URL || "").split(","),
+  ...(process.env.ADMIN_URL || "").split(","),
+  "http://localhost:3000",
+  "http://localhost:3001",
+].map((o) => o.trim()).filter(Boolean);
+
 app.use(cors({
   origin: function(origin, callback) {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      "http://localhost:3000",
-      "http://localhost:3001",
-      /\.vercel\.app$/,
-    ].filter(Boolean);
-
+    // Không có origin (request server-to-server, curl, health check) → cho qua
     if (!origin) return callback(null, true);
 
-    const isAllowed = allowedOrigins.some(allowed =>
-      allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
-    );
-
-    if (isAllowed) callback(null, true);
+    if (allowedOrigins.includes(origin)) callback(null, true);
     else callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
