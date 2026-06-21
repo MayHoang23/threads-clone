@@ -5,12 +5,17 @@ const { getTrendingHashtags } = require("../posts/post.service");
 
 // Dashboard — thống kê tổng quan + biểu đồ 7 ngày + top hashtag
 const getDashboardStats = async () => {
-  const now = new Date();
-  const today = new Date(now.setHours(0, 0, 0, 0));
+  // Tính mốc ngày theo giờ VN (UTC+7) — KHÔNG phụ thuộc timezone server (Render chạy UTC).
+  // Nửa đêm VN được biểu diễn dưới dạng instant UTC để query Prisma đúng ranh giới ngày.
+  const VN_OFFSET = 7 * 60 * 60 * 1000;
+  const nowVN = new Date(Date.now() + VN_OFFSET); // các trường UTC của nó = giờ "treo tường" VN
+  const todayStart = new Date(
+    Date.UTC(nowVN.getUTCFullYear(), nowVN.getUTCMonth(), nowVN.getUTCDate()) - VN_OFFSET
+  );
 
   const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - (6 - i));
+    const d = new Date(todayStart);
+    d.setUTCDate(d.getUTCDate() - (6 - i));
     return d;
   });
 
@@ -19,28 +24,32 @@ const getDashboardStats = async () => {
     prisma.user.count(),
     prisma.post.count(),
     prisma.report.count({ where: { status: "PENDING" } }),
-    prisma.user.count({ where: { createdAt: { gte: today } } }),
+    prisma.user.count({ where: { createdAt: { gte: todayStart } } }),
 
     Promise.all(last7Days.map(async (day) => {
       const nextDay = new Date(day);
-      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
       const count = await prisma.post.count({
         where: { createdAt: { gte: day, lt: nextDay } },
       });
       return {
-        date: day.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+        date: day.toLocaleDateString("vi-VN", {
+          day: "2-digit", month: "2-digit", timeZone: "Asia/Ho_Chi_Minh",
+        }),
         count,
       };
     })),
 
     Promise.all(last7Days.map(async (day) => {
       const nextDay = new Date(day);
-      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
       const count = await prisma.user.count({
         where: { createdAt: { gte: day, lt: nextDay } },
       });
       return {
-        date: day.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+        date: day.toLocaleDateString("vi-VN", {
+          day: "2-digit", month: "2-digit", timeZone: "Asia/Ho_Chi_Minh",
+        }),
         count,
       };
     })),

@@ -1,5 +1,11 @@
 const adminService = require("./admin.service");
 
+// Chuẩn hoá tham số phân trang từ query: chặn NaN/âm và giới hạn limit tối đa 100
+const parsePagination = (query) => ({
+  page: Math.max(1, parseInt(query.page) || 1),
+  limit: Math.min(100, Math.max(1, parseInt(query.limit) || 20)),
+});
+
 const getDashboardStats = async (req, res, next) => {
   try {
     const data = await adminService.getDashboardStats();
@@ -9,12 +15,9 @@ const getDashboardStats = async (req, res, next) => {
 
 const getUsers = async (req, res, next) => {
   try {
-    const { page, limit, search, role, banned } = req.query;
-    const data = await adminService.getUsers({
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
-      search, role, banned,
-    });
+    const { search, role, banned } = req.query;
+    const { page, limit } = parsePagination(req.query);
+    const data = await adminService.getUsers({ page, limit, search, role, banned });
     return res.json({ success: true, data, message: "Lấy danh sách users thành công" });
   } catch (err) { next(err); }
 };
@@ -42,12 +45,9 @@ const deleteUser = async (req, res, next) => {
 
 const getPosts = async (req, res, next) => {
   try {
-    const { page, limit, search, hidden } = req.query;
-    const data = await adminService.getPosts({
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
-      search, hidden,
-    });
+    const { search, hidden } = req.query;
+    const { page, limit } = parsePagination(req.query);
+    const data = await adminService.getPosts({ page, limit, search, hidden });
     return res.json({ success: true, data, message: "Lấy danh sách posts thành công" });
   } catch (err) { next(err); }
 };
@@ -68,12 +68,9 @@ const restorePost = async (req, res, next) => {
 
 const getReports = async (req, res, next) => {
   try {
-    const { page, limit, status } = req.query;
-    const data = await adminService.getReports({
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
-      status,
-    });
+    const { status } = req.query;
+    const { page, limit } = parsePagination(req.query);
+    const data = await adminService.getReports({ page, limit, status });
     return res.json({ success: true, data, message: "Lấy danh sách reports thành công" });
   } catch (err) { next(err); }
 };
@@ -88,12 +85,9 @@ const resolveReport = async (req, res, next) => {
 
 const getHashtags = async (req, res, next) => {
   try {
-    const { page, limit, search } = req.query;
-    const data = await adminService.getHashtags({
-      page: page ? parseInt(page) : 1,
-      limit: limit ? parseInt(limit) : 20,
-      search,
-    });
+    const { search } = req.query;
+    const { page, limit } = parsePagination(req.query);
+    const data = await adminService.getHashtags({ page, limit, search });
     return res.json({ success: true, data, message: "Lấy danh sách hashtag thành công" });
   } catch (err) { next(err); }
 };
