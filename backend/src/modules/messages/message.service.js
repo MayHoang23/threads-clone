@@ -10,6 +10,52 @@ const USER_SELECT = {
   isVerified: true,
 };
 
+// Thông tin tin nhắn gốc cần kèm khi 1 tin là reply — chỉ lấy đủ để hiển thị khối quote
+const REPLY_SELECT = {
+  id: true,
+  content: true,
+  senderId: true,
+  mediaUrl: true,
+  mediaType: true,
+  isRecalled: true,
+};
+
+// Thời gian cho phép thu hồi tin nhắn (5 phút kể từ khi gửi)
+const RECALL_WINDOW_MS = 5 * 60 * 1000;
+
+// Độ dài tối đa của nội dung tin gốc trong khối quote (rút gọn cho gọn payload)
+const REPLY_PREVIEW_LEN = 120;
+
+// ========================
+// CHUẨN HÓA TIN NHẮN TRƯỚC KHI TRẢ VỀ CLIENT
+// ========================
+// - Tin đã thu hồi: xóa hẳn nội dung/media để KHÔNG lộ nội dung gốc ra client
+// - replyTo: rút gọn nội dung; nếu tin gốc đã thu hồi thì cũng ẩn nội dung
+const sanitizeMessage = (msg) => {
+  if (!msg) return msg;
+  const out = { ...msg };
+
+  if (out.isRecalled) {
+    out.content = "";
+    out.mediaUrl = null;
+    out.mediaType = null;
+  }
+
+  if (out.replyTo) {
+    const r = { ...out.replyTo };
+    if (r.isRecalled) {
+      r.content = "";
+      r.mediaUrl = null;
+      r.mediaType = null;
+    } else if (r.content && r.content.length > REPLY_PREVIEW_LEN) {
+      r.content = r.content.slice(0, REPLY_PREVIEW_LEN) + "…";
+    }
+    out.replyTo = r;
+  }
+
+  return out;
+};
+
 // ========================
 // KIỂM TRA QUYỀN NHẮN TIN (UserSettings.allowMessagesFrom)
 // ========================
@@ -84,10 +130,16 @@ const getConversations = async (userId) => {
   // Format lại: lấy info người kia trong cuộc trò chuyện
   return conversations.map((conv) => {
     const otherMember = conv.members.find((m) => m.userId !== userId);
+    // Ẩn nội dung tin cuối nếu đã thu hồi (giữ isRecalled để hiển thị placeholder)
+    const last = conv.messages[0] ?? null;
+    const lastMessage =
+      last && last.isRecalled
+        ? { ...last, content: "", mediaUrl: null, mediaType: null }
+        : last;
     return {
       id: conv.id,
       otherUser: otherMember?.user ?? null,
-      lastMessage: conv.messages[0] ?? null,
+      lastMessage,
       unreadCount: conv._count.messages,
       lastMessageAt: conv.lastMessageAt ?? conv.createdAt,
     };
@@ -161,9 +213,16 @@ const getMessages = async (conversationId, userId, cursor = null, limit = 30) =>
   if (!member) throw new AppError("Bạn không có quyền xem cuộc trò chuyện này", 403);
 
   // DESC để lấy mới nhất → dùng cursor bằng ID tin cũ nhất đang hiển thị
+  // Lọc bỏ tin mà user này đã "xóa cho riêng tôi" (deletedFor chứa userId)
   const messages = await prisma.message.findMany({
-    where: { conversationId },
-    include: { sender: { select: USER_SELECT } },
+    where: {
+      conversationId,
+      NOT: { deletedFor: { has: userId } },
+    },
+    include: {
+      sender: { select: USER_SELECT },
+      replyTo: { select: REPLY_SELECT },
+    },
     orderBy: { createdAt: "desc" },
     take: limit + 1,
     ...(cursor && { cursor: { id: cursor }, skip: 1 }),
@@ -178,18 +237,32 @@ const getMessages = async (conversationId, userId, cursor = null, limit = 30) =>
   // Đảo lại để hiển thị theo thứ tự thời gian (cũ → mới)
   messages.reverse();
 
-  return { messages, nextCursor, hasMore };
+  // Ẩn nội dung tin đã thu hồi + rút gọn replyTo trước khi trả về
+  return { messages: messages.map(sanitizeMessage), nextCursor, hasMore };
 };
 
 // ========================
 // GỬI TIN NHẮN
 // ========================
-const sendMessage = async (conversationId, senderId, content, mediaUrl = null, mediaType = null) => {
+const sendMessage = async (conversationId, senderId, content, mediaUrl = null, mediaType = null, replyToId = null) => {
   // Kiểm tra sender có phải member không
   const member = await prisma.conversationMember.findUnique({
     where: { conversationId_userId: { conversationId, userId: senderId } },
   });
   if (!member) throw new AppError("Bạn không phải thành viên cuộc trò chuyện này", 403);
+
+  // Xác thực replyToId (nếu có): tin gốc phải tồn tại VÀ thuộc cùng conversation.
+  // Không hợp lệ → bỏ qua reference (gửi như tin thường) thay vì báo lỗi.
+  let validReplyToId = null;
+  if (replyToId) {
+    const parent = await prisma.message.findUnique({
+      where: { id: replyToId },
+      select: { id: true, conversationId: true },
+    });
+    if (parent && parent.conversationId === conversationId) {
+      validReplyToId = parent.id;
+    }
+  }
 
   // Enforce "ai có thể nhắn tin" — đề phòng receiver đổi setting sau khi conversation đã tạo.
   // Ngoại lệ: nếu receiver đã từng nhắn lại trong conversation này (đã trao đổi 2 chiều)
@@ -224,8 +297,12 @@ const sendMessage = async (conversationId, senderId, content, mediaUrl = null, m
         mediaType,
         senderId,
         conversationId,
+        replyToId: validReplyToId,
       },
-      include: { sender: { select: USER_SELECT } },
+      include: {
+        sender: { select: USER_SELECT },
+        replyTo: { select: REPLY_SELECT },
+      },
     });
     await tx.conversation.update({
       where: { id: conversationId },
@@ -234,7 +311,77 @@ const sendMessage = async (conversationId, senderId, content, mediaUrl = null, m
     return msg;
   });
 
-  return message;
+  return sanitizeMessage(message);
+};
+
+// ========================
+// THU HỒI TIN NHẮN (Unsend/Recall) — chỉ trong 5 phút đầu
+// ========================
+// Chỉ người gửi mới thu hồi được tin của chính mình, và chỉ trong RECALL_WINDOW_MS.
+// Không xóa record — set isRecalled = true để hiển thị placeholder cả 2 phía.
+const recallMessage = async (messageId, userId) => {
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: {
+      id: true,
+      senderId: true,
+      createdAt: true,
+      isRecalled: true,
+      conversationId: true,
+    },
+  });
+  if (!message) throw new AppError("Tin nhắn không tồn tại", 404);
+  if (message.senderId !== userId) {
+    throw new AppError("Bạn chỉ có thể thu hồi tin nhắn của mình", 403);
+  }
+  if (message.isRecalled) {
+    throw new AppError("Tin nhắn đã được thu hồi", 400);
+  }
+  if (Date.now() - new Date(message.createdAt).getTime() > RECALL_WINDOW_MS) {
+    throw new AppError("Chỉ có thể thu hồi tin nhắn trong vòng 5 phút", 400);
+  }
+
+  const updated = await prisma.message.update({
+    where: { id: messageId },
+    data: { isRecalled: true, recalledAt: new Date() },
+    include: {
+      sender: { select: USER_SELECT },
+      replyTo: { select: REPLY_SELECT },
+    },
+  });
+
+  return sanitizeMessage(updated);
+};
+
+// ========================
+// XÓA TIN NHẮN CHO RIÊNG TÔI (Delete for me)
+// ========================
+// Chỉ ẩn tin khỏi view của người xóa — KHÔNG ảnh hưởng phía người kia.
+// Không giới hạn thời gian, áp dụng cho cả tin của mình lẫn của người khác.
+const deleteForMe = async (messageId, userId) => {
+  const message = await prisma.message.findUnique({
+    where: { id: messageId },
+    select: { id: true, conversationId: true, deletedFor: true },
+  });
+  if (!message) throw new AppError("Tin nhắn không tồn tại", 404);
+
+  // Phải là member của conversation mới được thao tác
+  const member = await prisma.conversationMember.findUnique({
+    where: {
+      conversationId_userId: { conversationId: message.conversationId, userId },
+    },
+  });
+  if (!member) throw new AppError("Bạn không có quyền thực hiện hành động này", 403);
+
+  // Idempotent: chỉ push nếu chưa có trong mảng
+  if (!message.deletedFor.includes(userId)) {
+    await prisma.message.update({
+      where: { id: messageId },
+      data: { deletedFor: { push: userId } },
+    });
+  }
+
+  return { deleted: true };
 };
 
 // ========================
@@ -279,4 +426,4 @@ const getUnreadConversationCount = async (userId) => {
   });
 };
 
-module.exports = { getConversations, getOrCreateConversation, getMessages, sendMessage, markRead, getUnreadConversationCount, canMessage };
+module.exports = { getConversations, getOrCreateConversation, getMessages, sendMessage, recallMessage, deleteForMe, markRead, getUnreadConversationCount, canMessage };

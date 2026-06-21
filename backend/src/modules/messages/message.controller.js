@@ -52,7 +52,7 @@ const getMessages = async (req, res, next) => {
 const sendMessage = async (req, res, next) => {
   try {
     const { id: conversationId } = req.params;
-    const { content, mediaUrl, mediaType } = req.body;
+    const { content, mediaUrl, mediaType, replyToId } = req.body;
 
     if (!content?.trim() && !mediaUrl) {
       throw new AppError("Tin nhắn không được trống", 400);
@@ -63,7 +63,8 @@ const sendMessage = async (req, res, next) => {
       req.user.id,
       content?.trim() || "",
       mediaUrl || null,
-      mediaType || null
+      mediaType || null,
+      replyToId || null
     );
 
     // Emit real-time tới tất cả người trong room conversation (kể cả sender)
@@ -90,6 +91,38 @@ const sendMessage = async (req, res, next) => {
     }
 
     res.status(201).json({ success: true, data: message, message: "Gửi tin nhắn thành công" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PATCH /api/v1/conversations/messages/:messageId/recall
+// Thu hồi tin nhắn của chính mình (chỉ trong 5 phút đầu)
+const recallMessage = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+    const message = await messageService.recallMessage(messageId, req.user.id);
+
+    // Cập nhật real-time cho cả 2 phía trong room conversation
+    emitToConversation(message.conversationId, "message_recalled", {
+      conversationId: message.conversationId,
+      messageId: message.id,
+      recalledAt: message.recalledAt,
+    });
+
+    res.json({ success: true, data: message, message: "Đã thu hồi tin nhắn" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/v1/conversations/messages/:messageId
+// Xóa tin nhắn chỉ ở phía người gọi (không ảnh hưởng người kia → không emit socket)
+const deleteForMe = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+    const result = await messageService.deleteForMe(messageId, req.user.id);
+    res.json({ success: true, data: result, message: "Đã xóa tin nhắn" });
   } catch (err) {
     next(err);
   }
@@ -123,4 +156,4 @@ const getUnreadCount = async (req, res, next) => {
   }
 };
 
-module.exports = { getConversations, getOrCreate, getMessages, sendMessage, markRead, getUnreadCount };
+module.exports = { getConversations, getOrCreate, getMessages, sendMessage, recallMessage, deleteForMe, markRead, getUnreadCount };

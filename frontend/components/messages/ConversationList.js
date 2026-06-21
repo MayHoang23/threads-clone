@@ -75,8 +75,10 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
         const isSelected = conv.id === selectedId;
         const hasUnread = conv.unreadCount > 0;
         const preview = conv.lastMessage
-          ? (conv.lastMessage.senderId === currentUserId ? t("messages.you") : "") +
-            (conv.lastMessage.mediaUrl ? t("messages.photo") : conv.lastMessage.content?.slice(0, 50) || "")
+          ? conv.lastMessage.isRecalled
+            ? t("messages.recalledMessage")
+            : (conv.lastMessage.senderId === currentUserId ? t("messages.you") : "") +
+              (conv.lastMessage.mediaUrl ? t("messages.photo") : conv.lastMessage.content?.slice(0, 50) || "")
           : t("messages.startConversation");
 
         return (

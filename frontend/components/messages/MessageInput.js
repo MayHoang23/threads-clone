@@ -33,6 +33,9 @@ export default function MessageInput({
     onSend,
     conversationId,
     disabled = false,
+    replyingTo = null,
+    onCancelReply,
+    currentUser,
 }) {
     const [content, setContent] = useState("");
     const [sending, setSending] = useState(false);
@@ -117,6 +120,11 @@ export default function MessageInput({
     useEffect(() => {
         resizeTextarea();
     }, [content]);
+
+    // Khi bắt đầu trả lời một tin nhắn → focus ngay ô nhập
+    useEffect(() => {
+        if (replyingTo) textareaRef.current?.focus();
+    }, [replyingTo]);
 
     // Đóng emoji picker khi click ra ngoài
     useEffect(() => {
@@ -258,6 +266,7 @@ export default function MessageInput({
         const sentContent = content.trim();
         const sentMediaUrl = attachUrl;
         const sentMediaType = attachUrl ? attachType : null;
+        const sentReplyToId = replyingTo?.id || null;
         setContent(""); // Reset ngay (optimistic)
         clearAttach();
         setAttachError("");
@@ -266,7 +275,8 @@ export default function MessageInput({
         if (textareaRef.current) textareaRef.current.style.height = "auto";
 
         try {
-            await onSend(sentContent, sentMediaUrl, sentMediaType);
+            await onSend(sentContent, sentMediaUrl, sentMediaType, sentReplyToId);
+            onCancelReply?.(); // gửi xong → đóng banner trả lời
         } catch (err) {
             // Nếu lỗi → khôi phục nội dung + media (dùng URL cloud đã upload)
             setContent(sentContent);
@@ -313,7 +323,8 @@ export default function MessageInput({
         setSendError("");
         try {
             // GIF Tenor là URL ngoài → gửi như media, mediaType = "gif"
-            await onSend("", gifUrl, "gif");
+            await onSend("", gifUrl, "gif", replyingTo?.id || null);
+            onCancelReply?.();
         } catch (err) {
             setSendError(
                 err?.status ? err.message || t("messages.failed") : t("messages.failed")
@@ -341,7 +352,10 @@ export default function MessageInput({
                 body: form,
             });
             const data = await res.json();
-            if (data?.success) await onSend("", data.data.url, "audio");
+            if (data?.success) {
+                await onSend("", data.data.url, "audio", replyingTo?.id || null);
+                onCancelReply?.();
+            }
         } catch {
             // Bỏ qua lỗi upload thoại
         } finally {
@@ -522,8 +536,46 @@ export default function MessageInput({
         );
     }
 
+    // Thông tin tin đang trả lời (cho banner phía trên input)
+    const replyName = replyingTo
+        ? replyingTo.senderId === currentUser?.id
+            ? t("messages.yourself")
+            : replyingTo.sender?.displayName || replyingTo.sender?.username || ""
+        : "";
+    const replyPreview = replyingTo
+        ? replyingTo.isRecalled
+            ? t("messages.messageUnavailable")
+            : replyingTo.mediaUrl && !replyingTo.content
+              ? t("messages.mediaMessage")
+              : replyingTo.content
+        : "";
+
     return (
         <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-3">
+            {/* Banner trả lời tin nhắn cụ thể */}
+            {replyingTo && (
+                <div className="flex items-center gap-2 mb-2 pl-3 pr-2 py-2 rounded-xl bg-gray-50 dark:bg-gray-800/60 border-l-2 border-violet-400 dark:border-violet-500">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-violet-500 dark:text-violet-400">
+                            {t("messages.replyingTo")} {replyName}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {replyPreview}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onCancelReply}
+                        title={t("messages.cancelReply")}
+                        className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
             {/* Preview media đính kèm */}
             {attachPreview && (
                 <div className="relative inline-block mb-2">
